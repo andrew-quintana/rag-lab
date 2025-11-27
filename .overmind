@@ -1,0 +1,7 @@
+# Overmind process configuration (Procfile format)
+# Manages local development services
+
+supabase: cd infra/supabase && (supabase status > /dev/null 2>&1 && echo "Supabase already running, keeping process alive..." && while true; do sleep 60; done) || supabase start
+backend: cd backend && source venv/bin/activate && PYTHONPATH=backend uvicorn rag_eval.api.main:app --reload --port 8000
+frontend: cd frontend && npm run dev
+

@@ -296,11 +296,25 @@ Holds Dockerfiles or Compose definitions for future integration.
 
 For:
 
-* `make dev`,
-* `make supabase-start`,
-* `make reset-db`,
-* `make backend`,
-* and basic automation.
+* `make dev` - Start all services via Overmind (Supabase, backend, frontend),
+* `make stop` - Stop all services,
+* `make restart` - Restart all services,
+* `make logs` - View logs from all processes,
+* `make supabase-start` - Start Supabase only,
+* `make reset-db` - Reset database and run migrations,
+* `make backend` - Start backend only,
+* `make frontend` - Start frontend only.
+
+The Makefile uses Overmind to orchestrate local development services.
+
+### **Overmind Configuration**
+
+The `.overmind` file in the project root defines process management for local development:
+- `supabase` - Local Supabase instance
+- `backend` - FastAPI server
+- `frontend` - Frontend dev server
+
+All services can be started together with `make dev` from the `infra/` directory.
 
 ### **dev.env.example**
 
@@ -337,6 +351,7 @@ Documents all required env vars.
 5. Each module has clear boundaries and empty-but-documented entrypoints.
 6. Frontend project compiles with `npm run dev` or `pnpm dev`.
 7. The entire repo runs in "empty skeleton mode" without errors.
+8. Overmind configuration is valid and all services start via `make dev`.
 
 When these criteria are met, functional implementation may begin.
 
