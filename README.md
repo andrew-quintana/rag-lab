@@ -45,10 +45,17 @@ The platform consists of four independent but interoperable subsystems:
 2. **Configure environment:**
 
    ```bash
-   # Copy environment template
-   cp infra/dev.env.example .env
+   # Create .env.local file in project root (or backend/.env.local)
+   # Add your Azure credentials and Supabase connection details
+   # The Config.from_env() method automatically loads from .env.local
    
-   # Edit .env with your Azure credentials and Supabase connection details
+   # Example .env.local structure:
+   # SUPABASE_URL=...
+   # SUPABASE_KEY=...
+   # DATABASE_URL=...
+   # AZURE_AI_FOUNDRY_ENDPOINT=...
+   # AZURE_AI_FOUNDRY_API_KEY=...
+   # (etc.)
    ```
 
 3. **Start Supabase locally:**
