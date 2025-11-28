@@ -13,6 +13,10 @@ from rag_eval.services.rag.storage import (
     upload_document_to_blob,
     download_document_from_blob,
 )
+from rag_eval.services.rag.embeddings import (
+    generate_embeddings,
+    generate_query_embedding,
+)
 
 __all__ = [
     # Ingestion
@@ -25,4 +29,7 @@ __all__ = [
     # Storage
     "upload_document_to_blob",
     "download_document_from_blob",
+    # Embeddings
+    "generate_embeddings",
+    "generate_query_embedding",
 ]
