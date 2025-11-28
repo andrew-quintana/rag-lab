@@ -16,15 +16,32 @@ def extract_text_from_document(file_content: bytes, config) -> str:
     Extract text from a document using Azure Document Intelligence.
     Handles OCR, table extraction, and text segmentation.
     
+    This function uses Azure Document Intelligence's "prebuilt-read" model to extract
+    text from various document formats (PDF, images, etc.). It extracts:
+    - Main document text content
+    - Table cell contents (if tables are present)
+    
+    The extracted text is deterministic for the same input document.
+    
     Args:
-        file_content: Raw file content (bytes)
-        config: Application configuration
+        file_content: Raw file content (bytes). Supports PDF, images, and other formats
+                     supported by Azure Document Intelligence.
+        config: Application configuration with Azure Document Intelligence credentials
+               (azure_document_intelligence_endpoint, azure_document_intelligence_api_key)
         
     Returns:
-        Extracted plaintext content
+        Extracted plaintext content. Text from main content and tables are joined with
+        double newlines ("\\n\\n").
         
     Raises:
-        AzureServiceError: If extraction fails
+        AzureServiceError: If extraction fails (network errors, authentication failures,
+                          invalid document format, service unavailability)
+        
+    Note:
+        - Requires valid Azure Document Intelligence credentials in config
+        - Large documents may take significant time to process
+        - Empty documents will return empty string
+        - Table extraction preserves cell content but not table structure
     """
     logger.info("Extracting text using Azure Document Intelligence")
     
@@ -71,15 +88,18 @@ def ingest_document(file_content: bytes, config) -> str:
     """
     Ingest a document by extracting text using Azure Document Intelligence.
     
+    This is a convenience wrapper around extract_text_from_document() that provides
+    a higher-level interface for document ingestion in the RAG pipeline.
+    
     Args:
         file_content: Raw file content (bytes)
-        config: Application configuration
+        config: Application configuration with Azure Document Intelligence credentials
         
     Returns:
-        Document text content
+        Document text content (same as extract_text_from_document)
         
     Raises:
-        AzureServiceError: If ingestion fails
+        AzureServiceError: If ingestion fails (propagated from extract_text_from_document)
     """
     logger.info("Ingesting document")
     return extract_text_from_document(file_content, config)
