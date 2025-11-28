@@ -37,8 +37,9 @@ Generate these documents **sequentially**, using each as foundational context fo
     - **technical_debt.md**: require a document to capture testing gaps and the technical debt that is left after the initiative
 - **Validation Tasks**: Performance testing, security review, stakeholder approval
 
-### 4.  PHASE_X_PROMPT{serial}.md (Prompts for Executing Phases of TODO.md)
+### 4.  prompt_phase_X_{serial}.md (Prompts for Executing Phases of TODO.md)
 **Purpose**: Map for accessing information relevant for executing phases of TODO.md
+- **Naming Convention**: `prompt_phase_{phase_number}_{serial}.md` (e.g., `prompt_phase_1_001.md`, `prompt_phase_2_001.md`)
 - **References**: Relative filepaths provided with '@' for supporting Cursor agent context
 - **Limited Detail**: Detail will be provided in PRD.md, RFC.md, TODO.md and any other contextual documents
 - **Execution**: Always require the following in execution:
@@ -171,9 +172,20 @@ All documents follow a serialization pattern for version control and iteration:
 - **PRD{serial}.md, PRD{serial+1}.md, PRD{serial+2}.md** - Product Requirements Documents
 - **RFC{serial}.md, RFC{serial+1}.md, RFC{serial+2}.md** - Request for Comments Documents  
 - **TODO{serial}.md, TODO{serial+1}.md, TODO{serial+2}.md** - Implementation Task Lists
+- **prompt_phase_{X}_{serial}.md** - Phase execution prompts (e.g., `prompt_phase_1_001.md`, `prompt_phase_2_001.md`)
+
+**Phase Prompt Naming Convention**:
+- Format: `prompt_phase_{phase_number}_{serial}.md`
+- Phase number: The phase number from TODO.md (0, 1, 2, etc.)
+- Serial: Sequential number for multiple versions of the same phase prompt (typically starts at 001)
+- Examples:
+  - Phase 1 first version: `prompt_phase_1_001.md`
+  - Phase 1 second version: `prompt_phase_1_002.md`
+  - Phase 2 first version: `prompt_phase_2_001.md`
 
 This enables:
 - **Version tracking**: Clear progression of requirements and designs
 - **Iteration management**: Multiple approaches can be explored in parallel
 - **Reference stability**: Links between documents remain valid as new versions are created
 - **Flexible numbering**: Serial numbers can be specified or auto-detected based on existing files
+- **Phase organization**: Phase prompts are clearly organized by phase number and version
