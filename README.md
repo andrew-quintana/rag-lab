@@ -63,7 +63,6 @@ The platform consists of four independent but interoperable subsystems:
 4. **Start all services:**
 
    ```bash
-   cd infra
    make dev
    ```
 
@@ -74,7 +73,7 @@ The platform consists of four independent but interoperable subsystems:
 
 ### Development Commands
 
-From the `infra/` directory:
+From the project root:
 
 - `make dev` - Start all services via Overmind
 - `make stop` - Stop all services

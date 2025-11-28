@@ -8,9 +8,11 @@ psycopg2-binary>=2.9.9
 
 # Azure SDKs
 azure-ai-inference==1.0.0b1
+azure-ai-documentintelligence==1.0.0
 azure-search-documents==11.4.0
 azure-storage-blob==12.19.0
 
 # Utilities
 python-dotenv==1.0.0
+requests>=2.31.0
 

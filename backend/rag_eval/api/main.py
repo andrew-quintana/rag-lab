@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from rag_eval.api.routes import query, metrics, meta_eval
+from rag_eval.api.routes import query, metrics, meta_eval, upload
 from rag_eval.core.config import Config
 from rag_eval.core.logging import setup_logging
 
@@ -29,6 +29,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(upload.router, prefix="/api", tags=["upload"])
 app.include_router(query.router, prefix="/api", tags=["query"])
 app.include_router(metrics.router, prefix="/api", tags=["metrics"])
 app.include_router(meta_eval.router, prefix="/api", tags=["meta_eval"])

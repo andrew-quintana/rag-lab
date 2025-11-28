@@ -1,7 +1,7 @@
 """Azure AI Search retrieval"""
 
 from typing import List
-from rag_eval.core.interfaces import Query, RetrievalResult
+from rag_eval.core.interfaces import Query, RetrievalResult, Chunk
 from rag_eval.core.exceptions import AzureServiceError
 from rag_eval.core.logging import get_logger
 

@@ -23,6 +23,10 @@ class Config:
     azure_search_api_key: str
     azure_search_index_name: str
     
+    # Azure Document Intelligence
+    azure_document_intelligence_endpoint: str
+    azure_document_intelligence_api_key: str
+    
     # Azure Blob Storage
     azure_blob_connection_string: str
     azure_blob_container_name: str
@@ -50,6 +54,8 @@ class Config:
             azure_search_endpoint=os.getenv("AZURE_SEARCH_ENDPOINT", ""),
             azure_search_api_key=os.getenv("AZURE_SEARCH_API_KEY", ""),
             azure_search_index_name=os.getenv("AZURE_SEARCH_INDEX_NAME", ""),
+            azure_document_intelligence_endpoint=os.getenv("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT", ""),
+            azure_document_intelligence_api_key=os.getenv("AZURE_DOCUMENT_INTELLIGENCE_API_KEY", ""),
             azure_blob_connection_string=os.getenv("AZURE_BLOB_CONNECTION_STRING", ""),
             azure_blob_container_name=os.getenv("AZURE_BLOB_CONTAINER_NAME", ""),
             api_host=os.getenv("API_HOST", "0.0.0.0"),
