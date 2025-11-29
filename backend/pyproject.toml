@@ -24,4 +24,8 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 pythonpath = ["."]  # Ensures pytest can find rag_eval package
+filterwarnings = [
+    "ignore::PendingDeprecationWarning:starlette.formparsers",
+    "ignore:Please use `import python_multipart` instead:PendingDeprecationWarning",
+]
 
