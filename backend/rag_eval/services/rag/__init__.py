@@ -21,6 +21,11 @@ from rag_eval.services.rag.generation import (
     load_prompt_template,
     construct_prompt,
 )
+from rag_eval.services.rag.logging import (
+    log_query,
+    log_retrieval,
+    log_model_answer,
+)
 
 __all__ = [
     # Ingestion
@@ -39,4 +44,8 @@ __all__ = [
     # Generation
     "load_prompt_template",
     "construct_prompt",
+    # Logging
+    "log_query",
+    "log_retrieval",
+    "log_model_answer",
 ]

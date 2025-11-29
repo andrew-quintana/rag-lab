@@ -12,6 +12,7 @@ from rag_eval.utils.timing import timer
 from rag_eval.services.rag.embeddings import generate_query_embedding
 from rag_eval.services.rag.search import retrieve_chunks
 from rag_eval.services.rag.generation import generate_answer
+from rag_eval.services.rag.logging import log_query, log_retrieval, log_model_answer
 from rag_eval.db.connection import DatabaseConnection
 from rag_eval.db.queries import QueryExecutor
 
@@ -173,23 +174,48 @@ def run_rag(query: Query, prompt_version: str = "v1", config: Optional[Config] =
                 except Exception as close_error:
                     logger.warning(f"Error closing database connection: {close_error}")
         
-        # Step 5: Log to Supabase (Phase 8 - stubbed initially)
+        # Step 5: Log to Supabase
         logger.info(f"[Step 5/5] Logging pipeline results for query_id '{query_id}'")
         logging_start_time = time.time()
         try:
-            # Stub logging for Phase 8 - will be implemented in Phase 8
-            # For now, we just log locally
-            logger.debug(
-                f"Logging stub: query_id='{query_id}', "
-                f"retrieved_chunks={len(retrieval_results)}, "
-                f"prompt_version='{prompt_version}'"
-            )
-            # TODO: Implement actual logging in Phase 8
-            # log_query(query, query_executor)
-            # log_retrieval(query_id, retrieval_results, query_executor)
-            # log_model_answer(answer, query_executor)
+            # Ensure we have a QueryExecutor for logging
+            # Reuse existing connection if available, otherwise create new one
+            if db_conn is None:
+                db_conn = DatabaseConnection(config)
+                db_conn.connect()
+                query_executor = QueryExecutor(db_conn)
+                created_db_conn = True
+            else:
+                created_db_conn = False
+            
+            # Log query (generates query_id if missing)
+            logged_query_id = log_query(query, query_executor)
+            if logged_query_id != query_id:
+                logger.warning(
+                    f"Query ID mismatch: expected '{query_id}', got '{logged_query_id}'. "
+                    f"Using logged query_id."
+                )
+                query_id = logged_query_id
+                answer.query_id = query_id
+            
+            # Log retrieval results
+            log_retrieval(query_id, retrieval_results, query_executor)
+            
+            # Log model answer
+            log_model_answer(answer, query_executor)
+            
+            # Close database connection if we created it
+            if created_db_conn and db_conn is not None:
+                try:
+                    db_conn.close()
+                except Exception as close_error:
+                    logger.warning(f"Error closing database connection: {close_error}")
+            
             logging_latency = time.time() - logging_start_time
-            logger.info(f"[Step 5/5] Logging completed in {logging_latency:.2f}s (stubbed)")
+            logger.info(
+                f"[Step 5/5] Logging completed in {logging_latency:.2f}s "
+                f"(query_id: '{query_id}')"
+            )
         except Exception as e:
             # Logging failures should not break the pipeline
             logger.warning(f"[Step 5/5] Logging failed (non-fatal): {e}", exc_info=True)

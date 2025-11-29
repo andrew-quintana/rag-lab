@@ -36,14 +36,19 @@ class QueryExecutor:
                 self.db_conn.return_connection(conn)
     
     def execute_insert(self, query: str, params: Optional[tuple] = None) -> Optional[str]:
-        """Execute an INSERT query and return the inserted ID"""
+        """Execute an INSERT query and return the inserted ID if RETURNING clause is used"""
         conn = None
         try:
             conn = self.db_conn.get_connection()
             cursor = conn.cursor()
             cursor.execute(query, params)
             conn.commit()
-            return cursor.fetchone()[0] if cursor.rowcount > 0 else None
+            # Only try to fetch if query has RETURNING clause
+            if "RETURNING" in query.upper():
+                result = cursor.fetchone()
+                return result[0] if result else None
+            # Otherwise, just return None (insert succeeded if no exception)
+            return None
         except Exception as e:
             if conn:
                 conn.rollback()
