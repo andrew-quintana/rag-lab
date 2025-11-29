@@ -54,10 +54,11 @@ def extract_text_from_document(file_content: bytes, config) -> str:
         
         # Analyze document (supports PDF, images, etc.)
         # This performs OCR, table extraction, and text segmentation
+        # Wrap bytes in BytesIO for the API
+        from io import BytesIO
         poller = client.begin_analyze_document(
             model_id="prebuilt-read",  # Prebuilt model for text extraction
-            analyze_request=file_content,
-            content_type="application/octet-stream"
+            body=BytesIO(file_content)  # API expects body parameter, not analyze_request
         )
         
         result = poller.result()

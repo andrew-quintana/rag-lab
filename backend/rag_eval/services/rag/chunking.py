@@ -86,7 +86,9 @@ Text to chunk:
 
         # Call Azure AI Foundry using REST API
         # Azure AI Foundry uses OpenAI-compatible API
-        endpoint = f"{config.azure_ai_foundry_endpoint}/openai/deployments/{chunking_model}/chat/completions?api-version=2024-02-15-preview"
+        # Strip trailing slash from endpoint to avoid double slashes
+        base_endpoint = config.azure_ai_foundry_endpoint.rstrip('/')
+        endpoint = f"{base_endpoint}/openai/deployments/{chunking_model}/chat/completions?api-version=2024-02-15-preview"
         
         headers = {
             "Content-Type": "application/json",

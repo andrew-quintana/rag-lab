@@ -70,6 +70,8 @@ def _call_embedding_api(texts: List[str], model: str, endpoint: str, api_key: st
         return []
     
     # Azure AI Foundry uses OpenAI-compatible API
+    # Strip trailing slash from endpoint to avoid double slashes
+    endpoint = endpoint.rstrip('/')
     api_endpoint = f"{endpoint}/openai/deployments/{model}/embeddings?api-version=2024-02-15-preview"
     
     headers = {
