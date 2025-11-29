@@ -55,6 +55,7 @@ class PromptVersion:
     version_name: str
     prompt_text: str
     created_at: datetime
+    prompt_type: str = "rag"  # Default to "rag" for backward compatibility
 
 
 @dataclass

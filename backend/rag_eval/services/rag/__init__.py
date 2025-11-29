@@ -17,6 +17,10 @@ from rag_eval.services.rag.embeddings import (
     generate_embeddings,
     generate_query_embedding,
 )
+from rag_eval.services.rag.generation import (
+    load_prompt_template,
+    construct_prompt,
+)
 
 __all__ = [
     # Ingestion
@@ -32,4 +36,7 @@ __all__ = [
     # Embeddings
     "generate_embeddings",
     "generate_query_embedding",
+    # Generation
+    "load_prompt_template",
+    "construct_prompt",
 ]
