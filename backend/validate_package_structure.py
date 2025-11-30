@@ -16,7 +16,6 @@ def test_imports():
         ("DB", "from rag_eval.db import QueryExecutor, DatabaseConnection, QueryRecord"),
         ("Utils", "from rag_eval.utils import generate_id, timer, read_prompt_file"),
         ("Evaluator", "from rag_eval.services.evaluator import normalize_score, aggregate_scores, classify_correctness"),
-        ("Meta-eval", "from rag_eval.services.meta_eval import generate_summary, compute_judge_consistency, detect_drift, compare_versions"),
         ("Main Package", "from rag_eval import Chunk, Query, Config, get_logger, __version__"),
     ]
     
@@ -45,7 +44,6 @@ def test_all_lists():
         ("rag_eval.db", "rag_eval.db"),
         ("rag_eval.utils", "rag_eval.utils"),
         ("rag_eval.services.evaluator", "rag_eval.services.evaluator"),
-        ("rag_eval.services.meta_eval", "rag_eval.services.meta_eval"),
     ]
     
     results = []

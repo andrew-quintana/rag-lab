@@ -104,3 +104,23 @@ class BEIRMetricsResult:
     precision_at_k: float
     ndcg_at_k: float
 
+
+@dataclass
+class EvaluationExample:
+    """Single evaluation example with question, reference answer, and ground truth."""
+    example_id: str
+    question: str
+    reference_answer: str
+    ground_truth_chunk_ids: List[str]
+    beir_failure_scale_factor: float  # Preserved for dataset completeness, not used by pipeline
+
+
+@dataclass
+class EvaluationResult:
+    """Complete evaluation result for a single example."""
+    example_id: str
+    judge_output: JudgeEvaluationResult
+    meta_eval_output: MetaEvaluationResult
+    beir_metrics: BEIRMetricsResult
+    timestamp: datetime
+
