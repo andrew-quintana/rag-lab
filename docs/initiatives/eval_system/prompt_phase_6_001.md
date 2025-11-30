@@ -53,6 +53,8 @@ def calculate_hallucination_impact(
 
 ### Implementation Location
 - `rag_eval/services/evaluator/hallucination_impact.py`
+- **Base Class**: `rag_eval/services/evaluator/base_evaluator.py` - Inherit from `BaseEvaluatorNode`
+- **LLM Provider**: `rag_eval/services/shared/llm_providers.py` - Use `LLMProvider` abstraction
 
 ### Test Location
 - `backend/tests/components/evaluator/test_evaluator_hallucination_impact.py`
@@ -62,6 +64,9 @@ def calculate_hallucination_impact(
 
 ### Dependencies
 - Phase 5: Cost Extraction LLM-Node (for extracting costs from text)
+
+### Reference Implementation
+- See `rag_eval/services/evaluator/correctness.py` for example of `BaseEvaluatorNode` usage
 
 ## Phase 6 Tasks
 
@@ -90,18 +95,19 @@ def calculate_hallucination_impact(
 3. Test prompt template with sample inputs
 
 ### Core Implementation
-1. Implement `calculate_hallucination_impact()` function matching RFC001 interface
-2. Load prompt template
-3. Format cost dictionaries for prompt (JSON representation)
-4. Construct prompt with model answer cost and actual cost
-5. Call Azure Foundry GPT-4o-mini with structured output (JSON)
-6. Set temperature=0.1 for reproducibility
-7. Parse JSON response to extract `hallucination_impact` (0-3)
-8. Validate impact is in range [0, 3]
-9. Return float impact magnitude
-10. Handle LLM failures with proper error handling
-11. Validate inputs are non-empty dictionaries
-12. Implement `_construct_impact_prompt()` helper function
+1. Create `HallucinationImpactEvaluator` class inheriting from `BaseEvaluatorNode`:
+   - Override `_construct_prompt()` method to build impact calculation-specific prompt
+   - Implement `calculate_hallucination_impact()` method using base class `_call_llm()` and `_parse_json_response()`
+   - Format cost dictionaries for prompt (JSON representation)
+   - Parse JSON response to extract `hallucination_impact` (0-3)
+   - Validate impact is in range [0, 3]
+   - Return float impact magnitude
+   - Validate inputs are non-empty dictionaries
+2. Implement module-level `calculate_hallucination_impact()` function for backward compatibility:
+   - Create `HallucinationImpactEvaluator` instance
+   - Call `calculate_hallucination_impact()` method
+   - Return result
+3. **Note**: Base class handles prompt loading, LLM calls (via provider), JSON parsing, and error handling
 
 ### Testing
 1. Unit tests for `calculate_hallucination_impact()`:

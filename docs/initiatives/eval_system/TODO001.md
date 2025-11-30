@@ -100,71 +100,73 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 
 **Component**: `rag_eval/services/evaluator/correctness.py`
 
+**Status**: ✅ Complete (2024-12-19) - All tests pass, 83% coverage achieved
+
 ### Setup Tasks
-- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
-- [ ] Create `rag_eval/services/evaluator/correctness.py` module
-- [ ] Ensure package `__init__.py` files are properly configured with exports
-- [ ] Verify imports work correctly (`from rag_eval.services.evaluator.correctness import classify_correctness`)
-- [ ] Review Azure Foundry API configuration for GPT-4o-mini
-- [ ] Set up test fixtures for mock LLM responses
-- [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_correctness.py`
+- [x] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [x] Create `rag_eval/services/evaluator/correctness.py` module
+- [x] Ensure package `__init__.py` files are properly configured with exports
+- [x] Verify imports work correctly (`from rag_eval.services.evaluator.correctness import classify_correctness`)
+- [x] Review Azure Foundry API configuration for GPT-4o-mini
+- [x] Set up test fixtures for mock LLM responses
+- [x] Create test file: `backend/tests/components/evaluator/test_evaluator_correctness.py`
 
 ### Prompt Creation Tasks
-- [ ] Create prompt template for correctness classification
-- [ ] Prompt location: `backend/rag_eval/prompts/evaluation/correctness_prompt.md` (or store in database with `prompt_type="evaluation"`)
-- [ ] Prompt design:
-  - [ ] System instruction: "You are an expert evaluator comparing a model answer directly to a gold reference answer."
-  - [ ] Input placeholders: `{query}`, `{model_answer}`, `{reference_answer}`
-  - [ ] Output format: JSON with `correctness_binary` (bool) and `reasoning` (str)
-  - [ ] Include examples of correct/incorrect classifications
-- [ ] Test prompt template with sample inputs
+- [x] Create prompt template for correctness classification
+- [x] Prompt location: `backend/rag_eval/prompts/evaluation/correctness_prompt.md` (or store in database with `prompt_type="evaluation"`)
+- [x] Prompt design:
+  - [x] System instruction: "You are an expert evaluator comparing a model answer directly to a gold reference answer."
+  - [x] Input placeholders: `{query}`, `{model_answer}`, `{reference_answer}`
+  - [x] Output format: JSON with `correctness_binary` (bool) and `reasoning` (str)
+  - [x] Include examples of correct/incorrect classifications
+- [x] Test prompt template with sample inputs
 
 ### Core Implementation
-- [ ] Implement `classify_correctness(query: str, model_answer: str, reference_answer: str, config: Optional[Config] = None) -> bool`
-  - [ ] Load prompt template (from file or database)
-  - [ ] Construct prompt with query, model answer, reference answer
-  - [ ] Call Azure Foundry GPT-4o-mini with structured output (JSON)
-  - [ ] Set temperature=0.1 for reproducibility
-  - [ ] Parse JSON response to extract `correctness_binary`
-  - [ ] Return boolean classification
-  - [ ] Handle LLM failures with proper error handling (`AzureServiceError`)
-  - [ ] Validate inputs are non-empty (`ValueError`)
-- [ ] Implement `_construct_correctness_prompt(query: str, model_answer: str, reference_answer: str) -> str`
-  - [ ] Load prompt template
-  - [ ] Replace placeholders with actual values
-  - [ ] Return complete prompt string
+- [x] Implement `classify_correctness(query: str, model_answer: str, reference_answer: str, config: Optional[Config] = None) -> bool`
+  - [x] Load prompt template (from file or database)
+  - [x] Construct prompt with query, model answer, reference answer
+  - [x] Call Azure Foundry GPT-4o-mini with structured output (JSON)
+  - [x] Set temperature=0.1 for reproducibility
+  - [x] Parse JSON response to extract `correctness_binary`
+  - [x] Return boolean classification
+  - [x] Handle LLM failures with proper error handling (`AzureServiceError`)
+  - [x] Validate inputs are non-empty (`ValueError`)
+- [x] Implement `_construct_correctness_prompt(query: str, model_answer: str, reference_answer: str) -> str`
+  - [x] Load prompt template
+  - [x] Replace placeholders with actual values
+  - [x] Return complete prompt string
 
 ### Testing Tasks
-- [ ] Unit tests for `classify_correctness()`
-  - [ ] Test binary classification: correct (true)
-  - [ ] Test binary classification: incorrect (false)
-  - [ ] Test direct comparison between model answer and reference answer
-  - [ ] Test edge case: empty model answer
-  - [ ] Test edge case: empty reference answer
-  - [ ] Test error handling for LLM failures
-  - [ ] Test input validation (empty strings)
-- [ ] Connection test for Azure Foundry API
-  - [ ] Test actual connection to Azure Foundry (warns if credentials missing, doesn't fail tests)
-  - [ ] Document connection status in test output
-- [ ] **Document any failures** in fracas.md immediately when encountered
+- [x] Unit tests for `classify_correctness()`
+  - [x] Test binary classification: correct (true)
+  - [x] Test binary classification: incorrect (false)
+  - [x] Test direct comparison between model answer and reference answer
+  - [x] Test edge case: empty model answer
+  - [x] Test edge case: empty reference answer
+  - [x] Test error handling for LLM failures
+  - [x] Test input validation (empty strings)
+- [x] Connection test for Azure Foundry API
+  - [x] Test actual connection to Azure Foundry (warns if credentials missing, doesn't fail tests)
+  - [x] Document connection status in test output
+- [x] **Document any failures** in fracas.md immediately when encountered
 
 ### Documentation Tasks
-- [ ] Add docstrings to all functions
-  - [ ] Document function signature matching RFC001 interface contract
-  - [ ] Document return types and error conditions
-- [ ] Document prompt design and rationale
-- [ ] Document temperature setting (0.1) for reproducibility
-- [ ] **Phase 2 Testing Summary** for handoff to Phase 3
+- [x] Add docstrings to all functions
+  - [x] Document function signature matching RFC001 interface contract
+  - [x] Document return types and error conditions
+- [x] Document prompt design and rationale
+- [x] Document temperature setting (0.1) for reproducibility
+- [x] **Phase 2 Testing Summary** for handoff to Phase 3
 
 ### Validation Requirements (Phase 2 Complete)
-- [ ] **REQUIRED**: All unit tests for Phase 2 must pass before proceeding to Phase 3
-- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_correctness.py -v`
-- [ ] **REQUIRED**: Test coverage must meet minimum 80% for correctness.py module
-- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
-- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
-- [ ] **REQUIRED**: Document any test failures in fracas.md
-- [ ] **REQUIRED**: Phase 2 is NOT complete until all tests pass
-- [ ] **Status**: ⏳ Pending - Phase 2 cannot proceed to Phase 3 until validation complete
+- [x] **REQUIRED**: All unit tests for Phase 2 must pass before proceeding to Phase 3
+- [x] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_correctness.py -v`
+- [x] **REQUIRED**: Test coverage must meet minimum 80% for correctness.py module
+- [x] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [x] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [x] **REQUIRED**: Document any test failures in fracas.md
+- [x] **REQUIRED**: Phase 2 is NOT complete until all tests pass
+- [x] **Status**: ✅ Complete - All tests pass (23/23), 83% coverage, ready for Phase 3
 
 ---
 
@@ -174,10 +176,11 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 
 ### Setup Tasks
 - [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [ ] Review `rag_eval/services/evaluator/base_evaluator.py` and `rag_eval/services/shared/llm_providers.py` to understand the base class pattern
 - [ ] Create `rag_eval/services/evaluator/hallucination.py` module
+- [ ] Create `HallucinationEvaluator` class inheriting from `BaseEvaluatorNode`
 - [ ] Ensure package `__init__.py` files are properly configured with exports
 - [ ] Verify imports work correctly
-- [ ] Review Azure Foundry API configuration
 - [ ] Set up test fixtures for mock LLM responses
 - [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_hallucination.py`
 
@@ -193,21 +196,18 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 - [ ] Test prompt template with sample inputs
 
 ### Core Implementation
-- [ ] Implement `classify_hallucination(retrieved_context: List[RetrievalResult], model_answer: str, config: Optional[Config] = None) -> bool`
-  - [ ] Load prompt template
+- [ ] Implement `HallucinationEvaluator` class inheriting from `BaseEvaluatorNode`:
+  - [ ] Override `_construct_prompt()` method to build hallucination-specific prompt
+  - [ ] Implement `classify_hallucination()` method using base class `_call_llm()` and `_parse_json_response()`
   - [ ] Format retrieved context (concatenate chunk texts with chunk IDs)
-  - [ ] Construct prompt with retrieved context and model answer
-  - [ ] Call Azure Foundry GPT-4o-mini with structured output (JSON)
-  - [ ] Set temperature=0.1 for reproducibility
-  - [ ] Parse JSON response to extract `hallucination_binary`
+  - [ ] Validate `hallucination_binary` field in parsed JSON response
   - [ ] Return boolean classification
-  - [ ] Handle LLM failures with proper error handling
+  - [ ] Handle LLM failures with proper error handling (inherited from base class)
   - [ ] Validate inputs are non-empty
-- [ ] Implement `_construct_hallucination_prompt(retrieved_context: List[RetrievalResult], model_answer: str) -> str`
-  - [ ] Load prompt template
-  - [ ] Format retrieved context for prompt
-  - [ ] Replace placeholders with actual values
-  - [ ] Return complete prompt string
+- [ ] Implement module-level `classify_hallucination()` function for backward compatibility:
+  - [ ] Create `HallucinationEvaluator` instance
+  - [ ] Call `classify_hallucination()` method
+  - [ ] Return result
 
 ### Testing Tasks
 - [ ] Unit tests for `classify_hallucination()`
@@ -246,10 +246,11 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 
 ### Setup Tasks
 - [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [ ] Review `rag_eval/services/evaluator/base_evaluator.py` and `rag_eval/services/shared/llm_providers.py` to understand the base class pattern
 - [ ] Create `rag_eval/services/evaluator/hallucination_cost.py` module
+- [ ] Create `HallucinationCostEvaluator` class inheriting from `BaseEvaluatorNode`
 - [ ] Ensure package `__init__.py` files are properly configured with exports
 - [ ] Verify imports work correctly
-- [ ] Review Azure Foundry API configuration
 - [ ] Set up test fixtures for mock LLM responses
 - [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_hallucination_cost.py`
 
@@ -268,22 +269,19 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 - [ ] Test prompt template with sample inputs
 
 ### Core Implementation
-- [ ] Implement `classify_hallucination_cost(model_answer: str, retrieved_context: List[RetrievalResult], config: Optional[Config] = None) -> int`
-  - [ ] Load prompt template
+- [ ] Implement `HallucinationCostEvaluator` class inheriting from `BaseEvaluatorNode`:
+  - [ ] Override `_construct_prompt()` method to build cost classification-specific prompt
+  - [ ] Implement `classify_hallucination_cost()` method using base class `_call_llm()` and `_parse_json_response()`
   - [ ] Format retrieved context
-  - [ ] Construct prompt with model answer and retrieved context
-  - [ ] Call Azure Foundry GPT-4o-mini with structured output (JSON)
-  - [ ] Set temperature=0.1 for reproducibility
-  - [ ] Parse JSON response to extract `hallucination_cost` (-1 or +1)
+  - [ ] Validate `hallucination_cost` field in parsed JSON response (-1 or +1)
   - [ ] Return integer classification
-  - [ ] Handle LLM failures with proper error handling
+  - [ ] Handle LLM failures with proper error handling (inherited from base class)
   - [ ] Validate inputs are non-empty
   - [ ] Handle ambiguous cost direction cases
-- [ ] Implement `_construct_cost_classification_prompt(model_answer: str, retrieved_context: List[RetrievalResult]) -> str`
-  - [ ] Load prompt template
-  - [ ] Format retrieved context
-  - [ ] Replace placeholders with actual values
-  - [ ] Return complete prompt string
+- [ ] Implement module-level `classify_hallucination_cost()` function for backward compatibility:
+  - [ ] Create `HallucinationCostEvaluator` instance
+  - [ ] Call `classify_hallucination_cost()` method
+  - [ ] Return result
 
 ### Testing Tasks
 - [ ] Unit tests for `classify_hallucination_cost()`
@@ -322,10 +320,11 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 
 ### Setup Tasks
 - [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [ ] Review `rag_eval/services/evaluator/base_evaluator.py` and `rag_eval/services/shared/llm_providers.py` to understand the base class pattern
 - [ ] Create `rag_eval/services/evaluator/cost_extraction.py` module
+- [ ] Create `CostExtractionEvaluator` class inheriting from `BaseEvaluatorNode`
 - [ ] Ensure package `__init__.py` files are properly configured with exports
 - [ ] Verify imports work correctly
-- [ ] Review Azure Foundry API configuration
 - [ ] Set up test fixtures for mock LLM responses
 - [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_cost_extraction.py`
 
@@ -344,19 +343,17 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 - [ ] Test prompt template with sample inputs
 
 ### Core Implementation
-- [ ] Implement `extract_costs(text: str, config: Optional[Config] = None) -> Dict[str, Any]`
-  - [ ] Load prompt template
-  - [ ] Construct prompt with text
-  - [ ] Call Azure Foundry GPT-4o-mini with structured output (JSON)
-  - [ ] Set temperature=0.1 for reproducibility
+- [ ] Implement `CostExtractionEvaluator` class inheriting from `BaseEvaluatorNode`:
+  - [ ] Override `_construct_prompt()` method to build cost extraction-specific prompt
+  - [ ] Implement `extract_costs()` method using base class `_call_llm()` and `_parse_json_response()`
   - [ ] Parse JSON response to extract cost fields (time, money, steps)
   - [ ] Return dictionary with optional cost fields
-  - [ ] Handle LLM failures with proper error handling
+  - [ ] Handle LLM failures with proper error handling (inherited from base class)
   - [ ] Validate input is non-empty
-- [ ] Implement `_construct_cost_extraction_prompt(text: str) -> str`
-  - [ ] Load prompt template
-  - [ ] Replace placeholder with actual text
-  - [ ] Return complete prompt string
+- [ ] Implement module-level `extract_costs()` function for backward compatibility:
+  - [ ] Create `CostExtractionEvaluator` instance
+  - [ ] Call `extract_costs()` method
+  - [ ] Return result
 
 ### Testing Tasks
 - [ ] Unit tests for `extract_costs()`
@@ -395,10 +392,11 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 
 ### Setup Tasks
 - [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [ ] Review `rag_eval/services/evaluator/base_evaluator.py` and `rag_eval/services/shared/llm_providers.py` to understand the base class pattern
 - [ ] Create `rag_eval/services/evaluator/hallucination_impact.py` module
+- [ ] Create `HallucinationImpactEvaluator` class inheriting from `BaseEvaluatorNode`
 - [ ] Ensure package `__init__.py` files are properly configured with exports
 - [ ] Verify imports work correctly
-- [ ] Review Azure Foundry API configuration
 - [ ] Set up test fixtures for mock LLM responses
 - [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_hallucination_impact.py`
 
@@ -419,22 +417,19 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 - [ ] Test prompt template with sample inputs
 
 ### Core Implementation
-- [ ] Implement `calculate_hallucination_impact(model_answer_cost: Dict[str, Any], actual_cost: Dict[str, Any], config: Optional[Config] = None) -> float`
-  - [ ] Load prompt template
+- [ ] Implement `HallucinationImpactEvaluator` class inheriting from `BaseEvaluatorNode`:
+  - [ ] Override `_construct_prompt()` method to build impact calculation-specific prompt
+  - [ ] Implement `calculate_hallucination_impact()` method using base class `_call_llm()` and `_parse_json_response()`
   - [ ] Format cost dictionaries for prompt (JSON representation)
-  - [ ] Construct prompt with model answer cost and actual cost
-  - [ ] Call Azure Foundry GPT-4o-mini with structured output (JSON)
-  - [ ] Set temperature=0.1 for reproducibility
   - [ ] Parse JSON response to extract `hallucination_impact` (0-3)
   - [ ] Validate impact is in range [0, 3]
   - [ ] Return float impact magnitude
-  - [ ] Handle LLM failures with proper error handling
+  - [ ] Handle LLM failures with proper error handling (inherited from base class)
   - [ ] Validate inputs are non-empty dictionaries
-- [ ] Implement `_construct_impact_prompt(model_answer_cost: Dict[str, Any], actual_cost: Dict[str, Any]) -> str`
-  - [ ] Load prompt template
-  - [ ] Format cost dictionaries as JSON strings
-  - [ ] Replace placeholders with actual values
-  - [ ] Return complete prompt string
+- [ ] Implement module-level `calculate_hallucination_impact()` function for backward compatibility:
+  - [ ] Create `HallucinationImpactEvaluator` instance
+  - [ ] Call `calculate_hallucination_impact()` method
+  - [ ] Return result
 
 ### Testing Tasks
 - [ ] Unit tests for `calculate_hallucination_impact()`

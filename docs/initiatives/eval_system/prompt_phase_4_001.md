@@ -51,12 +51,17 @@ def classify_hallucination_cost(
 
 ### Implementation Location
 - `rag_eval/services/evaluator/hallucination_cost.py`
+- **Base Class**: `rag_eval/services/evaluator/base_evaluator.py` - Inherit from `BaseEvaluatorNode`
+- **LLM Provider**: `rag_eval/services/shared/llm_providers.py` - Use `LLMProvider` abstraction
 
 ### Test Location
 - `backend/tests/components/evaluator/test_evaluator_hallucination_cost.py`
 
 ### Prompt Location
 - `backend/rag_eval/prompts/evaluation/hallucination_cost_prompt.md` (or store in database)
+
+### Reference Implementation
+- See `rag_eval/services/evaluator/correctness.py` for example of `BaseEvaluatorNode` usage
 
 ## Phase 4 Tasks
 
@@ -83,18 +88,19 @@ def classify_hallucination_cost(
 3. Test prompt template with sample inputs
 
 ### Core Implementation
-1. Implement `classify_hallucination_cost()` function matching RFC001 interface
-2. Load prompt template
-3. Format retrieved context
-4. Construct prompt with model answer and retrieved context
-5. Call Azure Foundry GPT-4o-mini with structured output (JSON)
-6. Set temperature=0.1 for reproducibility
-7. Parse JSON response to extract `hallucination_cost` (-1 or +1)
-8. Return integer classification
-9. Handle LLM failures with proper error handling
-10. Validate inputs are non-empty
-11. Handle ambiguous cost direction cases
-12. Implement `_construct_cost_classification_prompt()` helper function
+1. Create `HallucinationCostEvaluator` class inheriting from `BaseEvaluatorNode`:
+   - Override `_construct_prompt()` method to build cost classification-specific prompt
+   - Implement `classify_hallucination_cost()` method using base class `_call_llm()` and `_parse_json_response()`
+   - Format retrieved context
+   - Validate `hallucination_cost` field in parsed JSON response (-1 or +1)
+   - Return integer classification
+   - Validate inputs are non-empty
+   - Handle ambiguous cost direction cases
+2. Implement module-level `classify_hallucination_cost()` function for backward compatibility:
+   - Create `HallucinationCostEvaluator` instance
+   - Call `classify_hallucination_cost()` method
+   - Return result
+3. **Note**: Base class handles prompt loading, LLM calls (via provider), JSON parsing, and error handling
 
 ### Testing
 1. Unit tests for `classify_hallucination_cost()`:

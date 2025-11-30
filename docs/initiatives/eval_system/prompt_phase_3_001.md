@@ -47,6 +47,8 @@ def classify_hallucination(
 
 ### Implementation Location
 - `rag_eval/services/evaluator/hallucination.py`
+- **Base Class**: `rag_eval/services/evaluator/base_evaluator.py` - Inherit from `BaseEvaluatorNode`
+- **LLM Provider**: `rag_eval/services/shared/llm_providers.py` - Use `LLMProvider` abstraction
 
 ### Test Location
 - `backend/tests/components/evaluator/test_evaluator_hallucination.py`
@@ -56,6 +58,9 @@ def classify_hallucination(
 
 ### Data Structures
 - `RetrievalResult` from @backend/rag_eval/core/interfaces.py
+
+### Reference Implementation
+- See `rag_eval/services/evaluator/correctness.py` for example of `BaseEvaluatorNode` usage
 
 ## Phase 3 Tasks
 
@@ -79,17 +84,18 @@ def classify_hallucination(
 3. Test prompt template with sample inputs
 
 ### Core Implementation
-1. Implement `classify_hallucination()` function matching RFC001 interface
-2. Load prompt template
-3. Format retrieved context (concatenate chunk texts with chunk IDs)
-4. Construct prompt with retrieved context and model answer
-5. Call Azure Foundry GPT-4o-mini with structured output (JSON)
-6. Set temperature=0.1 for reproducibility
-7. Parse JSON response to extract `hallucination_binary`
-8. Return boolean classification
-9. Handle LLM failures with proper error handling
-10. Validate inputs are non-empty
-11. Implement `_construct_hallucination_prompt()` helper function
+1. Create `HallucinationEvaluator` class inheriting from `BaseEvaluatorNode`:
+   - Override `_construct_prompt()` method to build hallucination-specific prompt
+   - Implement `classify_hallucination()` method using base class `_call_llm()` and `_parse_json_response()`
+   - Format retrieved context (concatenate chunk texts with chunk IDs)
+   - Validate `hallucination_binary` field in parsed JSON response
+   - Return boolean classification
+   - Validate inputs are non-empty
+2. Implement module-level `classify_hallucination()` function for backward compatibility:
+   - Create `HallucinationEvaluator` instance
+   - Call `classify_hallucination()` method
+   - Return result
+3. **Note**: Base class handles prompt loading, LLM calls (via provider), JSON parsing, and error handling
 
 ### Testing
 1. Unit tests for `classify_hallucination()`:
