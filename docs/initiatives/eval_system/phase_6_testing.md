@@ -45,7 +45,7 @@ These are edge case error handling paths that are difficult to test without comp
 - ✅ Calculate impact for mixed resource types
 - ✅ Zero impact scenarios (edge case)
 - ✅ Maximum impact scenarios (edge case)
-- ✅ Range validation [0, 3]
+- ✅ Discrete value validation {0, 1, 2, 3}
 - ✅ Invalid inputs (empty dicts, non-dicts)
 - ✅ LLM failure handling (AzureServiceError)
 - ✅ Missing field in response (ValueError)

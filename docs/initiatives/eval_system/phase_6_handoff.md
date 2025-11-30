@@ -6,7 +6,7 @@
 
 ## Summary
 
-Phase 6 successfully implements the Risk Impact LLM-Node for calculating system-level risk impact magnitude on a 0-3 scale. The implementation handles mixed resource types (time, money, steps) and evaluates impact regardless of deviation origin.
+Phase 6 successfully implements the Risk Impact LLM-Node for calculating system-level risk impact magnitude as discrete values (0, 1, 2, or 3). The implementation handles mixed resource types (time, money, steps) and evaluates impact regardless of deviation origin.
 
 ## Deliverables
 
@@ -51,7 +51,7 @@ def calculate_risk_impact(
 
 ### Return Value
 - **Type**: `float`
-- **Range**: [0, 3]
+- **Discrete Values**: {0, 1, 2, 3}
 - **Scale**:
   - 0: Minimal/no impact
   - 1: Low impact
@@ -68,7 +68,7 @@ model_cost = {"money": 500.0, "time": "2 hours"}
 actual_cost = {"money": 50.0, "time": "30 minutes"}
 
 impact = calculate_risk_impact(model_cost, actual_cost, config)
-# Returns: float in range [0, 3]
+# Returns: int in {0, 1, 2, 3}
 ```
 
 ## Dependencies

@@ -51,3 +51,14 @@ class EvaluationScore:
     prompt_version: str
     judge_reasoning: Optional[str] = None
 
+
+@dataclass
+class JudgeEvaluationResult:
+    """Output from LLM-as-Judge evaluation."""
+    correctness_binary: bool
+    hallucination_binary: bool
+    risk_direction: Optional[int]  # -1, 0, or 1, None if no deviation
+    risk_impact: Optional[int]  # 0, 1, 2, or 3, None if no deviation
+    reasoning: str
+    failure_mode: Optional[str] = None
+

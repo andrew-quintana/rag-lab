@@ -134,7 +134,7 @@ risk_impact = calculate_risk_impact(model_answer_cost, actual_cost, config)
 
 Proceed to **Phase 6: Risk Impact LLM-Node** using `@docs/initiatives/eval_system/prompt_phase_6_001.md`.
 
-Phase 6 will implement the `calculate_risk_impact()` function that uses the cost extraction from Phase 5 to calculate impact magnitude (0-3 scale) based on differences between model answer costs and actual costs from retrieved chunks.
+Phase 6 will implement the `calculate_risk_impact()` function that uses the cost extraction from Phase 5 to calculate impact magnitude (discrete values: 0, 1, 2, or 3) based on differences between model answer costs and actual costs from retrieved chunks.
 
 ---
 

@@ -19,7 +19,7 @@
 
 ### Decision 2: Impact Range Validation
 
-**Decision**: Validate `risk_impact` is in range [0, 3] after parsing from LLM response.
+**Decision**: Validate `risk_impact` is a discrete value in {0, 1, 2, 3} after parsing from LLM response.
 
 **Rationale**:
 - Ensures output conforms to specification

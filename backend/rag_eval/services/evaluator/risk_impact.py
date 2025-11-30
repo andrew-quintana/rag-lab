@@ -120,16 +120,16 @@ class RiskImpactEvaluator(BaseEvaluatorNode):
         self,
         model_answer_cost: Dict[str, Any],
         actual_cost: Dict[str, Any]
-    ) -> float:
+    ) -> int:
         """
-        Calculate system-level risk impact magnitude (0-3 scale).
+        Calculate system-level risk impact magnitude (discrete scale: 0, 1, 2, or 3).
         
         Analyzes difference between model answer cost and actual cost from chunks,
         considering mixed resource types (time, money, steps) and their relative importance.
         Evaluates impact of deviations regardless of origin (retrieval, augmentation, context ordering,
         prompting, model reasoning, or hallucination).
         
-        **Impact Scale**:
+        **Impact Scale** (discrete values):
         - **0**: Minimal/no impact
         - **1**: Low impact
         - **2**: Moderate impact
@@ -148,7 +148,7 @@ class RiskImpactEvaluator(BaseEvaluatorNode):
             actual_cost: Actual cost from retrieved chunks (ground truth)
             
         Returns:
-            float: Impact magnitude in range [0, 3], where:
+            int: Impact magnitude as discrete value in {0, 1, 2, 3}, where:
                 - 0: Minimal/no impact
                 - 1: Low impact
                 - 2: Moderate impact
@@ -169,7 +169,7 @@ class RiskImpactEvaluator(BaseEvaluatorNode):
             >>> 
             >>> impact = evaluator.calculate_risk_impact(model_answer_cost, actual_cost)
             >>> print(impact)
-            2.5
+            2
         """
         # Validate inputs
         if not isinstance(model_answer_cost, dict) or not model_answer_cost:
@@ -218,13 +218,13 @@ class RiskImpactEvaluator(BaseEvaluatorNode):
                     f"risk_impact must be a number, got {type(risk_impact)}: {risk_impact}"
                 )
             
-            # Convert to float
-            risk_impact = float(risk_impact)
+            # Convert to int (discrete values only)
+            risk_impact = int(risk_impact)
             
-            # Validate risk_impact is in range [0, 3]
-            if risk_impact < 0 or risk_impact > 3:
+            # Validate risk_impact is a discrete value in {0, 1, 2, 3}
+            if risk_impact not in [0, 1, 2, 3]:
                 raise ValueError(
-                    f"risk_impact must be in range [0, 3], got {risk_impact}"
+                    f"risk_impact must be a discrete value in {{0, 1, 2, 3}}, got {risk_impact}"
                 )
             
             reasoning = classification.get("reasoning", "No reasoning provided")
@@ -257,9 +257,9 @@ def calculate_risk_impact(
     query_executor: Optional[QueryExecutor] = None,
     prompt_version: Optional[str] = None,
     live: bool = True
-) -> float:
+) -> int:
     """
-    Calculate system-level risk impact magnitude (0-3 scale).
+    Calculate system-level risk impact magnitude (discrete scale: 0, 1, 2, or 3).
     
     This is a convenience function that maintains backward compatibility.
     It creates a RiskImpactEvaluator instance and calls calculate_risk_impact().
@@ -269,7 +269,7 @@ def calculate_risk_impact(
     Evaluates impact of deviations regardless of origin (retrieval, augmentation, context ordering,
     prompting, model reasoning, or hallucination).
     
-    **Impact Scale**:
+    **Impact Scale** (discrete values):
     - **0**: Minimal/no impact
     - **1**: Low impact
     - **2**: Moderate impact
@@ -292,7 +292,7 @@ def calculate_risk_impact(
         live: If True and prompt_version is None, loads the live version. Defaults to True
         
     Returns:
-        float: Impact magnitude in range [0, 3], where:
+        int: Impact magnitude as discrete value in {0, 1, 2, 3}, where:
             - 0: Minimal/no impact
             - 1: Low impact
             - 2: Moderate impact
@@ -310,9 +310,9 @@ def calculate_risk_impact(
         >>> model_answer_cost = {"money": 500.0, "time": "2 hours"}
         >>> actual_cost = {"money": 50.0, "time": "30 minutes"}
         >>> 
-        >>> impact = calculate_risk_impact(model_answer_cost, actual_cost, config)
-        >>> print(impact)
-        2.5
+            >>> impact = calculate_risk_impact(model_answer_cost, actual_cost, config)
+            >>> print(impact)
+            2
     """
     evaluator = RiskImpactEvaluator(
         config=config,

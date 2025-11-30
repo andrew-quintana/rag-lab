@@ -2,7 +2,7 @@
 
 ## Context
 
-This prompt guides the implementation of **Phase 6: Risk Impact LLM-Node** for the RAG Evaluation MVP system. This phase implements the impact magnitude calculation LLM node that computes system-level risk impact on a 0-3 scale, handling mixed resource types (time, money, steps).
+This prompt guides the implementation of **Phase 6: Risk Impact LLM-Node** for the RAG Evaluation MVP system. This phase implements the impact magnitude calculation LLM node that computes system-level risk impact as discrete values (0, 1, 2, or 3), handling mixed resource types (time, money, steps).
 
 **Related Documents:**
 - @docs/initiatives/eval_system/PRD001.md - Product requirements (FR5: Risk Impact LLM-Node)
@@ -12,7 +12,7 @@ This prompt guides the implementation of **Phase 6: Risk Impact LLM-Node** for t
 
 ## Objectives
 
-1. **Implement Impact Calculation Node**: Create LLM node for impact magnitude calculation (0-3 scale)
+1. **Implement Impact Calculation Node**: Create LLM node for impact magnitude calculation (discrete values: 0, 1, 2, or 3)
 2. **Create Prompt Template**: Design prompt for handling mixed resource types and relative importance
 3. **Integrate Azure Foundry**: Use Azure Foundry GPT-4o-mini with structured output
 4. **Test Thoroughly**: Achieve 80%+ test coverage with comprehensive unit tests
@@ -90,7 +90,7 @@ def calculate_risk_impact(
 2. Prompt design:
    - System instruction: "You are an expert evaluator calculating the real-world impact magnitude of system-level deviations."
    - Input placeholders: `{model_answer_cost}`, `{actual_cost}`
-   - Output format: JSON with `risk_impact` (float 0-3) and `reasoning` (str)
+   - Output format: JSON with `risk_impact` (int: 0, 1, 2, or 3) and `reasoning` (str)
    - Explain impact scale:
      - 0: Minimal/no impact
      - 1: Low impact
@@ -106,8 +106,8 @@ def calculate_risk_impact(
    - Override `_construct_prompt()` method to build impact calculation-specific prompt
    - Implement `calculate_risk_impact()` method using base class `_call_llm()` and `_parse_json_response()`
    - Format cost dictionaries for prompt (JSON representation)
-   - Parse JSON response to extract `risk_impact` (0-3)
-   - Validate impact is in range [0, 3]
+   - Parse JSON response to extract `risk_impact` (0, 1, 2, or 3)
+   - Validate impact is a discrete value in {0, 1, 2, 3}
    - Return float impact magnitude
    - Validate inputs are non-empty dictionaries
 2. Implement module-level `calculate_risk_impact()` function for backward compatibility:
@@ -122,7 +122,7 @@ def calculate_risk_impact(
    - Test impact calculation for money-based costs
    - Test impact calculation for step-based costs
    - Test impact calculation for mixed resource types
-   - Test impact scaling factor range [0, 3]
+   - Test impact scaling factor discrete values {0, 1, 2, 3}
    - Test edge case: zero impact scenarios
    - Test edge case: maximum impact scenarios
    - Test error handling for LLM failures
@@ -131,7 +131,7 @@ def calculate_risk_impact(
 
 ### Documentation
 1. Add docstrings to all functions
-2. Document impact scale (0-3) and rationale
+2. Document impact scale (discrete values: 0, 1, 2, or 3) and rationale
 3. Document handling of mixed resource types
 4. Document why LLM node is used (not deterministic function)
 
@@ -140,14 +140,14 @@ def calculate_risk_impact(
 - [ ] `calculate_risk_impact()` function implemented matching RFC001 interface
 - [ ] Prompt template created with emphasis on mixed resource types
 - [ ] All unit tests pass with 80%+ coverage
-- [ ] Tests verify impact range [0, 3]
+- [ ] Tests verify impact discrete values {0, 1, 2, 3}
 - [ ] All error handling implemented
 - [ ] All Phase 6 tasks in TODO001.md checked off
 - [ ] Phase 6 handoff document created
 
 ## Important Notes
 
-- **Impact Range**: Must validate impact is in range [0, 3]
+- **Impact Values**: Must validate impact is a discrete value in {0, 1, 2, 3}
 - **Temperature**: Use temperature=0.1 for all LLM calls
 - **Mixed Resources**: Must handle time, money, and steps with relative importance assessment
 - **LLM Rationale**: Uses LLM node (not deterministic function) because it requires nuanced reasoning about mixed resource types and system-level deviations
