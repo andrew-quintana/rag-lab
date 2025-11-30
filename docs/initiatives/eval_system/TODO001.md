@@ -468,80 +468,82 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 
 **Component**: `rag_eval/services/evaluator/risk_impact.py`
 
+**Status**: ✅ Complete (2024-12-19) - All tests pass, 86% coverage achieved
+
 ### Setup Tasks
-- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
-- [ ] Review `rag_eval/services/evaluator/base_evaluator.py` and `rag_eval/services/shared/llm_providers.py` to understand the base class pattern
-- [ ] Create `rag_eval/services/evaluator/risk_impact.py` module
-- [ ] Create `RiskImpactEvaluator` class inheriting from `BaseEvaluatorNode`
-- [ ] Ensure package `__init__.py` files are properly configured with exports
-- [ ] Verify imports work correctly
-- [ ] Set up test fixtures for mock LLM responses
-- [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_risk_impact.py`
+- [x] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [x] Review `rag_eval/services/evaluator/base_evaluator.py` and `rag_eval/services/shared/llm_providers.py` to understand the base class pattern
+- [x] Create `rag_eval/services/evaluator/risk_impact.py` module
+- [x] Create `RiskImpactEvaluator` class inheriting from `BaseEvaluatorNode`
+- [x] Ensure package `__init__.py` files are properly configured with exports
+- [x] Verify imports work correctly
+- [x] Set up test fixtures for mock LLM responses
+- [x] Create test file: `backend/tests/components/evaluator/test_evaluator_risk_impact.py`
 
 ### Prompt Creation Tasks
-- [ ] **REQUIRED**: Store prompt template in database (`public.prompts` table)
-  - [ ] `prompt_type='evaluation'`
-  - [ ] `name='risk_impact_evaluator'`
-  - [ ] `version='0.1'` (or appropriate version)
-  - [ ] `live=true` (for live version)
-- [ ] Prompt design:
-  - [ ] System instruction: "You are an expert evaluator calculating the real-world impact magnitude of system-level deviations."
-  - [ ] Input placeholders: `{model_answer_cost}`, `{actual_cost}`
-  - [ ] Output format: JSON with `risk_impact` (float 0-3) and `reasoning` (str)
-  - [ ] Explain impact scale:
-    - [ ] 0: Minimal/no impact
-    - [ ] 1: Low impact
-    - [ ] 2: Moderate impact
-    - [ ] 3: High/severe impact
-  - [ ] **CRITICAL**: Emphasize considering mixed resource types (time, money, steps) and their relative importance
-  - [ ] **CRITICAL**: Evaluate impact of deviations regardless of origin (retrieval, augmentation, context ordering, prompting, model reasoning, or hallucination)
-  - [ ] Include examples of impact calculations for different cost differences
-- [ ] Test prompt template with sample inputs
+- [x] **REQUIRED**: Store prompt template in database (`public.prompts` table)
+  - [x] `prompt_type='evaluation'`
+  - [x] `name='risk_impact_evaluator'`
+  - [x] `version='0.1'` (or appropriate version)
+  - [x] `live=true` (for live version)
+- [x] Prompt design:
+  - [x] System instruction: "You are an expert evaluator calculating the real-world impact magnitude of system-level deviations."
+  - [x] Input placeholders: `{model_answer_cost}`, `{actual_cost}`
+  - [x] Output format: JSON with `risk_impact` (float 0-3) and `reasoning` (str)
+  - [x] Explain impact scale:
+    - [x] 0: Minimal/no impact
+    - [x] 1: Low impact
+    - [x] 2: Moderate impact
+    - [x] 3: High/severe impact
+  - [x] **CRITICAL**: Emphasize considering mixed resource types (time, money, steps) and their relative importance
+  - [x] **CRITICAL**: Evaluate impact of deviations regardless of origin (retrieval, augmentation, context ordering, prompting, model reasoning, or hallucination)
+  - [x] Include examples of impact calculations for different cost differences
+- [x] Test prompt template with sample inputs
 
 ### Core Implementation
-- [ ] Implement `RiskImpactEvaluator` class inheriting from `BaseEvaluatorNode`:
-  - [ ] Override `_construct_prompt()` method to build impact calculation-specific prompt
-  - [ ] Implement `calculate_risk_impact()` method using base class `_call_llm()` and `_parse_json_response()`
-  - [ ] Format cost dictionaries for prompt (JSON representation)
-  - [ ] Parse JSON response to extract `risk_impact` (0-3)
-  - [ ] Validate impact is in range [0, 3]
-  - [ ] Return float impact magnitude
-  - [ ] Handle LLM failures with proper error handling (inherited from base class)
-  - [ ] Validate inputs are non-empty dictionaries
-- [ ] Implement module-level `calculate_risk_impact()` function for backward compatibility:
-  - [ ] Create `RiskImpactEvaluator` instance
-  - [ ] Call `calculate_risk_impact()` method
-  - [ ] Return result
+- [x] Implement `RiskImpactEvaluator` class inheriting from `BaseEvaluatorNode`:
+  - [x] Override `_construct_prompt()` method to build impact calculation-specific prompt
+  - [x] Implement `calculate_risk_impact()` method using base class `_call_llm()` and `_parse_json_response()`
+  - [x] Format cost dictionaries for prompt (JSON representation)
+  - [x] Parse JSON response to extract `risk_impact` (0-3)
+  - [x] Validate impact is in range [0, 3]
+  - [x] Return float impact magnitude
+  - [x] Handle LLM failures with proper error handling (inherited from base class)
+  - [x] Validate inputs are non-empty dictionaries
+- [x] Implement module-level `calculate_risk_impact()` function for backward compatibility:
+  - [x] Create `RiskImpactEvaluator` instance
+  - [x] Call `calculate_risk_impact()` method
+  - [x] Return result
 
 ### Testing Tasks
-- [ ] Unit tests for `calculate_risk_impact()`
-  - [ ] Test impact calculation for time-based costs
-  - [ ] Test impact calculation for money-based costs
-  - [ ] Test impact calculation for step-based costs
-  - [ ] Test impact calculation for mixed resource types
-  - [ ] Test impact scaling factor range [0, 3]
-  - [ ] Test edge case: zero impact scenarios
-  - [ ] Test edge case: maximum impact scenarios
-  - [ ] Test error handling for LLM failures
-- [ ] Connection test for Azure Foundry API
-- [ ] **Document any failures** in fracas.md immediately when encountered
+- [x] Unit tests for `calculate_risk_impact()`
+  - [x] Test impact calculation for time-based costs
+  - [x] Test impact calculation for money-based costs
+  - [x] Test impact calculation for step-based costs
+  - [x] Test impact calculation for mixed resource types
+  - [x] Test impact scaling factor range [0, 3]
+  - [x] Test edge case: zero impact scenarios
+  - [x] Test edge case: maximum impact scenarios
+  - [x] Test error handling for LLM failures
+- [x] Connection test for Azure Foundry API
+- [x] **Document any failures** in fracas.md immediately when encountered
 
 ### Documentation Tasks
-- [ ] Add docstrings to all functions
-- [ ] Document impact scale (0-3) and rationale
-- [ ] Document handling of mixed resource types
-- [ ] Document why LLM node is used (not deterministic function)
-- [ ] **Phase 6 Testing Summary** for handoff to Phase 7
+- [x] Add docstrings to all functions
+- [x] Document impact scale (0-3) and rationale
+- [x] Document handling of mixed resource types
+- [x] Document why LLM node is used (not deterministic function)
+- [x] **Phase 6 Testing Summary** for handoff to Phase 7
 
 ### Validation Requirements (Phase 6 Complete)
-- [ ] **REQUIRED**: All unit tests for Phase 6 must pass before proceeding to Phase 7
-- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_risk_impact.py -v`
-- [ ] **REQUIRED**: Test coverage must meet minimum 80% for risk_impact.py module
-- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
-- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
-- [ ] **REQUIRED**: Document any test failures in fracas.md
-- [ ] **REQUIRED**: Phase 6 is NOT complete until all tests pass
-- [ ] **Status**: ⏳ Pending - Phase 6 cannot proceed to Phase 7 until validation complete
+- [x] **REQUIRED**: All unit tests for Phase 6 must pass before proceeding to Phase 7
+- [x] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_risk_impact.py -v`
+- [x] **REQUIRED**: Test coverage must meet minimum 80% for risk_impact.py module
+- [x] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [x] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [x] **REQUIRED**: Document any test failures in fracas.md
+- [x] **REQUIRED**: Phase 6 is NOT complete until all tests pass
+- [x] **Status**: ✅ Complete - All tests pass (21/21), 86% coverage, ready for Phase 7
 
 ---
 
