@@ -394,75 +394,77 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 
 **Component**: `rag_eval/services/evaluator/cost_extraction.py`
 
+**Status**: ✅ Complete (2024-12-19) - All tests pass, 89% coverage achieved
+
 ### Setup Tasks
-- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
-- [ ] Review `rag_eval/services/evaluator/base_evaluator.py` and `rag_eval/services/shared/llm_providers.py` to understand the base class pattern
-- [ ] Create `rag_eval/services/evaluator/cost_extraction.py` module
-- [ ] Create `CostExtractionEvaluator` class inheriting from `BaseEvaluatorNode`
-- [ ] Ensure package `__init__.py` files are properly configured with exports
-- [ ] Verify imports work correctly
-- [ ] Set up test fixtures for mock LLM responses
-- [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_cost_extraction.py`
+- [x] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [x] Review `rag_eval/services/evaluator/base_evaluator.py` and `rag_eval/services/shared/llm_providers.py` to understand the base class pattern
+- [x] Create `rag_eval/services/evaluator/cost_extraction.py` module
+- [x] Create `CostExtractionEvaluator` class inheriting from `BaseEvaluatorNode`
+- [x] Ensure package `__init__.py` files are properly configured with exports
+- [x] Verify imports work correctly
+- [x] Set up test fixtures for mock LLM responses
+- [x] Create test file: `backend/tests/components/evaluator/test_evaluator_cost_extraction.py`
 
 ### Prompt Creation Tasks
-- [ ] Create prompt template for cost extraction
-- [ ] Prompt location: `backend/rag_eval/prompts/evaluation/cost_extraction_prompt.md` (or store in database)
-- [ ] Prompt design:
-  - [ ] System instruction: "You are an expert parser extracting cost information (time, money, steps) from text."
-  - [ ] Input placeholder: `{text}`
-  - [ ] Output format: JSON with `time` (optional float/str), `money` (optional float/str), `steps` (optional int/str), and `reasoning` (str)
-  - [ ] Include examples of cost extraction from various formats:
-    - [ ] Time: "2 hours", "30 minutes", "1 day"
-    - [ ] Money: "$500", "500 dollars", "500.00"
-    - [ ] Steps: "3 steps", "step 3", "third step"
-  - [ ] Handle missing cost information (optional fields)
-- [ ] Test prompt template with sample inputs
+- [x] Create prompt template for cost extraction
+- [x] Prompt location: `backend/rag_eval/prompts/evaluation/cost_extraction_prompt.md` (or store in database)
+- [x] Prompt design:
+  - [x] System instruction: "You are an expert parser extracting cost information (time, money, steps) from text."
+  - [x] Input placeholder: `{text}`
+  - [x] Output format: JSON with `time` (optional float/str), `money` (optional float/str), `steps` (optional int/str), and `reasoning` (str)
+  - [x] Include examples of cost extraction from various formats:
+    - [x] Time: "2 hours", "30 minutes", "1 day"
+    - [x] Money: "$500", "500 dollars", "500.00"
+    - [x] Steps: "3 steps", "step 3", "third step"
+  - [x] Handle missing cost information (optional fields)
+- [x] Test prompt template with sample inputs
 
 ### Core Implementation
-- [ ] Implement `CostExtractionEvaluator` class inheriting from `BaseEvaluatorNode`:
-  - [ ] Override `_construct_prompt()` method to build cost extraction-specific prompt
-  - [ ] Implement `extract_costs()` method using base class `_call_llm()` and `_parse_json_response()`
-  - [ ] Parse JSON response to extract cost fields (time, money, steps)
-  - [ ] Return dictionary with optional cost fields
-  - [ ] Handle LLM failures with proper error handling (inherited from base class)
-  - [ ] Validate input is non-empty
-- [ ] Implement module-level `extract_costs()` function for backward compatibility:
-  - [ ] Create `CostExtractionEvaluator` instance
-  - [ ] Call `extract_costs()` method
-  - [ ] Return result
+- [x] Implement `CostExtractionEvaluator` class inheriting from `BaseEvaluatorNode`:
+  - [x] Override `_construct_prompt()` method to build cost extraction-specific prompt
+  - [x] Implement `extract_costs()` method using base class `_call_llm()` and `_parse_json_response()`
+  - [x] Parse JSON response to extract cost fields (time, money, steps)
+  - [x] Return dictionary with optional cost fields
+  - [x] Handle LLM failures with proper error handling (inherited from base class)
+  - [x] Validate input is non-empty
+- [x] Implement module-level `extract_costs()` function for backward compatibility:
+  - [x] Create `CostExtractionEvaluator` instance
+  - [x] Call `extract_costs()` method
+  - [x] Return result
 
 ### Testing Tasks
-- [ ] Unit tests for `extract_costs()`
-  - [ ] Test extraction of time-based costs (e.g., "2 hours", "30 minutes")
-  - [ ] Test extraction of money-based costs (e.g., "$500", "500 dollars", "500.00")
-  - [ ] Test extraction of step-based costs (e.g., "3 steps", "step 3")
-  - [ ] Test extraction of mixed cost types from same text
-  - [ ] Test handling of missing cost information (optional fields)
-  - [ ] Test edge case: no cost information in text
-  - [ ] Test edge case: ambiguous cost expressions
-  - [ ] Test error handling for LLM failures
-- [ ] Connection test for Azure Foundry API
-- [ ] **Document any failures** in fracas.md immediately when encountered
+- [x] Unit tests for `extract_costs()`
+  - [x] Test extraction of time-based costs (e.g., "2 hours", "30 minutes")
+  - [x] Test extraction of money-based costs (e.g., "$500", "500 dollars", "500.00")
+  - [x] Test extraction of step-based costs (e.g., "3 steps", "step 3")
+  - [x] Test extraction of mixed cost types from same text
+  - [x] Test handling of missing cost information (optional fields)
+  - [x] Test edge case: no cost information in text
+  - [x] Test edge case: ambiguous cost expressions
+  - [x] Test error handling for LLM failures
+- [x] Connection test for Azure Foundry API
+- [x] **Document any failures** in fracas.md immediately when encountered
 
 ### Documentation Tasks
-- [ ] Add docstrings to all functions
-- [ ] Document cost extraction format and supported expressions
-- [ ] Document optional fields and handling of missing information
-- [ ] **Phase 5 Testing Summary** for handoff to Phase 6
+- [x] Add docstrings to all functions
+- [x] Document cost extraction format and supported expressions
+- [x] Document optional fields and handling of missing information
+- [x] **Phase 5 Testing Summary** for handoff to Phase 6
 
 ### Validation Requirements (Phase 5 Complete)
-- [ ] **REQUIRED**: All unit tests for Phase 5 must pass before proceeding to Phase 6
-- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_cost_extraction.py -v`
-- [ ] **REQUIRED**: Test coverage must meet minimum 80% for cost_extraction.py module
-- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
-- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
-- [ ] **REQUIRED**: Document any test failures in fracas.md
-- [ ] **REQUIRED**: Phase 5 is NOT complete until all tests pass
-- [ ] **Status**: ⏳ Pending - Phase 5 cannot proceed to Phase 6 until validation complete
+- [x] **REQUIRED**: All unit tests for Phase 5 must pass before proceeding to Phase 6
+- [x] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_cost_extraction.py -v`
+- [x] **REQUIRED**: Test coverage must meet minimum 80% for cost_extraction.py module
+- [x] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [x] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [x] **REQUIRED**: Document any test failures in fracas.md
+- [x] **REQUIRED**: Phase 5 is NOT complete until all tests pass
+- [x] **Status**: ✅ Complete - All tests pass (22/22), 89% coverage, ready for Phase 6
 
 ---
 
-## Phase 6 — Hallucination Impact LLM-Node
+## Phase 6 — Risk Impact LLM-Node
 
 **Component**: `rag_eval/services/evaluator/risk_impact.py`
 
@@ -470,17 +472,20 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 - [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
 - [ ] Review `rag_eval/services/evaluator/base_evaluator.py` and `rag_eval/services/shared/llm_providers.py` to understand the base class pattern
 - [ ] Create `rag_eval/services/evaluator/risk_impact.py` module
-- [ ] Create `HallucinationImpactEvaluator` class inheriting from `BaseEvaluatorNode`
+- [ ] Create `RiskImpactEvaluator` class inheriting from `BaseEvaluatorNode`
 - [ ] Ensure package `__init__.py` files are properly configured with exports
 - [ ] Verify imports work correctly
 - [ ] Set up test fixtures for mock LLM responses
 - [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_risk_impact.py`
 
 ### Prompt Creation Tasks
-- [ ] Create prompt template for impact calculation
-- [ ] Prompt location: `backend/rag_eval/prompts/evaluation/risk_impact_prompt.md` (or store in database)
+- [ ] **REQUIRED**: Store prompt template in database (`public.prompts` table)
+  - [ ] `prompt_type='evaluation'`
+  - [ ] `name='risk_impact_evaluator'`
+  - [ ] `version='0.1'` (or appropriate version)
+  - [ ] `live=true` (for live version)
 - [ ] Prompt design:
-  - [ ] System instruction: "You are an expert evaluator calculating the real-world impact magnitude of hallucinations."
+  - [ ] System instruction: "You are an expert evaluator calculating the real-world impact magnitude of system-level deviations."
   - [ ] Input placeholders: `{model_answer_cost}`, `{actual_cost}`
   - [ ] Output format: JSON with `risk_impact` (float 0-3) and `reasoning` (str)
   - [ ] Explain impact scale:
@@ -488,12 +493,13 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
     - [ ] 1: Low impact
     - [ ] 2: Moderate impact
     - [ ] 3: High/severe impact
-  - [ ] Emphasize: consider mixed resource types (time, money, steps) and their relative importance
+  - [ ] **CRITICAL**: Emphasize considering mixed resource types (time, money, steps) and their relative importance
+  - [ ] **CRITICAL**: Evaluate impact of deviations regardless of origin (retrieval, augmentation, context ordering, prompting, model reasoning, or hallucination)
   - [ ] Include examples of impact calculations for different cost differences
 - [ ] Test prompt template with sample inputs
 
 ### Core Implementation
-- [ ] Implement `HallucinationImpactEvaluator` class inheriting from `BaseEvaluatorNode`:
+- [ ] Implement `RiskImpactEvaluator` class inheriting from `BaseEvaluatorNode`:
   - [ ] Override `_construct_prompt()` method to build impact calculation-specific prompt
   - [ ] Implement `calculate_risk_impact()` method using base class `_call_llm()` and `_parse_json_response()`
   - [ ] Format cost dictionaries for prompt (JSON representation)
@@ -503,7 +509,7 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
   - [ ] Handle LLM failures with proper error handling (inherited from base class)
   - [ ] Validate inputs are non-empty dictionaries
 - [ ] Implement module-level `calculate_risk_impact()` function for backward compatibility:
-  - [ ] Create `HallucinationImpactEvaluator` instance
+  - [ ] Create `RiskImpactEvaluator` instance
   - [ ] Call `calculate_risk_impact()` method
   - [ ] Return result
 
@@ -559,12 +565,12 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
     - [ ] `correctness_binary = classify_correctness(query, model_answer, reference_answer, config)`
   - [ ] Step 2: Call hallucination LLM-node (always)
     - [ ] `hallucination_binary = classify_hallucination(retrieved_context, model_answer, config)`
-  - [ ] Step 3: Conditional - if hallucination detected, call cost classification node
+  - [ ] Step 3: Conditional - if correctness is True, call cost classification node
     - [ ] `risk_direction = None`
-    - [ ] `if hallucination_binary: risk_direction = classify_risk_direction(model_answer, retrieved_context, config)`
-  - [ ] Step 4: Conditional - if hallucination detected, extract costs and calculate impact
+    - [ ] `if correctness_binary: risk_direction = classify_risk_direction(model_answer, retrieved_context, config)`
+  - [ ] Step 4: Conditional - if correctness is True, extract costs and calculate impact
     - [ ] `risk_impact = None`
-    - [ ] `if hallucination_binary:`
+    - [ ] `if correctness_binary:`
       - [ ] Extract costs from model answer: `model_answer_cost = extract_costs(model_answer, config)`
       - [ ] Extract costs from retrieved chunks: `chunks_text = " ".join([chunk.chunk_text for chunk in retrieved_context])`
       - [ ] `actual_cost = extract_costs(chunks_text, config)`
@@ -595,12 +601,12 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
   - [ ] Test deterministic script orchestration with mocked LLM calls
   - [ ] Test correctness LLM-node invocation (always called)
   - [ ] Test hallucination LLM-node invocation (always called)
-  - [ ] Test conditional branching: hallucination_binary true path (cost and impact nodes called)
-  - [ ] Test conditional branching: hallucination_binary false path (cost and impact nodes NOT called)
-  - [ ] Test invocation of cost classification node when hallucination detected
-  - [ ] Test invocation of cost extraction node when hallucination detected
-  - [ ] Test invocation of impact node when hallucination detected
-  - [ ] Test that cost/impact nodes are NOT called when no hallucination
+  - [ ] Test conditional branching: correctness_binary true path (cost and impact nodes called)
+  - [ ] Test conditional branching: correctness_binary false path (cost and impact nodes NOT called)
+  - [ ] Test invocation of cost classification node when correctness is True
+  - [ ] Test invocation of cost extraction node when correctness is True
+  - [ ] Test invocation of impact node when correctness is True
+  - [ ] Test that cost/impact nodes are NOT called when correctness is False
   - [ ] Test output schema validation (all required fields present including correctness fields)
   - [ ] Test reasoning trace construction from LLM node outputs
   - [ ] Test error handling when LLM calls fail
@@ -653,10 +659,10 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
     - [ ] Check if model answer claims are supported by retrieved chunks
     - [ ] If judge says `hallucination_binary: true`, verify model answer contains unsupported claims
     - [ ] If judge says `hallucination_binary: false`, verify all claims are supported
-  - [ ] Validation 3: Validate risk_direction (if costs available and hallucination detected)
+  - [ ] Validation 3: Validate risk_direction (if costs available and correctness is True)
     - [ ] Compare extracted costs vs actual costs to determine expected cost direction
     - [ ] Validate judge's `risk_direction` matches expected direction
-  - [ ] Validation 4: Validate risk_impact (if costs available and hallucination detected)
+  - [ ] Validation 4: Validate risk_impact (if costs available and correctness is True)
     - [ ] Calculate expected impact magnitude based on cost differences
     - [ ] Validate judge's `risk_impact` is within reasonable range of expected impact
   - [ ] Determine overall judge correctness (all validations pass)

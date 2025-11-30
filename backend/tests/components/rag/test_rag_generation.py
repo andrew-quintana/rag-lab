@@ -117,6 +117,40 @@ class TestLoadPromptTemplate:
         assert "evaluation:v1" in _prompt_cache
         assert mock_query_executor.execute_query.call_count == 2
     
+    def test_load_prompt_template_with_name(self):
+        """Test loading evaluation prompts with name parameter"""
+        mock_query_executor = Mock(spec=QueryExecutor)
+        mock_query_executor.execute_query.side_effect = [
+            [{"prompt_text": "Correctness evaluator template with {query} and {model_answer}"}],
+            [{"prompt_text": "Hallucination evaluator template with {retrieved_context} and {model_answer}"}],
+        ]
+        
+        result1 = load_prompt_template(
+            query_executor=mock_query_executor,
+            prompt_type="evaluation", 
+            name="correctness_evaluator",
+            live=True
+        )
+        result2 = load_prompt_template(
+            query_executor=mock_query_executor,
+            prompt_type="evaluation", 
+            name="hallucination_evaluator",
+            live=True
+        )
+        
+        assert result1 == "Correctness evaluator template with {query} and {model_answer}"
+        assert result2 == "Hallucination evaluator template with {retrieved_context} and {model_answer}"
+        # Cache key format: name queries with live flag
+        assert "evaluation:correctness_evaluator:live" in _prompt_cache
+        assert "evaluation:hallucination_evaluator:live" in _prompt_cache
+        
+        # Verify database queries include name (version not in query params for live queries)
+        assert mock_query_executor.execute_query.call_count == 2
+        call1_args = mock_query_executor.execute_query.call_args_list[0]
+        call2_args = mock_query_executor.execute_query.call_args_list[1]
+        assert call1_args[0][1] == ("evaluation", "correctness_evaluator")
+        assert call2_args[0][1] == ("evaluation", "hallucination_evaluator")
+    
     def test_load_prompt_template_backward_compatibility(self):
         """Test that default prompt_type is 'rag' for backward compatibility"""
         mock_query_executor = Mock(spec=QueryExecutor)

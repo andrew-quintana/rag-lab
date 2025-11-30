@@ -67,7 +67,7 @@ def evaluate_answer_with_judge(
 - Phase 3: Hallucination LLM-Node
 - Phase 4: Hallucination Cost LLM-Node
 - Phase 5: Cost Extraction LLM-Node
-- Phase 6: Hallucination Impact LLM-Node
+- Phase 6: Risk Impact LLM-Node
 
 ## Phase 7 Tasks
 
@@ -87,12 +87,12 @@ def evaluate_answer_with_judge(
    - `correctness_binary = classify_correctness(query, model_answer, reference_answer, config)`
 4. **Step 2**: Call hallucination LLM-node (always)
    - `hallucination_binary = classify_hallucination(retrieved_context, model_answer, config)`
-5. **Step 3**: Conditional - if hallucination detected, call cost classification node
+5. **Step 3**: Conditional - if correctness is True, call cost classification node
    - `risk_direction = None`
-   - `if hallucination_binary: risk_direction = classify_risk_direction(model_answer, retrieved_context, config)`
-6. **Step 4**: Conditional - if hallucination detected, extract costs and calculate impact
+   - `if correctness_binary: risk_direction = classify_risk_direction(model_answer, retrieved_context, config)`
+6. **Step 4**: Conditional - if correctness is True, extract costs and calculate impact
    - `risk_impact = None`
-   - `if hallucination_binary:`
+   - `if correctness_binary:`
      - Extract costs from model answer: `model_answer_cost = extract_costs(model_answer, config)`
      - Extract costs from retrieved chunks: `chunks_text = " ".join([chunk.chunk_text for chunk in retrieved_context])`
      - `actual_cost = extract_costs(chunks_text, config)`
@@ -120,12 +120,12 @@ def evaluate_answer_with_judge(
    - Test deterministic script orchestration with mocked LLM calls
    - Test correctness LLM-node invocation (always called)
    - Test hallucination LLM-node invocation (always called)
-   - Test conditional branching: hallucination_binary true path (cost and impact nodes called)
-   - Test conditional branching: hallucination_binary false path (cost and impact nodes NOT called)
-   - Test invocation of cost classification node when hallucination detected
-   - Test invocation of cost extraction node when hallucination detected
-   - Test invocation of impact node when hallucination detected
-   - Test that cost/impact nodes are NOT called when no hallucination
+   - Test conditional branching: correctness_binary true path (cost and impact nodes called)
+   - Test conditional branching: correctness_binary false path (cost and impact nodes NOT called)
+   - Test invocation of cost classification node when correctness is True
+   - Test invocation of cost extraction node when correctness is True
+   - Test invocation of impact node when correctness is True
+   - Test that cost/impact nodes are NOT called when correctness is False
    - Test output schema validation (all required fields present including correctness fields)
    - Test reasoning trace construction from LLM node outputs
    - Test error handling when LLM calls fail
@@ -154,7 +154,7 @@ def evaluate_answer_with_judge(
 
 ## Important Notes
 
-- **Conditional Branching**: Cost and impact nodes are ONLY called when `hallucination_binary: true`
+- **Conditional Branching**: Cost and impact nodes are ONLY called when `correctness_binary: true`
 - **Always Called**: Correctness and hallucination nodes are ALWAYS called
 - **Reasoning Trace**: Must combine reasoning from all invoked nodes
 - **Test Coverage**: Minimum 80% coverage required

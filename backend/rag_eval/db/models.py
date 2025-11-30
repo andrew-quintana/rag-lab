@@ -58,8 +58,10 @@ class EvalJudgment:
 @dataclass
 class PromptVersion:
     """Database record for prompt version"""
-    version_id: str
-    version_name: str
+    id: str  # UUID
+    version: str  # Semantic version (e.g., v0.1)
+    name: Optional[str]  # Name for evaluation prompts (renamed from evaluator_type)
+    live: bool  # Live/active version flag
     prompt_text: str
     created_at: datetime
     prompt_type: str = "rag"  # Default to "rag" for backward compatibility

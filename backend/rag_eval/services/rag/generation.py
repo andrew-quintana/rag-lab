@@ -7,70 +7,162 @@ import requests
 from rag_eval.core.interfaces import Query, RetrievalResult, ModelAnswer
 from rag_eval.core.exceptions import AzureServiceError, DatabaseError, ValidationError
 from rag_eval.core.logging import get_logger
+from rag_eval.core.config import Config
 from rag_eval.db.queries import QueryExecutor
 from rag_eval.utils.ids import generate_id
 
 logger = get_logger("services.rag.generation")
 
 # In-memory cache for prompt templates
-# Cache key format: "{prompt_type}:{version_name}"
+# Cache key format: "{prompt_type}:{evaluator_type}:{version_name}" (when evaluator_type provided)
+# or "{prompt_type}:{version_name}" (when evaluator_type is None)
 _prompt_cache: Dict[str, str] = {}
 
 
 def load_prompt_template(
-    version: str, 
-    query_executor: QueryExecutor,
-    prompt_type: str = "rag"
+    version: Optional[str] = None,
+    query_executor: Optional[QueryExecutor] = None,
+    prompt_type: str = "rag",
+    name: Optional[str] = None,
+    live: bool = True
 ) -> str:
     """
-    Load a prompt template from Supabase by version name and type.
+    Load a prompt template from Supabase by type, name, and optionally version or live flag.
     
     Templates are cached in memory to avoid repeated database queries.
     If a template is already cached, it is returned immediately without
     querying the database.
     
     Args:
-        version: Prompt version name (e.g., "v1", "v2")
+        version: Optional prompt version (e.g., "v0.1", "v0.2"). If None and live=True,
+                loads the live version for the prompt_type and name combination.
         query_executor: QueryExecutor instance for database operations
         prompt_type: Type of prompt (e.g., "rag", "evaluation", "summarization").
                     Defaults to "rag" for backward compatibility.
+        name: Optional name for evaluation prompts (e.g., "correctness_evaluator",
+              "hallucination_evaluator", "risk_direction_evaluator"). Only used when
+              prompt_type="evaluation". Defaults to None.
+        live: If True and version is None, loads the live version. If version is provided,
+              live is ignored. Defaults to True.
         
     Returns:
         Prompt template text from database
         
     Raises:
-        ValidationError: If prompt version is not found in database
+        ValidationError: If prompt is not found in database
         DatabaseError: If database query fails
+        ValueError: If both version and live are None, or query_executor is None
         
     Example:
         >>> query_executor = QueryExecutor(db_conn)
-        >>> template = load_prompt_template("v1", query_executor)
-        >>> print(template)
-        "You are a helpful assistant... {query} ... {context}"
+        >>> # Load live version
+        >>> template = load_prompt_template(query_executor=query_executor, live=True)
         
-        >>> # Load a different type of prompt
-        >>> eval_template = load_prompt_template("v1", query_executor, prompt_type="evaluation")
+        >>> # Load specific version
+        >>> template = load_prompt_template("0.1", query_executor)
+        
+        >>> # Load live evaluation prompt
+        >>> correctness_template = load_prompt_template(
+        ...     query_executor=query_executor, prompt_type="evaluation", 
+        ...     name="correctness_evaluator", live=True
+        ... )
     """
-    # Create cache key from prompt_type and version
-    cache_key = f"{prompt_type}:{version}"
+    if query_executor is None:
+        raise ValueError("query_executor is required")
+    
+    # Create cache key from prompt_type, name (if provided), and version/live
+    if name:
+        if version:
+            cache_key = f"{prompt_type}:{name}:{version}"
+        else:
+            cache_key = f"{prompt_type}:{name}:live" if live else f"{prompt_type}:{name}"
+    else:
+        if version:
+            cache_key = f"{prompt_type}:{version}"
+        else:
+            cache_key = f"{prompt_type}:live" if live else f"{prompt_type}"
     
     # Check cache first
     if cache_key in _prompt_cache:
-        logger.debug(f"Retrieved prompt template '{prompt_type}:{version}' from cache")
+        logger.debug(f"Retrieved prompt template '{cache_key}' from cache")
         return _prompt_cache[cache_key]
     
     # Query database for prompt template
-    query = """
-        SELECT prompt_text
-        FROM prompt_versions
-        WHERE prompt_type = %s AND version_name = %s
-    """
+    if name:
+        # Evaluation prompt query
+        if version:
+            # Specific version requested
+            query = """
+                SELECT prompt_text
+                FROM prompts
+                WHERE prompt_type = %s AND name = %s AND version = %s
+            """
+            params = (prompt_type, name, version)
+        elif live:
+            # Live version requested
+            query = """
+                SELECT prompt_text
+                FROM prompts
+                WHERE prompt_type = %s AND name = %s AND live = true
+                ORDER BY version DESC
+                LIMIT 1
+            """
+            params = (prompt_type, name)
+        else:
+            # Latest version (not necessarily live)
+            query = """
+                SELECT prompt_text
+                FROM prompts
+                WHERE prompt_type = %s AND name = %s
+                ORDER BY version DESC
+                LIMIT 1
+            """
+            params = (prompt_type, name)
+    else:
+        # Non-evaluation prompt query
+        if version:
+            # Specific version requested
+            query = """
+                SELECT prompt_text
+                FROM prompts
+                WHERE prompt_type = %s AND version = %s AND name IS NULL
+            """
+            params = (prompt_type, version)
+        elif live:
+            # Live version requested
+            query = """
+                SELECT prompt_text
+                FROM prompts
+                WHERE prompt_type = %s AND name IS NULL AND live = true
+                ORDER BY version DESC
+                LIMIT 1
+            """
+            params = (prompt_type,)
+        else:
+            # Latest version (not necessarily live)
+            query = """
+                SELECT prompt_text
+                FROM prompts
+                WHERE prompt_type = %s AND name IS NULL
+                ORDER BY version DESC
+                LIMIT 1
+            """
+            params = (prompt_type,)
     
     try:
-        results = query_executor.execute_query(query, (prompt_type, version))
+        results = query_executor.execute_query(query, params)
         
         if not results:
-            error_msg = f"Prompt version '{version}' of type '{prompt_type}' not found in database"
+            if name:
+                if version:
+                    error_msg = f"Prompt version '{version}' of type '{prompt_type}' with name '{name}' not found in database"
+                else:
+                    error_msg = f"Live prompt of type '{prompt_type}' with name '{name}' not found in database"
+            else:
+                if version:
+                    error_msg = f"Prompt version '{version}' of type '{prompt_type}' not found in database"
+                else:
+                    error_msg = f"Live prompt of type '{prompt_type}' not found in database"
             logger.error(error_msg)
             raise ValidationError(error_msg)
         
@@ -78,14 +170,14 @@ def load_prompt_template(
         
         # Cache the template
         _prompt_cache[cache_key] = prompt_text
-        logger.info(f"Loaded and cached prompt template '{prompt_type}:{version}' from database")
+        logger.info(f"Loaded and cached prompt template '{cache_key}' from database")
         
         return prompt_text
         
     except ValidationError:
         raise
     except Exception as e:
-        error_msg = f"Failed to load prompt template '{version}': {e}"
+        error_msg = f"Failed to load prompt template: {e}"
         logger.error(error_msg)
         raise DatabaseError(error_msg) from e
 
@@ -93,9 +185,10 @@ def load_prompt_template(
 def construct_prompt(
     query: Query,
     retrieved_chunks: List[RetrievalResult],
-    prompt_version: str,
-    query_executor: QueryExecutor,
-    prompt_type: str = "rag"
+    prompt_version: Optional[str] = None,
+    query_executor: Optional[QueryExecutor] = None,
+    prompt_type: str = "rag",
+    live: bool = True
 ) -> str:
     """
     Construct a complete prompt by loading a template and replacing placeholders.
@@ -134,7 +227,12 @@ def construct_prompt(
         raise ValueError("Query text cannot be empty")
     
     # Load prompt template
-    template = load_prompt_template(prompt_version, query_executor, prompt_type=prompt_type)
+    template = load_prompt_template(
+        version=prompt_version,
+        query_executor=query_executor,
+        prompt_type=prompt_type,
+        live=live
+    )
     
     # Validate template has required placeholders
     required_placeholders = ["{query}", "{context}"]
@@ -144,8 +242,9 @@ def construct_prompt(
     ]
     
     if missing_placeholders:
+        version_str = prompt_version or ("live" if live else "latest")
         error_msg = (
-            f"Prompt template '{prompt_type}:{prompt_version}' is missing required placeholders: "
+            f"Prompt template '{prompt_type}:{version_str}' is missing required placeholders: "
             f"{', '.join(missing_placeholders)}"
         )
         logger.error(error_msg)
@@ -284,9 +383,10 @@ def _call_generation_api(
 def generate_answer(
     query: Query,
     retrieved_chunks: List[RetrievalResult],
-    prompt_version: str,
-    config,
-    query_executor: Optional[QueryExecutor] = None
+    prompt_version: Optional[str] = None,
+    config: Optional[Config] = None,
+    query_executor: Optional[QueryExecutor] = None,
+    live: bool = True
 ) -> ModelAnswer:
     """
     Generate an answer using Azure AI Foundry LLM.
@@ -384,7 +484,7 @@ def generate_answer(
     
     try:
         # Step 1: Construct prompt using Phase 5 implementation
-        prompt = construct_prompt(query, retrieved_chunks, prompt_version, query_executor)
+        prompt = construct_prompt(query, retrieved_chunks, prompt_version, query_executor, live=live)
         logger.debug(f"Constructed prompt ({len(prompt)} characters)")
         
         # Step 2: Call Azure AI Foundry for generation
