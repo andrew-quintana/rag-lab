@@ -174,69 +174,143 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 
 **Component**: `rag_eval/services/evaluator/hallucination.py`
 
+**Status**: ✅ Complete (2024-12-19) - All tests pass, 86% coverage achieved
+
 ### Setup Tasks
-- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
-- [ ] Review `rag_eval/services/evaluator/base_evaluator.py` and `rag_eval/services/shared/llm_providers.py` to understand the base class pattern
-- [ ] Create `rag_eval/services/evaluator/hallucination.py` module
-- [ ] Create `HallucinationEvaluator` class inheriting from `BaseEvaluatorNode`
-- [ ] Ensure package `__init__.py` files are properly configured with exports
-- [ ] Verify imports work correctly
-- [ ] Set up test fixtures for mock LLM responses
-- [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_hallucination.py`
+- [x] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [x] Review `rag_eval/services/evaluator/base_evaluator.py` and `rag_eval/services/shared/llm_providers.py` to understand the base class pattern
+- [x] Create `rag_eval/services/evaluator/hallucination.py` module
+- [x] Create `HallucinationEvaluator` class inheriting from `BaseEvaluatorNode`
+- [x] Ensure package `__init__.py` files are properly configured with exports
+- [x] Verify imports work correctly
+- [x] Set up test fixtures for mock LLM responses
+- [x] Create test file: `backend/tests/components/evaluator/test_evaluator_hallucination.py`
 
 ### Prompt Creation Tasks
-- [ ] Create prompt template for hallucination classification
-- [ ] Prompt location: `backend/rag_eval/prompts/evaluation/hallucination_prompt.md` (or store in database)
-- [ ] Prompt design:
-  - [ ] System instruction: "You are an expert evaluator analyzing whether a model answer contains hallucinations based on grounding in retrieved evidence."
-  - [ ] Input placeholders: `{retrieved_context}`, `{model_answer}`
-  - [ ] Output format: JSON with `hallucination_binary` (bool) and `reasoning` (str)
-  - [ ] Emphasize: reference answer is NOT used in hallucination detection
-  - [ ] Include examples of hallucination detection (grounded vs. ungrounded claims)
-- [ ] Test prompt template with sample inputs
+- [x] Create prompt template for hallucination classification
+- [x] Prompt location: `backend/rag_eval/prompts/evaluation/hallucination_prompt.md` (or store in database)
+- [x] Prompt design:
+  - [x] System instruction: "You are an expert evaluator analyzing whether a model answer contains hallucinations based on grounding in retrieved evidence."
+  - [x] Input placeholders: `{retrieved_context}`, `{model_answer}`
+  - [x] Output format: JSON with `hallucination_binary` (bool) and `reasoning` (str)
+  - [x] Emphasize: reference answer is NOT used in hallucination detection
+  - [x] Include examples of hallucination detection (grounded vs. ungrounded claims)
+- [x] Test prompt template with sample inputs
 
 ### Core Implementation
-- [ ] Implement `HallucinationEvaluator` class inheriting from `BaseEvaluatorNode`:
-  - [ ] Override `_construct_prompt()` method to build hallucination-specific prompt
-  - [ ] Implement `classify_hallucination()` method using base class `_call_llm()` and `_parse_json_response()`
-  - [ ] Format retrieved context (concatenate chunk texts with chunk IDs)
-  - [ ] Validate `hallucination_binary` field in parsed JSON response
-  - [ ] Return boolean classification
-  - [ ] Handle LLM failures with proper error handling (inherited from base class)
-  - [ ] Validate inputs are non-empty
-- [ ] Implement module-level `classify_hallucination()` function for backward compatibility:
-  - [ ] Create `HallucinationEvaluator` instance
-  - [ ] Call `classify_hallucination()` method
-  - [ ] Return result
+- [x] Implement `HallucinationEvaluator` class inheriting from `BaseEvaluatorNode`:
+  - [x] Override `_construct_prompt()` method to build hallucination-specific prompt
+  - [x] Implement `classify_hallucination()` method using base class `_call_llm()` and `_parse_json_response()`
+  - [x] Format retrieved context (concatenate chunk texts with chunk IDs)
+  - [x] Validate `hallucination_binary` field in parsed JSON response
+  - [x] Return boolean classification
+  - [x] Handle LLM failures with proper error handling (inherited from base class)
+  - [x] Validate inputs are non-empty
+- [x] Implement module-level `classify_hallucination()` function for backward compatibility:
+  - [x] Create `HallucinationEvaluator` instance
+  - [x] Call `classify_hallucination()` method
+  - [x] Return result
 
 ### Testing Tasks
-- [ ] Unit tests for `classify_hallucination()`
-  - [ ] Test binary classification: hallucination detected (true)
-  - [ ] Test binary classification: no hallucination (false)
-  - [ ] Test grounding analysis: information not in retrieved evidence
-  - [ ] Test grounding analysis: information supported by evidence
-  - [ ] Test edge case: ambiguous grounding scenarios
-  - [ ] Test that reference answer is NOT used in hallucination detection
-  - [ ] Test edge case: zero retrieved chunks
-  - [ ] Test error handling for LLM failures
-- [ ] Connection test for Azure Foundry API
+- [x] Unit tests for `classify_hallucination()`
+  - [x] Test binary classification: hallucination detected (true)
+  - [x] Test binary classification: no hallucination (false)
+  - [x] Test grounding analysis: information not in retrieved evidence
+  - [x] Test grounding analysis: information supported by evidence
+  - [x] Test edge case: ambiguous grounding scenarios
+  - [x] Test that reference answer is NOT used in hallucination detection
+  - [x] Test edge case: zero retrieved chunks
+  - [x] Test error handling for LLM failures
+- [x] Connection test for Azure Foundry API
+- [x] **Document any failures** in fracas.md immediately when encountered
+
+### Documentation Tasks
+- [x] Add docstrings to all functions
+- [x] Document that reference answer is NOT used in hallucination detection
+- [x] Document prompt design and grounding analysis approach
+- [x] **Phase 3 Testing Summary** for handoff to Phase 4
+
+### Validation Requirements (Phase 3 Complete)
+- [x] **REQUIRED**: All unit tests for Phase 3 must pass before proceeding to Phase 4
+- [x] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_hallucination.py -v`
+- [x] **REQUIRED**: Test coverage must meet minimum 80% for hallucination.py module
+- [x] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [x] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [x] **REQUIRED**: Document any test failures in fracas.md
+- [x] **REQUIRED**: Phase 3 is NOT complete until all tests pass
+- [x] **Status**: ✅ Complete - All tests pass (27/27), 86% coverage, ready for Phase 4
+
+---
+
+## Phase 3.5 — LangGraph Infrastructure Setup
+
+**Component**: `rag_eval/services/evaluator/graph_base.py`, `rag_eval/services/evaluator/test_graph.py`
+
+### Setup Tasks
+- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [ ] Install LangGraph dependencies: `pip install -r requirements.txt`
+- [ ] Verify LangGraph and langchain-core can be imported
+- [ ] Review LangGraph documentation for StateGraph patterns
+
+### Dependency Management
+- [ ] Add `langgraph>=0.2.0` to `backend/requirements.txt`
+- [ ] Add `langchain-core>=0.3.0` to `backend/requirements.txt`
+- [ ] Verify dependencies install correctly
+
+### Graph Infrastructure
+- [ ] Create `rag_eval/services/evaluator/graph_base.py` module
+- [ ] Define `JudgeEvaluationState` TypedDict with all required fields
+- [ ] Implement `validate_initial_state()` function
+- [ ] Implement `get_config_from_state()` helper function
+- [ ] Add docstrings and type hints
+
+### Test Graph Implementation
+- [ ] Create `rag_eval/services/evaluator/test_graph.py` module
+- [ ] Implement `correctness_node()` pure function node
+- [ ] Implement `hallucination_node()` pure function node
+- [ ] Implement `should_continue()` conditional edge function
+- [ ] Implement `create_test_graph()` function
+- [ ] Implement `run_test_evaluation()` convenience function
+- [ ] Ensure nodes follow LangGraph best practices (pure functions, immutable state updates)
+
+### Package Exports
+- [ ] Update `backend/rag_eval/services/evaluator/__init__.py` to export:
+  - `JudgeEvaluationState`
+  - `validate_initial_state`
+  - `get_config_from_state`
+- [ ] Maintain existing exports (classify_correctness, classify_hallucination)
+
+### Testing Tasks
+- [ ] Create test file: `backend/tests/components/evaluator/test_graph_setup.py`
+- [ ] Test LangGraph import and basic functionality
+- [ ] Test state class creation and validation
+- [ ] Test state validation functions (success and error cases)
+- [ ] Test simple graph construction and execution
+- [ ] Test node functions (correctness_node, hallucination_node)
+- [ ] Test conditional edge routing
+- [ ] Test integration with existing evaluator classes (mocked)
+- [ ] Test error handling in graph execution
+- [ ] Test graph execution order
+- [ ] Test config handling in state
 - [ ] **Document any failures** in fracas.md immediately when encountered
 
 ### Documentation Tasks
-- [ ] Add docstrings to all functions
-- [ ] Document that reference answer is NOT used in hallucination detection
-- [ ] Document prompt design and grounding analysis approach
-- [ ] **Phase 3 Testing Summary** for handoff to Phase 4
+- [ ] Add docstrings to all functions and classes
+- [ ] Document LangGraph setup and state management patterns
+- [ ] Document node function pattern (pure functions wrapping evaluators)
+- [ ] Create `phase_3_5_decisions.md` documenting implementation decisions
+- [ ] Create `phase_3_5_testing.md` documenting test results and coverage
+- [ ] Create `phase_3_5_handoff.md` summarizing setup completion and Phase 7 requirements
 
-### Validation Requirements (Phase 3 Complete)
-- [ ] **REQUIRED**: All unit tests for Phase 3 must pass before proceeding to Phase 4
-- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_hallucination.py -v`
-- [ ] **REQUIRED**: Test coverage must meet minimum 80% for hallucination.py module
+### Validation Requirements (Phase 3.5 Complete)
+- [ ] **REQUIRED**: All unit tests for Phase 3.5 must pass before proceeding
+- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_graph_setup.py -v`
+- [ ] **REQUIRED**: Test coverage must meet minimum 80% for graph_base.py and test_graph.py modules
 - [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
 - [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
 - [ ] **REQUIRED**: Document any test failures in fracas.md
-- [ ] **REQUIRED**: Phase 3 is NOT complete until all tests pass
-- [ ] **Status**: ⏳ Pending - Phase 3 cannot proceed to Phase 4 until validation complete
+- [ ] **REQUIRED**: Phase 3.5 is NOT complete until all tests pass
+- [ ] **Status**: ⏳ Pending - Phase 3.5 cannot proceed to Phase 4 until validation complete
 
 ---
 
