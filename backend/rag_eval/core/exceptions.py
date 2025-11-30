@@ -25,3 +25,8 @@ class ValidationError(RAGEvalException):
     """Raised when input validation fails"""
     pass
 
+
+class EvaluationError(RAGEvalException):
+    """Raised when evaluation pipeline fails"""
+    pass
+
