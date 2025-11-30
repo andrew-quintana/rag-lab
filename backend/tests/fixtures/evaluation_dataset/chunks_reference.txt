@@ -1,0 +1,107 @@
+CHUNK REFERENCE FOR EVALUATION DATASET CREATION
+================================================================================
+
+chunk_0:
+--------------------------------------------------------------------------------
+HealthGuard Select PPO Plan
+Plan Overview
+HealthGuard Select PPO is a comprehensive health insurance plan offering flexible provider access with
+enhanced coverage for in-network care. The plan year runs from January 1 through December 31. Members
+receive a personalized ID card within 10 business days of enrollment confirmation. This plan is administered by
+HealthGuard Insurance Group and is available to eligible employees and their dependents.
+Cost Structure
+Individual Annual Deductible: $1,500
+Family Annual Deductible: $3,000
+Individual Out-of-Pocket Maximum: $6,000
+Family Out-of-Pocket Maximum: $12,000
+Deductibles apply to most medical services except preventive care. The out-of-pocket maximum includes
+deductibles, copays, and coinsurance but excludes premiums and non-covered services. Once the
+out-of-pocket maximum is reached, the plan covers 100% of eligible expenses for the remainder of the plan
+year.
+Medical Benefits
+Primary Care Physician Visits: $25 copay per visit, deductible 
+
+================================================================================
+
+chunk_1:
+--------------------------------------------------------------------------------
+nce the
+out-of-pocket maximum is reached, the plan covers 100% of eligible expenses for the remainder of the plan
+year.
+Medical Benefits
+Primary Care Physician Visits: $25 copay per visit, deductible waived
+Specialist Visits: $50 copay per visit, deductible waived
+Urgent Care: $75 copay per visit, deductible waived
+Emergency Room Services: $350 copay, waived if admitted; deductible applies after copay
+Inpatient Hospital Services: 20% coinsurance after deductible
+Outpatient Surgery: 20% coinsurance after deductible
+Diagnostic Lab and X-Ray: $0 copay for in-network preventive labs; 20% coinsurance after deductible for
+diagnostic tests
+All preventive care services recommended by the U.S. Preventive Services Task Force are covered at 100%
+when using in-network providers, with no deductible or copay required.
+Prescription Benefits
+Tier 1 (Generic): $10 copay for 30-day supply
+Tier 2 (Preferred Brand): $40 copay for 30-day supply
+Tier 3 (Non-Preferred Brand): $70 copay for 30-day supply
+Tier
+
+================================================================================
+
+chunk_2:
+--------------------------------------------------------------------------------
+copay required.
+Prescription Benefits
+Tier 1 (Generic): $10 copay for 30-day supply
+Tier 2 (Preferred Brand): $40 copay for 30-day supply
+Tier 3 (Non-Preferred Brand): $70 copay for 30-day supply
+Tier 4 (Specialty): 25% coinsurance up to $250 maximum per prescription
+Mail-order prescriptions for 90-day supplies receive a 20% discount on copays. Prior authorization is required
+for all Tier 4 specialty medications and must be obtained before filling the prescription. Prescriptions filled at
+out-of-network pharmacies are subject to the deductible and 40% coinsurance.
+
+
+Eligibility & Enrollment
+Employees are eligible for coverage on the first day of the month following 30 days of continuous employment.
+Enrollment must be completed within 31 days of becoming eligible. Dependent coverage extends to spouses
+and unmarried children under age 26. The annual open enrollment period runs from November 1 through
+November 30, with coverage changes effective January 1.
+Qualifying life events—including
+
+================================================================================
+
+chunk_3:
+--------------------------------------------------------------------------------
+ to spouses
+and unmarried children under age 26. The annual open enrollment period runs from November 1 through
+November 30, with coverage changes effective January 1.
+Qualifying life events—including marriage, birth, adoption, or loss of other coverage—trigger a special
+enrollment period of 60 days from the event date.
+Provider Network
+The HealthGuard Select network includes over 42,000 physicians and 850 hospitals nationwide. In-network
+care is subject to the cost-sharing outlined above. Out-of-network care is subject to a separate $3,000 individual
+deductible, $6,000 family deductible, and 40% coinsurance with no out-of-pocket maximum protection.
+Members do not need referrals to see specialists within the network. To verify provider participation, use the
+online directory at healthguard.com/findcare or call Member Services.
+Claims & Support Information
+Claims for in-network services are filed directly by providers. Members must submit out-of-network claims within
+90 days of service 
+
+================================================================================
+
+chunk_4:
+--------------------------------------------------------------------------------
+.com/findcare or call Member Services.
+Claims & Support Information
+Claims for in-network services are filed directly by providers. Members must submit out-of-network claims within
+90 days of service using Form HG-2024. Claims appeals must be filed within 180 days of the initial claim
+decision.
+Member Services Phone: 1-800-555-4793
+Hours: Monday–Friday, 7:00 AM to 8:00 PM EST
+Pharmacy Support: 1-800-555-4794
+Online Portal: my.healthguard.com
+Members may request an expedited appeal review for urgent medical situations, which will be resolved within
+72 hours of receipt.
+
+
+================================================================================
+

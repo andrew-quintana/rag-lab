@@ -1,0 +1,38 @@
+[
+  {
+    "example_id": "val_001",
+    "question": "What is the copay for specialist visits?",
+    "reference_answer": "The copay for specialist visits is $50 per visit, and the deductible is waived.",
+    "ground_truth_chunk_ids": ["chunk_1"],
+    "beir_failure_scale_factor": 0.3
+  },
+  {
+    "example_id": "val_002",
+    "question": "What is the individual annual deductible?",
+    "reference_answer": "The individual annual deductible is $1,500. Deductibles apply to most medical services except preventive care.",
+    "ground_truth_chunk_ids": ["chunk_0"],
+    "beir_failure_scale_factor": 0.2
+  },
+  {
+    "example_id": "val_003",
+    "question": "What is the individual out-of-pocket maximum?",
+    "reference_answer": "The individual out-of-pocket maximum is $6,000. This includes deductibles, copays, and coinsurance but excludes premiums and non-covered services. Once reached, the plan covers 100% of eligible expenses for the remainder of the plan year.",
+    "ground_truth_chunk_ids": ["chunk_0"],
+    "beir_failure_scale_factor": 0.4
+  },
+  {
+    "example_id": "val_004",
+    "question": "When are employees eligible for coverage?",
+    "reference_answer": "Employees are eligible for coverage on the first day of the month following 30 days of continuous employment. Enrollment must be completed within 31 days of becoming eligible.",
+    "ground_truth_chunk_ids": ["chunk_3"],
+    "beir_failure_scale_factor": 0.3
+  },
+  {
+    "example_id": "val_005",
+    "question": "What is the coinsurance rate for inpatient hospital services?",
+    "reference_answer": "Inpatient hospital services have a 20% coinsurance rate after the deductible is met.",
+    "ground_truth_chunk_ids": ["chunk_1"],
+    "beir_failure_scale_factor": 0.3
+  }
+]
+
