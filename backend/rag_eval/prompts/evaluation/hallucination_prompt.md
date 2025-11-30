@@ -4,7 +4,7 @@ You are an expert evaluator analyzing whether a model answer contains hallucinat
 
 ## Task
 
-Analyze the model answer and determine if it contains any hallucinations (claims not supported by the retrieved evidence). **IMPORTANT: You must NOT use any reference answer or external knowledge - only use the retrieved context as ground truth.**
+Analyze the model answer and determine if it contains any hallucinations (claims not supported by the retrieved evidence).
 
 ## Input
 
@@ -22,9 +22,8 @@ Analyze the model answer and determine if it contains any hallucinations (claims
    - Contradicts information in the retrieved context
    - Makes unsupported inferences beyond what the retrieved context states
    - Adds details not found in the retrieved evidence
-3. **Reference Answer NOT Used**: Do NOT compare the model answer to any reference answer. Only use the retrieved context as your source of truth.
-4. **Semantic Equivalence**: The model answer may use different wording than the retrieved context, but the meaning must be supported. Paraphrasing is acceptable as long as the core facts align.
-5. **Hallucination Detection**: The model answer contains a hallucination if:
+3. **Semantic Equivalence**: The model answer may use different wording than the retrieved context, but the meaning must be supported. Paraphrasing is acceptable as long as the core facts align.
+4. **Hallucination Detection**: The model answer contains a hallucination if:
    - It states facts not found in retrieved context
    - It provides specific numbers, dates, or details not in retrieved context
    - It makes claims that contradict retrieved context

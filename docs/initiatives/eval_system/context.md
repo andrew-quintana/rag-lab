@@ -55,18 +55,19 @@ This context will be fed into a documentation agent to generate PRD, RFC, TODO l
      - This node performs strict *grounding* analysis: does the model answer contain any information not supported by the retrieved evidence? (Note: reference answer is NOT used)
      - Returns: `hallucination_binary` (true/false)
   
-  3. **Cost Type Classification Step** (if `hallucination_binary: true`):  
-     - The deterministic script calls a dedicated **hallucination_cost LLM-node** (GPT-4o-mini, Azure Foundry) to classify the type of cost impact.
+  3. **Risk Direction Classification Step** (if `hallucination_binary: true`):  
+     - The deterministic script calls a dedicated **risk_direction LLM-node** (GPT-4o-mini, Azure Foundry) to classify the risk direction of system-level deviations.
+     - This node evaluates the entire RAG pipeline as a black box, analyzing deviations regardless of origin (retrieval misses, incomplete context, ambiguous phrasing, context ordering issues, prompting biases, model reasoning errors, or hallucinations).
      - This node analyzes:
        - Model answer vs retrieved chunks (for ground-truth context)
-       - Whether the hallucination overestimates or underestimates costs relative to the retrieved chunks (Note: reference answer is NOT used)
-     - Returns: `hallucination_cost` with values:
-       - **-1 = Opportunity Cost**: The user may have been dissuaded from seeking care because the model answer overestimated the cost (in time/money/steps), causing them to miss the opportunity to get care.
-       - **+1 = Resource Cost**: The user may have been persuaded to pursue care because the model answer underestimated the cost (in time/money/steps), and it ended up costing them those resources.
-     - This classification is made for all hallucinations (both quantitative and non-quantitative).
+       - Whether the deviation overestimates or underestimates costs relative to the retrieved chunks (Note: reference answer is NOT used)
+     - Returns: `risk_direction` with values:
+       - **-1 = Care Avoidance Risk**: The user may have been dissuaded from seeking care because the model answer overestimated the cost (in time/money/steps), causing them to miss the opportunity to get care.
+       - **+1 = Unexpected Cost Risk**: The user may have been persuaded to pursue care because the model answer underestimated the cost (in time/money/steps), and it ended up costing them those resources.
+     - This classification is made for all deviations (both quantitative and non-quantitative).
   
-  4. **Impact Calculation Step** (if `hallucination_binary: true`):  
-     - The deterministic script calls a dedicated **hallucination_impact LLM-node** (GPT-4o-mini, Azure Foundry) to determine the magnitude of impact.
+  4. **Risk Impact Calculation Step** (if `hallucination_binary: true`):  
+     - The deterministic script calls a dedicated **risk_impact LLM-node** (GPT-4o-mini, Azure Foundry) to determine the magnitude of system-level impact.
      - This node handles mixed resource types (time/money/steps) and requires LLM reasoning to assess relative impact across these different dimensions.
      - Inputs:
        - Cost in time/money/steps from the model answer
@@ -74,19 +75,19 @@ This context will be fed into a documentation agent to generate PRD, RFC, TODO l
      - Process:
        - Analyzes the difference between model answer cost and actual cost from chunks
        - Considers the mixed resource types (time, money, steps) and their relative importance
-       - Computes **hallucination_impact** (range [0, 3]) representing the magnitude of real-world consequence
+       - Computes **risk_impact** (range [0, 3]) representing the magnitude of real-world consequence
      - Output:
-       - **hallucination_impact**: Numeric scaling factor [0, 3]
-     - hallucination_impact serves as a scaling factor that, combined with hallucination_cost (-1 or +1), determines total real-world consequence.
+       - **risk_impact**: Numeric scaling factor [0, 3]
+     - risk_impact serves as a scaling factor that, combined with risk_direction (-1 or +1), determines total real-world consequence.
 
 - Output schema:
   ```json
   {
     "correctness_binary": true | false,
     "hallucination_binary": true | false,
-    "hallucination_cost": -1 | 1,         // -1 = opportunity cost (overestimated, dissuaded from care), +1 = resource cost (underestimated, persuaded to care)
-    "hallucination_impact": number,       // [0, 3], from hallucination_impact LLM-node
-    "reasoning": string,                  // Reasoning trace constructed from LLM node outputs, including correctness classification, cost type classification (via hallucination_cost LLM-node) and impact calculation (via hallucination_impact LLM-node) steps
+    "risk_direction": -1 | 1,         // -1 = care avoidance risk (overestimated, dissuaded from care), +1 = unexpected cost risk (underestimated, persuaded to care)
+    "risk_impact": number,       // [0, 3], from risk_impact LLM-node
+    "reasoning": string,                  // Reasoning trace constructed from LLM node outputs, including correctness classification, risk direction classification (via risk_direction LLM-node) and impact calculation (via risk_impact LLM-node) steps
     "failure_mode": string                // Optional: e.g., "cost misstatement", "omitted deductible", "incorrect coverage rule"
   }
   ```
@@ -105,24 +106,25 @@ This context will be fed into a documentation agent to generate PRD, RFC, TODO l
   - Output:
     - **correctness_binary**: true | false
 
-### 4.3 Hallucination Cost Classification and Impact Calculation
+### 4.3 System-Level Risk Direction and Impact Calculation
 
-- **hallucination_cost LLM-node** (GPT-4o-mini, Azure Foundry):
+- **risk_direction LLM-node** (GPT-4o-mini, Azure Foundry):
   - **Invoked by deterministic script orchestrator** when `hallucination_binary: true`.
+  - **Purpose**: Evaluates the entire RAG pipeline as a black box, capturing deviations regardless of origin (retrieval, augmentation, context ordering, prompting, model reasoning, or hallucination).
   - Inputs:
     - Model answer
     - Retrieved chunks (for ground-truth context)
     - Note: Reference answer is NOT used
   - Process:
-    - Analyzes whether the hallucination overestimates or underestimates costs (time/money/steps) relative to the retrieved chunks (ground truth)
-    - Determines the type of cost impact based on the direction of the misstatement
+    - Analyzes whether the system-level deviation overestimates or underestimates costs (time/money/steps) relative to the retrieved chunks (ground truth)
+    - Determines the risk direction based on the direction of the deviation
   - Output:
-    - **hallucination_cost**: Classification value
-      - **-1 = Opportunity Cost**: Model answer overestimated cost (time/money/steps), potentially dissuading user from seeking care and causing them to miss the opportunity.
-      - **+1 = Resource Cost**: Model answer underestimated cost (time/money/steps), potentially persuading user to pursue care that ended up costing them those resources.
-  - This classification is made for all hallucinations (both quantitative and non-quantitative).
+    - **risk_direction**: Classification value
+      - **-1 = Care Avoidance Risk**: Model answer overestimated cost (time/money/steps), potentially dissuading user from seeking care and causing them to miss the opportunity.
+      - **+1 = Unexpected Cost Risk**: Model answer underestimated cost (time/money/steps), potentially persuading user to pursue care that ended up costing them those resources.
+  - This classification is made for all deviations (both quantitative and non-quantitative).
 
-- **hallucination_impact LLM-node** (GPT-4o-mini, Azure Foundry):
+- **risk_impact LLM-node** (GPT-4o-mini, Azure Foundry):
   - **Invoked by deterministic script orchestrator** when `hallucination_binary: true`.
   - **Rationale**: Uses an LLM node (rather than a deterministic function) because it must handle mixed resource types (time, money, steps) and assess their relative importance and impact, which requires nuanced reasoning.
   - Inputs:
@@ -132,10 +134,10 @@ This context will be fed into a documentation agent to generate PRD, RFC, TODO l
     - Analyzes the difference between model answer cost and actual cost from chunks
     - Considers the mixed resource types (time, money, steps) and their relative importance
     - Assesses the magnitude of real-world consequence across these different dimensions
-    - Computes **hallucination_impact** (range [0, 3]) representing the scaling factor for impact
+    - Computes **risk_impact** (range [0, 3]) representing the scaling factor for impact
   - Output:
-    - **hallucination_impact**: Numeric scaling factor [0, 3] representing the magnitude of real-world consequence
-  - This node is used for all hallucinations (both quantitative and non-quantitative), as it can handle both numeric and qualitative assessments of impact.
+    - **risk_impact**: Numeric scaling factor [0, 3] representing the magnitude of real-world consequence
+  - This node is used for all deviations (both quantitative and non-quantitative), as it can handle both numeric and qualitative assessments of impact.
 
 - Failure modes remain tied to key insurance dimensions:
   - Copay  
@@ -153,8 +155,8 @@ This context will be fed into a documentation agent to generate PRD, RFC, TODO l
   - Use rule-based validation logic to check:
     - correctness_binary: Compare model answer to reference answer
     - hallucination_binary: Check if model answer is grounded in retrieved chunks
-    - hallucination_cost: Validate cost direction against ground truth
-    - hallucination_impact: Validate impact magnitude against ground truth
+    - risk_direction: Validate risk direction against ground truth
+    - risk_impact: Validate impact magnitude against ground truth
   - Return:
     - judge_correct / judge_incorrect (binary)
     - Optional, concise explanation (deterministic, not LLM-generated)
@@ -197,8 +199,8 @@ This context will be fed into a documentation agent to generate PRD, RFC, TODO l
   - RAG answer generator
   - judge (deterministic script orchestrator)
   - hallucination LLM-node (binary classification)
-  - hallucination_cost LLM-node (cost type classification: -1 or +1)
-  - hallucination_impact LLM-node (impact magnitude calculation: 0-3)
+  - risk_direction LLM-node (risk direction classification: -1 or +1)
+  - risk_impact LLM-node (impact magnitude calculation: 0-3)
   - meta-judge
   - BEIR evaluator
 
@@ -224,8 +226,8 @@ This context will be fed into a documentation agent to generate PRD, RFC, TODO l
 ### Phase 3 — LLM-as-Judge Implementation
 - Implement deterministic Python script orchestrator for LLM-as-Judge (sequential calls with conditional branching).
 - Implement separate hallucination LLM-node for binary classification.
-- Implement separate hallucination_cost LLM-node (GPT-4o-mini) for cost type classification (-1 for opportunity cost, +1 for resource cost).
-- Implement separate hallucination_impact LLM-node (GPT-4o-mini) for impact magnitude calculation (0-3), handling mixed resource types (time/money/steps).
+- Implement separate risk_direction LLM-node (GPT-4o-mini) for risk direction classification (-1 for care avoidance risk, +1 for unexpected cost risk).
+- Implement separate risk_impact LLM-node (GPT-4o-mini) for impact magnitude calculation (0-3), handling mixed resource types (time/money/steps).
 - Implement failure mode tagging.
 
 ### Phase 4 — Meta-Evaluator
@@ -243,7 +245,44 @@ This context will be fed into a documentation agent to generate PRD, RFC, TODO l
 
 ---
 
-## 7. Key Edge Cases & Open Questions
+## 7. System-Level Risk Metrics: From Hallucination Detection to Full-System Deviation Analysis
+
+### 7.1 Rationale for System-Level Risk Metrics
+
+The evaluation framework has been refactored from hallucination-specific metrics to system-level risk metrics. This shift recognizes that hallucinations are only one form of error in RAG systems. Other failure modes include:
+
+- **Retrieval misses**: Relevant context not retrieved
+- **Incomplete context**: Partial information retrieved, missing critical details
+- **Context ordering issues**: Important information buried or deprioritized
+- **Ambiguous phrasing**: Unclear benefit descriptions in prompts or source material
+- **Prompting biases**: Biases introduced through prompt engineering
+- **Model reasoning errors**: Incorrect inferences even with correct context
+
+By measuring only hallucinations, we hide these other failure modes and produce incomplete safety assessments. System-level risk metrics evaluate the entire RAG pipeline as a black box, capturing deviations regardless of their origin.
+
+### 7.2 Benefits of System-Level Risk Metrics
+
+1. **Comprehensive Evaluation**: Evaluates the entire RAG pipeline end-to-end, not just model generation
+2. **Direction and Severity**: Captures both risk direction (over-claiming vs under-claiming benefits) and severity (harm potential)
+3. **Healthcare Alignment**: Produces measurements that align with healthcare safety, trust, and explainability requirements
+4. **Robust Bias Analysis**: Supports more robust bias analyses across categories and retrieval methods
+5. **Black Box Analysis**: Treats the RAG system as a black box, focusing on outcomes rather than internal mechanisms
+
+### 7.3 Risk Metrics
+
+- **risk_direction** (INT: -1 or +1): Classifies the direction of system-level deviations
+  - **-1 (Care Avoidance Risk)**: Model overestimated cost, dissuading user from seeking care
+  - **+1 (Unexpected Cost Risk)**: Model underestimated cost, persuading user to pursue care
+  
+- **risk_impact** (FLOAT: 0-3): Measures the magnitude of real-world consequence
+  - **0**: Minimal/no impact
+  - **1**: Low impact
+  - **2**: Moderate impact
+  - **3**: High/severe impact
+
+These metrics apply to any deviation from the gold answer, regardless of where it originates in the RAG pipeline.
+
+## 9. Key Edge Cases & Open Questions
 
 ### Edge Cases
 - Retrieval returns zero relevant passages.

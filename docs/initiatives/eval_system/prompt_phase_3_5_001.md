@@ -74,8 +74,8 @@ This prompt guides the implementation of **Phase 3.5: LangGraph Infrastructure S
    - `reference_answer: str` (required)
    - `correctness_binary: Optional[bool]`
    - `hallucination_binary: Optional[bool]`
-   - `hallucination_cost: Optional[int]`
-   - `hallucination_impact: Optional[float]`
+   - `risk_direction: Optional[int]`
+   - `risk_impact: Optional[float]`
    - `reasoning: List[str]`
    - `config: Optional[Config]`
 3. Implement `validate_initial_state(state: JudgeEvaluationState) -> None`:
