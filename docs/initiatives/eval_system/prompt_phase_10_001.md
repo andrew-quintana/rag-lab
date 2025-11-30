@@ -68,7 +68,7 @@ def evaluate_rag_system(
 ### Dependencies
 - Phase 1: Evaluation Dataset
 - Phase 7: LLM-as-Judge Orchestrator
-- Phase 8: Meta-Evaluator
+- Phase 8: Meta-Evaluator (including `calculate_judge_metrics()` for performance metrics)
 - Phase 9: BEIR Metrics Evaluator
 
 ## Phase 10 Tasks
@@ -97,6 +97,7 @@ def evaluate_rag_system(
    - **Step 4**: Meta-evaluate judge verdict
      - Extract costs if needed (for meta-evaluation)
      - `meta_eval_output = meta_evaluate_judge(judge_output, retrieved_chunks, model_answer.text, example.reference_answer, extracted_costs, actual_costs)`
+     - Note: `meta_evaluate_judge()` now includes ground truth values in `MetaEvaluationResult` for metrics calculation
    - **Step 5**: Compute BEIR metrics
      - `beir_metrics = compute_beir_metrics(retrieved_chunks, example.ground_truth_chunk_ids, k=5)`
    - **Step 6**: Assemble EvaluationResult
@@ -104,6 +105,10 @@ def evaluate_rag_system(
    - Handle errors gracefully with proper logging
    - Measure and log latency metrics
 5. Return list of EvaluationResult objects
+6. **Optional**: Calculate judge performance metrics from batch results
+   - After pipeline execution, collect all (judge_output, meta_eval_output) pairs
+   - Call `calculate_judge_metrics()` to compute precision, recall, F1 for all judge metrics
+   - Return or log `JudgePerformanceMetrics` for analysis
 6. Implement `_evaluate_single_example()` helper function
    - Extract single example evaluation logic
    - Handle errors for individual examples (don't fail entire pipeline)
@@ -118,8 +123,17 @@ def evaluate_rag_system(
    - Test edge case: RAG retriever failure
    - Test edge case: RAG generator failure
    - Test edge case: Judge evaluation failure
-2. Integration tests with real RAG components (optional, requires full system setup)
-3. **Document any failures** in fracas.md immediately when encountered
+2. Integration tests for judge performance metrics:
+   - Test `calculate_judge_metrics()` integration with pipeline results
+   - Test metrics calculation from batch of EvaluationResult objects
+   - Verify correctness metrics (precision, recall, F1) are calculated correctly
+   - Verify hallucination metrics (precision, recall, F1) are calculated correctly
+   - Verify risk_direction metrics (if cost data available) are calculated correctly
+   - Verify risk_impact metrics (if cost data available) are calculated correctly
+   - Test metrics calculation with mixed scenarios (some with costs, some without)
+   - Test metrics calculation handles missing optional metrics gracefully
+3. Integration tests with real RAG components (optional, requires full system setup)
+4. **Document any failures** in fracas.md immediately when encountered
 
 ### Documentation
 1. Add docstrings to all functions
@@ -132,8 +146,10 @@ def evaluate_rag_system(
 - [ ] `evaluate_rag_system()` function implemented matching RFC001 interface
 - [ ] Full pipeline executes: Retrieval → RAG generation → Judge → Meta-Eval → Metrics
 - [ ] All components properly integrated
+- [ ] Judge performance metrics integration tested (calculate_judge_metrics with pipeline results)
 - [ ] All unit tests pass with 80%+ coverage
 - [ ] Tests verify full pipeline execution
+- [ ] Tests verify judge metrics calculation from batch results
 - [ ] All error handling implemented
 - [ ] All Phase 10 tasks in TODO001.md checked off
 - [ ] Phase 10 handoff document created

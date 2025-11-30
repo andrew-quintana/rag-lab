@@ -10,6 +10,10 @@ from rag_eval.services.evaluator.risk_direction import classify_risk_direction
 from rag_eval.services.evaluator.cost_extraction import extract_costs
 from rag_eval.services.evaluator.risk_impact import calculate_risk_impact
 from rag_eval.services.evaluator.judge import evaluate_answer_with_judge
+from rag_eval.services.evaluator.meta_eval import (
+    meta_evaluate_judge,
+    calculate_judge_metrics
+)
 from rag_eval.services.evaluator.graph_base import (
     JudgeEvaluationState,
     validate_initial_state,
@@ -25,6 +29,8 @@ __all__ = [
     "extract_costs",
     "calculate_risk_impact",
     "evaluate_answer_with_judge",
+    "meta_evaluate_judge",
+    "calculate_judge_metrics",
     "JudgeEvaluationState",
     "validate_initial_state",
     "get_config_from_state",
