@@ -46,53 +46,53 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 
 **Component**: `backend/tests/fixtures/evaluation_dataset/validation_dataset.json`
 
-**Status**: Development task - manually create 5 validation samples (not an automated function)
+**Status**: ✅ Complete (2024-12-19) - 5 validation samples created and validated
 
 ### Setup Tasks
-- [ ] Verify `healthguard_select_ppo_plan.pdf` exists in `backend/tests/fixtures/sample_documents/`
-- [ ] Ensure document has been indexed via upload pipeline (to identify actual chunk IDs)
-- [ ] Create directory structure: `backend/tests/fixtures/evaluation_dataset/`
-- [ ] Review document content to identify suitable QA pair topics
+- [x] Verify `healthguard_select_ppo_plan.pdf` exists in `backend/tests/fixtures/sample_documents/`
+- [x] Ensure document has been indexed via upload pipeline (to identify actual chunk IDs)
+- [x] Create directory structure: `backend/tests/fixtures/evaluation_dataset/`
+- [x] Review document content to identify suitable QA pair topics
 
 ### Core Implementation
-- [ ] Create 5 validation samples manually (not via automated generation)
-- [ ] For each sample, include:
-  - [ ] `example_id`: Unique identifier (e.g., "val_001")
-  - [ ] `question`: Question text covering different types (cost, coverage, eligibility, out-of-pocket max)
-  - [ ] `reference_answer`: Gold reference answer
-  - [ ] `ground_truth_chunk_ids`: List of actual chunk IDs from indexed document
-  - [ ] `beir_failure_scale_factor`: Float in range [0.0, 1.0] representing retrieval challenge/severity
-- [ ] Ensure samples cover:
-  - [ ] Cost-related questions (copay, deductible, coinsurance)
-  - [ ] Coverage questions
-  - [ ] Eligibility questions
-  - [ ] Out-of-pocket maximum questions
-- [ ] Store as single JSON file: `validation_dataset.json`
-- [ ] Validate JSON format matches `EvaluationExample` dataclass structure
+- [x] Create 5 validation samples manually (not via automated generation)
+- [x] For each sample, include:
+  - [x] `example_id`: Unique identifier (e.g., "val_001")
+  - [x] `question`: Question text covering different types (cost, coverage, eligibility, out-of-pocket max)
+  - [x] `reference_answer`: Gold reference answer
+  - [x] `ground_truth_chunk_ids`: List of actual chunk IDs from indexed document
+  - [x] `beir_failure_scale_factor`: Float in range [0.0, 1.0] representing retrieval challenge/severity
+- [x] Ensure samples cover:
+  - [x] Cost-related questions (copay, deductible, coinsurance)
+  - [x] Coverage questions
+  - [x] Eligibility questions
+  - [x] Out-of-pocket maximum questions
+- [x] Store as single JSON file: `validation_dataset.json`
+- [x] Validate JSON format matches `EvaluationExample` dataclass structure
 
 ### Testing Tasks
-- [ ] Create test file: `backend/tests/components/evaluator/test_evaluation_dataset.py`
-- [ ] Validate that `validation_dataset.json` exists and is properly formatted
-- [ ] Validate that all 5 samples have required fields
-- [ ] Validate that `ground_truth_chunk_ids` reference actual chunks from indexed document
-- [ ] Validate that `beir_failure_scale_factor` is in range [0.0, 1.0]
-- [ ] Validate that questions cover different types (cost, coverage, eligibility, etc.)
-- [ ] **Document any failures** in fracas.md immediately when encountered
+- [x] Create test file: `backend/tests/components/evaluator/test_evaluation_dataset.py`
+- [x] Validate that `validation_dataset.json` exists and is properly formatted
+- [x] Validate that all 5 samples have required fields
+- [x] Validate that `ground_truth_chunk_ids` reference actual chunks from indexed document
+- [x] Validate that `beir_failure_scale_factor` is in range [0.0, 1.0]
+- [x] Validate that questions cover different types (cost, coverage, eligibility, etc.)
+- [x] **Document any failures** in fracas.md immediately when encountered
 
 ### Documentation Tasks
-- [ ] Document dataset structure and format
-- [ ] Document how to identify ground-truth chunk IDs from indexed document
-- [ ] Document `beir_failure_scale_factor` calculation methodology
-- [ ] **Phase 1 Testing Summary** for handoff to Phase 2
+- [x] Document dataset structure and format
+- [x] Document how to identify ground-truth chunk IDs from indexed document
+- [x] Document `beir_failure_scale_factor` calculation methodology
+- [x] **Phase 1 Testing Summary** for handoff to Phase 2
 
 ### Validation Requirements (Phase 1 Complete)
-- [ ] **REQUIRED**: All unit tests for Phase 1 must pass before proceeding to Phase 2
-- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/test_evaluation_dataset.py -v`
-- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
-- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
-- [ ] **REQUIRED**: Document any test failures in fracas.md
-- [ ] **REQUIRED**: Phase 1 is NOT complete until all tests pass
-- [ ] **Status**: ⏳ Pending - Phase 1 cannot proceed to Phase 2 until validation complete
+- [x] **REQUIRED**: All unit tests for Phase 1 must pass before proceeding to Phase 2
+- [x] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluation_dataset.py -v`
+- [x] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [x] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [x] **REQUIRED**: Document any test failures in fracas.md
+- [x] **REQUIRED**: Phase 1 is NOT complete until all tests pass
+- [x] **Status**: ✅ Complete - All tests pass (13/13), ready for Phase 2
 
 ---
 
