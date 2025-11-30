@@ -4,11 +4,14 @@
 
 This prompt guides the implementation of **Phase 9: BEIR Metrics Evaluator** for the RAG Evaluation MVP system. This phase implements the BEIR-style retrieval metrics computation (recall@k, precision@k, nDCG@k) as pure Python functions.
 
+**BEIR Reference**: This implementation follows the [BEIR benchmark](https://github.com/beir-cellar/beir) framework for information retrieval evaluation. BEIR is a heterogeneous benchmark containing diverse IR tasks and provides a common framework for evaluation of NLP-based retrieval models.
+
 **Related Documents:**
 - @docs/initiatives/eval_system/PRD001.md - Product requirements (FR7: BEIR-Style Retrieval Metrics)
 - @docs/initiatives/eval_system/RFC001.md - Technical design (Phase 8: BEIR Metrics Evaluator, Interface Contracts)
 - @docs/initiatives/eval_system/TODO001.md - Implementation tasks (Phase 9 section - check off tasks as completed)
 - @docs/initiatives/eval_system/context.md - Project context
+- [BEIR GitHub Repository](https://github.com/beir-cellar/beir) - BEIR benchmark framework and documentation
 
 ## Objectives
 
@@ -36,6 +39,11 @@ This prompt guides the implementation of **Phase 9: BEIR Metrics Evaluator** for
 
 ## Key References
 
+### BEIR Benchmark
+- **BEIR Repository**: [https://github.com/beir-cellar/beir](https://github.com/beir-cellar/beir) - Main BEIR benchmark repository
+- **BEIR Documentation**: [https://github.com/beir-cellar/beir/wiki](https://github.com/beir-cellar/beir/wiki) - BEIR wiki with detailed documentation
+- **BEIR Custom Dataset Guide**: [https://github.com/beir-cellar/beir/wiki/Load-your-custom-dataset](https://github.com/beir-cellar/beir/wiki/Load-your-custom-dataset) - Guide for loading custom datasets in BEIR format
+
 ### Interface Contract (from RFC001.md)
 ```python
 def compute_beir_metrics(
@@ -51,10 +59,12 @@ def compute_beir_metrics(
   - `precision_at_k: float`
   - `ndcg_at_k: float`
 
-### Metric Formulas (from RFC001.md)
+### Metric Formulas (from RFC001.md and BEIR framework)
 - **Recall@k**: (Number of relevant chunks in top-k) / (Total number of relevant chunks)
 - **Precision@k**: (Number of relevant chunks in top-k) / k
 - **nDCG@k**: Normalized discounted cumulative gain, using relevance scores (1 for relevant, 0 for irrelevant)
+
+**Note**: These metrics follow the standard BEIR evaluation framework. For additional details on metric computation and evaluation methodology, refer to the [BEIR repository](https://github.com/beir-cellar/beir).
 
 ### Implementation Location
 - `rag_eval/services/evaluator/beir_metrics.py`
@@ -102,8 +112,9 @@ def compute_beir_metrics(
 
 ### Documentation
 1. Add docstrings to all functions
-2. Document BEIR metric formulas
+2. Document BEIR metric formulas (reference BEIR framework)
 3. Document edge case handling
+4. Include reference to BEIR repository in module docstring
 
 ## Success Criteria
 
@@ -119,7 +130,8 @@ def compute_beir_metrics(
 ## Important Notes
 
 - **No LLM Calls**: Pure Python implementation - standard information retrieval metrics
-- **Metric Formulas**: Must match formulas specified in RFC001.md
+- **BEIR Framework**: Implementation follows the [BEIR benchmark](https://github.com/beir-cellar/beir) standards for retrieval evaluation
+- **Metric Formulas**: Must match formulas specified in RFC001.md and BEIR framework
 - **Edge Cases**: Handle zero relevant passages, all relevant passages, k > retrieved chunks
 - **Test Coverage**: Minimum 80% coverage required
 
