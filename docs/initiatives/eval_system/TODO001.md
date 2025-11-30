@@ -1,0 +1,886 @@
+# TODO 001 — RAG Evaluation MVP (LLM-as-Judge + BEIR + Meta-Eval)
+
+## Context
+
+This TODO document provides the implementation breakdown for the RAG Evaluation MVP system, as specified in [PRD001.md](./PRD001.md) and [RFC001.md](./RFC001.md). The evaluation system provides a quantitative framework to measure how retrieval method changes and prompt changes affect downstream RAG system performance through LLM-as-Judge evaluation, meta-evaluation for judge reliability, and BEIR-style retrieval metrics.
+
+**Current Status**: The evaluation system is currently not implemented. This TODO provides the implementation plan for building the complete evaluation stack.
+
+**Implementation Phases**: This TODO follows a 10-phase implementation plan that builds the system incrementally, starting with the evaluation dataset and progressing through individual LLM nodes, orchestrators, and integration.
+
+---
+
+## Phase 0 — Context Harvest
+
+### Setup Tasks
+- [ ] Review adjacent components in [context.md](./context.md)
+- [ ] Review PRD001.md and RFC001.md for complete requirements understanding
+- [ ] Review existing RAG system components (`rag_eval/services/rag/`)
+- [ ] Review existing prompt system (`rag_eval/prompts/`, `rag_eval/services/rag/generation.py`)
+- [ ] Validate Azure Foundry API configuration and credentials
+- [ ] Validate Supabase database schema and connection (for optional logging)
+- [ ] Review test fixtures structure (`backend/tests/fixtures/`)
+- [ ] Review existing evaluation components (`rag_eval/services/evaluator/`)
+- [ ] **Create fracas.md** for failure tracking using FRACAS methodology
+
+### Testing Environment Setup
+- [ ] **REQUIRED**: Set up and activate backend virtual environment (`backend/venv/`)
+- [ ] **REQUIRED**: Verify pytest is installed in venv (`pip install pytest pytest-cov`)
+- [ ] **REQUIRED**: Verify all backend dependencies are installed (`pip install -r backend/requirements.txt`)
+- [ ] **REQUIRED**: Verify pytest can discover tests (`pytest backend/tests/ --collect-only`)
+- [ ] **REQUIRED**: Document venv activation command for all subsequent phases
+- [ ] **REQUIRED**: All testing in Phases 1-11 MUST use the same venv (`backend/venv/`)
+- [ ] Block: Implementation cannot proceed until Phase 0 complete
+
+---
+
+## Phase 1 — Evaluation Dataset Construction (Development Task)
+
+**Component**: `backend/tests/fixtures/evaluation_dataset/validation_dataset.json`
+
+**Status**: Development task - manually create 5 validation samples (not an automated function)
+
+### Setup Tasks
+- [ ] Verify `healthguard_select_ppo_plan.pdf` exists in `backend/tests/fixtures/sample_documents/`
+- [ ] Ensure document has been indexed via upload pipeline (to identify actual chunk IDs)
+- [ ] Create directory structure: `backend/tests/fixtures/evaluation_dataset/`
+- [ ] Review document content to identify suitable QA pair topics
+
+### Core Implementation
+- [ ] Create 5 validation samples manually (not via automated generation)
+- [ ] For each sample, include:
+  - [ ] `example_id`: Unique identifier (e.g., "val_001")
+  - [ ] `question`: Question text covering different types (cost, coverage, eligibility, out-of-pocket max)
+  - [ ] `reference_answer`: Gold reference answer
+  - [ ] `ground_truth_chunk_ids`: List of actual chunk IDs from indexed document
+  - [ ] `beir_failure_scale_factor`: Float in range [0.0, 1.0] representing retrieval challenge/severity
+- [ ] Ensure samples cover:
+  - [ ] Cost-related questions (copay, deductible, coinsurance)
+  - [ ] Coverage questions
+  - [ ] Eligibility questions
+  - [ ] Out-of-pocket maximum questions
+- [ ] Store as single JSON file: `validation_dataset.json`
+- [ ] Validate JSON format matches `EvaluationExample` dataclass structure
+
+### Testing Tasks
+- [ ] Create test file: `backend/tests/components/evaluator/test_evaluation_dataset.py`
+- [ ] Validate that `validation_dataset.json` exists and is properly formatted
+- [ ] Validate that all 5 samples have required fields
+- [ ] Validate that `ground_truth_chunk_ids` reference actual chunks from indexed document
+- [ ] Validate that `beir_failure_scale_factor` is in range [0.0, 1.0]
+- [ ] Validate that questions cover different types (cost, coverage, eligibility, etc.)
+- [ ] **Document any failures** in fracas.md immediately when encountered
+
+### Documentation Tasks
+- [ ] Document dataset structure and format
+- [ ] Document how to identify ground-truth chunk IDs from indexed document
+- [ ] Document `beir_failure_scale_factor` calculation methodology
+- [ ] **Phase 1 Testing Summary** for handoff to Phase 2
+
+### Validation Requirements (Phase 1 Complete)
+- [ ] **REQUIRED**: All unit tests for Phase 1 must pass before proceeding to Phase 2
+- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/test_evaluation_dataset.py -v`
+- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [ ] **REQUIRED**: Document any test failures in fracas.md
+- [ ] **REQUIRED**: Phase 1 is NOT complete until all tests pass
+- [ ] **Status**: ⏳ Pending - Phase 1 cannot proceed to Phase 2 until validation complete
+
+---
+
+## Phase 2 — Correctness LLM-Node
+
+**Component**: `rag_eval/services/evaluator/correctness.py`
+
+### Setup Tasks
+- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [ ] Create `rag_eval/services/evaluator/correctness.py` module
+- [ ] Ensure package `__init__.py` files are properly configured with exports
+- [ ] Verify imports work correctly (`from rag_eval.services.evaluator.correctness import classify_correctness`)
+- [ ] Review Azure Foundry API configuration for GPT-4o-mini
+- [ ] Set up test fixtures for mock LLM responses
+- [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_correctness.py`
+
+### Prompt Creation Tasks
+- [ ] Create prompt template for correctness classification
+- [ ] Prompt location: `backend/rag_eval/prompts/evaluation/correctness_prompt.md` (or store in database with `prompt_type="evaluation"`)
+- [ ] Prompt design:
+  - [ ] System instruction: "You are an expert evaluator comparing a model answer directly to a gold reference answer."
+  - [ ] Input placeholders: `{query}`, `{model_answer}`, `{reference_answer}`
+  - [ ] Output format: JSON with `correctness_binary` (bool) and `reasoning` (str)
+  - [ ] Include examples of correct/incorrect classifications
+- [ ] Test prompt template with sample inputs
+
+### Core Implementation
+- [ ] Implement `classify_correctness(query: str, model_answer: str, reference_answer: str, config: Optional[Config] = None) -> bool`
+  - [ ] Load prompt template (from file or database)
+  - [ ] Construct prompt with query, model answer, reference answer
+  - [ ] Call Azure Foundry GPT-4o-mini with structured output (JSON)
+  - [ ] Set temperature=0.1 for reproducibility
+  - [ ] Parse JSON response to extract `correctness_binary`
+  - [ ] Return boolean classification
+  - [ ] Handle LLM failures with proper error handling (`AzureServiceError`)
+  - [ ] Validate inputs are non-empty (`ValueError`)
+- [ ] Implement `_construct_correctness_prompt(query: str, model_answer: str, reference_answer: str) -> str`
+  - [ ] Load prompt template
+  - [ ] Replace placeholders with actual values
+  - [ ] Return complete prompt string
+
+### Testing Tasks
+- [ ] Unit tests for `classify_correctness()`
+  - [ ] Test binary classification: correct (true)
+  - [ ] Test binary classification: incorrect (false)
+  - [ ] Test direct comparison between model answer and reference answer
+  - [ ] Test edge case: empty model answer
+  - [ ] Test edge case: empty reference answer
+  - [ ] Test error handling for LLM failures
+  - [ ] Test input validation (empty strings)
+- [ ] Connection test for Azure Foundry API
+  - [ ] Test actual connection to Azure Foundry (warns if credentials missing, doesn't fail tests)
+  - [ ] Document connection status in test output
+- [ ] **Document any failures** in fracas.md immediately when encountered
+
+### Documentation Tasks
+- [ ] Add docstrings to all functions
+  - [ ] Document function signature matching RFC001 interface contract
+  - [ ] Document return types and error conditions
+- [ ] Document prompt design and rationale
+- [ ] Document temperature setting (0.1) for reproducibility
+- [ ] **Phase 2 Testing Summary** for handoff to Phase 3
+
+### Validation Requirements (Phase 2 Complete)
+- [ ] **REQUIRED**: All unit tests for Phase 2 must pass before proceeding to Phase 3
+- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_correctness.py -v`
+- [ ] **REQUIRED**: Test coverage must meet minimum 80% for correctness.py module
+- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [ ] **REQUIRED**: Document any test failures in fracas.md
+- [ ] **REQUIRED**: Phase 2 is NOT complete until all tests pass
+- [ ] **Status**: ⏳ Pending - Phase 2 cannot proceed to Phase 3 until validation complete
+
+---
+
+## Phase 3 — Hallucination LLM-Node
+
+**Component**: `rag_eval/services/evaluator/hallucination.py`
+
+### Setup Tasks
+- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [ ] Create `rag_eval/services/evaluator/hallucination.py` module
+- [ ] Ensure package `__init__.py` files are properly configured with exports
+- [ ] Verify imports work correctly
+- [ ] Review Azure Foundry API configuration
+- [ ] Set up test fixtures for mock LLM responses
+- [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_hallucination.py`
+
+### Prompt Creation Tasks
+- [ ] Create prompt template for hallucination classification
+- [ ] Prompt location: `backend/rag_eval/prompts/evaluation/hallucination_prompt.md` (or store in database)
+- [ ] Prompt design:
+  - [ ] System instruction: "You are an expert evaluator analyzing whether a model answer contains hallucinations based on grounding in retrieved evidence."
+  - [ ] Input placeholders: `{retrieved_context}`, `{model_answer}`
+  - [ ] Output format: JSON with `hallucination_binary` (bool) and `reasoning` (str)
+  - [ ] Emphasize: reference answer is NOT used in hallucination detection
+  - [ ] Include examples of hallucination detection (grounded vs. ungrounded claims)
+- [ ] Test prompt template with sample inputs
+
+### Core Implementation
+- [ ] Implement `classify_hallucination(retrieved_context: List[RetrievalResult], model_answer: str, config: Optional[Config] = None) -> bool`
+  - [ ] Load prompt template
+  - [ ] Format retrieved context (concatenate chunk texts with chunk IDs)
+  - [ ] Construct prompt with retrieved context and model answer
+  - [ ] Call Azure Foundry GPT-4o-mini with structured output (JSON)
+  - [ ] Set temperature=0.1 for reproducibility
+  - [ ] Parse JSON response to extract `hallucination_binary`
+  - [ ] Return boolean classification
+  - [ ] Handle LLM failures with proper error handling
+  - [ ] Validate inputs are non-empty
+- [ ] Implement `_construct_hallucination_prompt(retrieved_context: List[RetrievalResult], model_answer: str) -> str`
+  - [ ] Load prompt template
+  - [ ] Format retrieved context for prompt
+  - [ ] Replace placeholders with actual values
+  - [ ] Return complete prompt string
+
+### Testing Tasks
+- [ ] Unit tests for `classify_hallucination()`
+  - [ ] Test binary classification: hallucination detected (true)
+  - [ ] Test binary classification: no hallucination (false)
+  - [ ] Test grounding analysis: information not in retrieved evidence
+  - [ ] Test grounding analysis: information supported by evidence
+  - [ ] Test edge case: ambiguous grounding scenarios
+  - [ ] Test that reference answer is NOT used in hallucination detection
+  - [ ] Test edge case: zero retrieved chunks
+  - [ ] Test error handling for LLM failures
+- [ ] Connection test for Azure Foundry API
+- [ ] **Document any failures** in fracas.md immediately when encountered
+
+### Documentation Tasks
+- [ ] Add docstrings to all functions
+- [ ] Document that reference answer is NOT used in hallucination detection
+- [ ] Document prompt design and grounding analysis approach
+- [ ] **Phase 3 Testing Summary** for handoff to Phase 4
+
+### Validation Requirements (Phase 3 Complete)
+- [ ] **REQUIRED**: All unit tests for Phase 3 must pass before proceeding to Phase 4
+- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_hallucination.py -v`
+- [ ] **REQUIRED**: Test coverage must meet minimum 80% for hallucination.py module
+- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [ ] **REQUIRED**: Document any test failures in fracas.md
+- [ ] **REQUIRED**: Phase 3 is NOT complete until all tests pass
+- [ ] **Status**: ⏳ Pending - Phase 3 cannot proceed to Phase 4 until validation complete
+
+---
+
+## Phase 4 — Hallucination Cost LLM-Node
+
+**Component**: `rag_eval/services/evaluator/hallucination_cost.py`
+
+### Setup Tasks
+- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [ ] Create `rag_eval/services/evaluator/hallucination_cost.py` module
+- [ ] Ensure package `__init__.py` files are properly configured with exports
+- [ ] Verify imports work correctly
+- [ ] Review Azure Foundry API configuration
+- [ ] Set up test fixtures for mock LLM responses
+- [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_hallucination_cost.py`
+
+### Prompt Creation Tasks
+- [ ] Create prompt template for cost classification
+- [ ] Prompt location: `backend/rag_eval/prompts/evaluation/hallucination_cost_prompt.md` (or store in database)
+- [ ] Prompt design:
+  - [ ] System instruction: "You are an expert evaluator classifying the cost impact direction of hallucinations."
+  - [ ] Input placeholders: `{model_answer}`, `{retrieved_context}`
+  - [ ] Output format: JSON with `hallucination_cost` (-1 or +1) and `reasoning` (str)
+  - [ ] Explain cost classification:
+    - [ ] -1 = Opportunity Cost: Model overestimated cost, dissuading user from seeking care
+    - [ ] +1 = Resource Cost: Model underestimated cost, persuading user to pursue care
+  - [ ] Emphasize: reference answer is NOT used (only retrieved chunks for ground truth)
+  - [ ] Include examples of opportunity cost vs. resource cost classifications
+- [ ] Test prompt template with sample inputs
+
+### Core Implementation
+- [ ] Implement `classify_hallucination_cost(model_answer: str, retrieved_context: List[RetrievalResult], config: Optional[Config] = None) -> int`
+  - [ ] Load prompt template
+  - [ ] Format retrieved context
+  - [ ] Construct prompt with model answer and retrieved context
+  - [ ] Call Azure Foundry GPT-4o-mini with structured output (JSON)
+  - [ ] Set temperature=0.1 for reproducibility
+  - [ ] Parse JSON response to extract `hallucination_cost` (-1 or +1)
+  - [ ] Return integer classification
+  - [ ] Handle LLM failures with proper error handling
+  - [ ] Validate inputs are non-empty
+  - [ ] Handle ambiguous cost direction cases
+- [ ] Implement `_construct_cost_classification_prompt(model_answer: str, retrieved_context: List[RetrievalResult]) -> str`
+  - [ ] Load prompt template
+  - [ ] Format retrieved context
+  - [ ] Replace placeholders with actual values
+  - [ ] Return complete prompt string
+
+### Testing Tasks
+- [ ] Unit tests for `classify_hallucination_cost()`
+  - [ ] Test opportunity cost classification (-1): overestimated cost
+  - [ ] Test resource cost classification (+1): underestimated cost
+  - [ ] Test cost analysis for quantitative hallucinations
+  - [ ] Test cost analysis for non-quantitative hallucinations
+  - [ ] Test edge case: ambiguous cost direction
+  - [ ] Test that reference answer is NOT used in cost classification
+  - [ ] Test error handling for LLM failures
+- [ ] Connection test for Azure Foundry API
+- [ ] **Document any failures** in fracas.md immediately when encountered
+
+### Documentation Tasks
+- [ ] Add docstrings to all functions
+- [ ] Document cost classification logic (-1 vs. +1)
+- [ ] Document that reference answer is NOT used
+- [ ] Document prompt design and cost direction analysis
+- [ ] **Phase 4 Testing Summary** for handoff to Phase 5
+
+### Validation Requirements (Phase 4 Complete)
+- [ ] **REQUIRED**: All unit tests for Phase 4 must pass before proceeding to Phase 5
+- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_hallucination_cost.py -v`
+- [ ] **REQUIRED**: Test coverage must meet minimum 80% for hallucination_cost.py module
+- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [ ] **REQUIRED**: Document any test failures in fracas.md
+- [ ] **REQUIRED**: Phase 4 is NOT complete until all tests pass
+- [ ] **Status**: ⏳ Pending - Phase 4 cannot proceed to Phase 5 until validation complete
+
+---
+
+## Phase 5 — Cost Extraction LLM-Node
+
+**Component**: `rag_eval/services/evaluator/cost_extraction.py`
+
+### Setup Tasks
+- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [ ] Create `rag_eval/services/evaluator/cost_extraction.py` module
+- [ ] Ensure package `__init__.py` files are properly configured with exports
+- [ ] Verify imports work correctly
+- [ ] Review Azure Foundry API configuration
+- [ ] Set up test fixtures for mock LLM responses
+- [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_cost_extraction.py`
+
+### Prompt Creation Tasks
+- [ ] Create prompt template for cost extraction
+- [ ] Prompt location: `backend/rag_eval/prompts/evaluation/cost_extraction_prompt.md` (or store in database)
+- [ ] Prompt design:
+  - [ ] System instruction: "You are an expert parser extracting cost information (time, money, steps) from text."
+  - [ ] Input placeholder: `{text}`
+  - [ ] Output format: JSON with `time` (optional float/str), `money` (optional float/str), `steps` (optional int/str), and `reasoning` (str)
+  - [ ] Include examples of cost extraction from various formats:
+    - [ ] Time: "2 hours", "30 minutes", "1 day"
+    - [ ] Money: "$500", "500 dollars", "500.00"
+    - [ ] Steps: "3 steps", "step 3", "third step"
+  - [ ] Handle missing cost information (optional fields)
+- [ ] Test prompt template with sample inputs
+
+### Core Implementation
+- [ ] Implement `extract_costs(text: str, config: Optional[Config] = None) -> Dict[str, Any]`
+  - [ ] Load prompt template
+  - [ ] Construct prompt with text
+  - [ ] Call Azure Foundry GPT-4o-mini with structured output (JSON)
+  - [ ] Set temperature=0.1 for reproducibility
+  - [ ] Parse JSON response to extract cost fields (time, money, steps)
+  - [ ] Return dictionary with optional cost fields
+  - [ ] Handle LLM failures with proper error handling
+  - [ ] Validate input is non-empty
+- [ ] Implement `_construct_cost_extraction_prompt(text: str) -> str`
+  - [ ] Load prompt template
+  - [ ] Replace placeholder with actual text
+  - [ ] Return complete prompt string
+
+### Testing Tasks
+- [ ] Unit tests for `extract_costs()`
+  - [ ] Test extraction of time-based costs (e.g., "2 hours", "30 minutes")
+  - [ ] Test extraction of money-based costs (e.g., "$500", "500 dollars", "500.00")
+  - [ ] Test extraction of step-based costs (e.g., "3 steps", "step 3")
+  - [ ] Test extraction of mixed cost types from same text
+  - [ ] Test handling of missing cost information (optional fields)
+  - [ ] Test edge case: no cost information in text
+  - [ ] Test edge case: ambiguous cost expressions
+  - [ ] Test error handling for LLM failures
+- [ ] Connection test for Azure Foundry API
+- [ ] **Document any failures** in fracas.md immediately when encountered
+
+### Documentation Tasks
+- [ ] Add docstrings to all functions
+- [ ] Document cost extraction format and supported expressions
+- [ ] Document optional fields and handling of missing information
+- [ ] **Phase 5 Testing Summary** for handoff to Phase 6
+
+### Validation Requirements (Phase 5 Complete)
+- [ ] **REQUIRED**: All unit tests for Phase 5 must pass before proceeding to Phase 6
+- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_cost_extraction.py -v`
+- [ ] **REQUIRED**: Test coverage must meet minimum 80% for cost_extraction.py module
+- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [ ] **REQUIRED**: Document any test failures in fracas.md
+- [ ] **REQUIRED**: Phase 5 is NOT complete until all tests pass
+- [ ] **Status**: ⏳ Pending - Phase 5 cannot proceed to Phase 6 until validation complete
+
+---
+
+## Phase 6 — Hallucination Impact LLM-Node
+
+**Component**: `rag_eval/services/evaluator/hallucination_impact.py`
+
+### Setup Tasks
+- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [ ] Create `rag_eval/services/evaluator/hallucination_impact.py` module
+- [ ] Ensure package `__init__.py` files are properly configured with exports
+- [ ] Verify imports work correctly
+- [ ] Review Azure Foundry API configuration
+- [ ] Set up test fixtures for mock LLM responses
+- [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_hallucination_impact.py`
+
+### Prompt Creation Tasks
+- [ ] Create prompt template for impact calculation
+- [ ] Prompt location: `backend/rag_eval/prompts/evaluation/hallucination_impact_prompt.md` (or store in database)
+- [ ] Prompt design:
+  - [ ] System instruction: "You are an expert evaluator calculating the real-world impact magnitude of hallucinations."
+  - [ ] Input placeholders: `{model_answer_cost}`, `{actual_cost}`
+  - [ ] Output format: JSON with `hallucination_impact` (float 0-3) and `reasoning` (str)
+  - [ ] Explain impact scale:
+    - [ ] 0: Minimal/no impact
+    - [ ] 1: Low impact
+    - [ ] 2: Moderate impact
+    - [ ] 3: High/severe impact
+  - [ ] Emphasize: consider mixed resource types (time, money, steps) and their relative importance
+  - [ ] Include examples of impact calculations for different cost differences
+- [ ] Test prompt template with sample inputs
+
+### Core Implementation
+- [ ] Implement `calculate_hallucination_impact(model_answer_cost: Dict[str, Any], actual_cost: Dict[str, Any], config: Optional[Config] = None) -> float`
+  - [ ] Load prompt template
+  - [ ] Format cost dictionaries for prompt (JSON representation)
+  - [ ] Construct prompt with model answer cost and actual cost
+  - [ ] Call Azure Foundry GPT-4o-mini with structured output (JSON)
+  - [ ] Set temperature=0.1 for reproducibility
+  - [ ] Parse JSON response to extract `hallucination_impact` (0-3)
+  - [ ] Validate impact is in range [0, 3]
+  - [ ] Return float impact magnitude
+  - [ ] Handle LLM failures with proper error handling
+  - [ ] Validate inputs are non-empty dictionaries
+- [ ] Implement `_construct_impact_prompt(model_answer_cost: Dict[str, Any], actual_cost: Dict[str, Any]) -> str`
+  - [ ] Load prompt template
+  - [ ] Format cost dictionaries as JSON strings
+  - [ ] Replace placeholders with actual values
+  - [ ] Return complete prompt string
+
+### Testing Tasks
+- [ ] Unit tests for `calculate_hallucination_impact()`
+  - [ ] Test impact calculation for time-based costs
+  - [ ] Test impact calculation for money-based costs
+  - [ ] Test impact calculation for step-based costs
+  - [ ] Test impact calculation for mixed resource types
+  - [ ] Test impact scaling factor range [0, 3]
+  - [ ] Test edge case: zero impact scenarios
+  - [ ] Test edge case: maximum impact scenarios
+  - [ ] Test error handling for LLM failures
+- [ ] Connection test for Azure Foundry API
+- [ ] **Document any failures** in fracas.md immediately when encountered
+
+### Documentation Tasks
+- [ ] Add docstrings to all functions
+- [ ] Document impact scale (0-3) and rationale
+- [ ] Document handling of mixed resource types
+- [ ] Document why LLM node is used (not deterministic function)
+- [ ] **Phase 6 Testing Summary** for handoff to Phase 7
+
+### Validation Requirements (Phase 6 Complete)
+- [ ] **REQUIRED**: All unit tests for Phase 6 must pass before proceeding to Phase 7
+- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_hallucination_impact.py -v`
+- [ ] **REQUIRED**: Test coverage must meet minimum 80% for hallucination_impact.py module
+- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [ ] **REQUIRED**: Document any test failures in fracas.md
+- [ ] **REQUIRED**: Phase 6 is NOT complete until all tests pass
+- [ ] **Status**: ⏳ Pending - Phase 6 cannot proceed to Phase 7 until validation complete
+
+---
+
+## Phase 7 — LLM-as-Judge Orchestrator
+
+**Component**: `rag_eval/services/evaluator/judge.py`
+
+### Setup Tasks
+- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [ ] Create `rag_eval/services/evaluator/judge.py` module
+- [ ] Ensure package `__init__.py` files are properly configured with exports
+- [ ] Verify imports work correctly (correctness, hallucination, cost, impact, cost_extraction nodes)
+- [ ] Review data structures: `JudgeEvaluationResult` dataclass
+- [ ] Set up test fixtures for mocked LLM node responses
+- [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_judge.py`
+
+### Core Implementation
+- [ ] Implement `evaluate_answer_with_judge(query: str, retrieved_context: List[RetrievalResult], model_answer: str, reference_answer: str, config: Optional[Config] = None) -> JudgeEvaluationResult`
+  - [ ] Validate all inputs are non-empty
+  - [ ] Step 1: Call correctness LLM-node (always)
+    - [ ] `correctness_binary = classify_correctness(query, model_answer, reference_answer, config)`
+  - [ ] Step 2: Call hallucination LLM-node (always)
+    - [ ] `hallucination_binary = classify_hallucination(retrieved_context, model_answer, config)`
+  - [ ] Step 3: Conditional - if hallucination detected, call cost classification node
+    - [ ] `hallucination_cost = None`
+    - [ ] `if hallucination_binary: hallucination_cost = classify_hallucination_cost(model_answer, retrieved_context, config)`
+  - [ ] Step 4: Conditional - if hallucination detected, extract costs and calculate impact
+    - [ ] `hallucination_impact = None`
+    - [ ] `if hallucination_binary:`
+      - [ ] Extract costs from model answer: `model_answer_cost = extract_costs(model_answer, config)`
+      - [ ] Extract costs from retrieved chunks: `chunks_text = " ".join([chunk.chunk_text for chunk in retrieved_context])`
+      - [ ] `actual_cost = extract_costs(chunks_text, config)`
+      - [ ] Calculate impact: `hallucination_impact = calculate_hallucination_impact(model_answer_cost, actual_cost, config)`
+  - [ ] Step 5: Construct reasoning trace from all LLM node outputs
+    - [ ] Collect reasoning from correctness node
+    - [ ] Collect reasoning from hallucination node
+    - [ ] Collect reasoning from cost node (if called)
+    - [ ] Collect reasoning from impact node (if called)
+    - [ ] Construct combined reasoning trace
+  - [ ] Step 6: Assemble `JudgeEvaluationResult` with all fields
+    - [ ] `correctness_binary`
+    - [ ] `hallucination_binary`
+    - [ ] `hallucination_cost` (optional)
+    - [ ] `hallucination_impact` (optional)
+    - [ ] `reasoning` (combined trace)
+    - [ ] `failure_mode` (optional, extracted from reasoning or LLM output)
+  - [ ] Handle edge cases: zero chunks, empty answers, LLM failures
+  - [ ] Return `JudgeEvaluationResult` object
+- [ ] Implement `_orchestrate_judge_evaluation(...)` helper function (if needed for organization)
+- [ ] Implement `_construct_reasoning_trace(correctness_result: bool, hallucination_result: bool, cost_result: Optional[int], impact_result: Optional[float], node_reasonings: List[str]) -> str`
+  - [ ] Combine reasoning from all invoked LLM nodes
+  - [ ] Format as structured reasoning trace
+  - [ ] Return combined reasoning string
+
+### Testing Tasks
+- [ ] Unit tests for `evaluate_answer_with_judge()`
+  - [ ] Test deterministic script orchestration with mocked LLM calls
+  - [ ] Test correctness LLM-node invocation (always called)
+  - [ ] Test hallucination LLM-node invocation (always called)
+  - [ ] Test conditional branching: hallucination_binary true path (cost and impact nodes called)
+  - [ ] Test conditional branching: hallucination_binary false path (cost and impact nodes NOT called)
+  - [ ] Test invocation of cost classification node when hallucination detected
+  - [ ] Test invocation of cost extraction node when hallucination detected
+  - [ ] Test invocation of impact node when hallucination detected
+  - [ ] Test that cost/impact nodes are NOT called when no hallucination
+  - [ ] Test output schema validation (all required fields present including correctness fields)
+  - [ ] Test reasoning trace construction from LLM node outputs
+  - [ ] Test error handling when LLM calls fail
+  - [ ] Test edge case: zero retrieved chunks
+  - [ ] Test edge case: empty model answer
+  - [ ] Test edge case: empty reference answer
+- [ ] Integration tests with mocked LLM nodes
+- [ ] **Document any failures** in fracas.md immediately when encountered
+
+### Documentation Tasks
+- [ ] Add docstrings to all functions
+- [ ] Document orchestration logic and conditional branching
+- [ ] Document reasoning trace construction
+- [ ] Document edge case handling
+- [ ] **Phase 7 Testing Summary** for handoff to Phase 8
+
+### Validation Requirements (Phase 7 Complete)
+- [ ] **REQUIRED**: All unit tests for Phase 7 must pass before proceeding to Phase 8
+- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_judge.py -v`
+- [ ] **REQUIRED**: Test coverage must meet minimum 80% for judge.py module
+- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [ ] **REQUIRED**: Document any test failures in fracas.md
+- [ ] **REQUIRED**: Phase 7 is NOT complete until all tests pass
+- [ ] **Status**: ⏳ Pending - Phase 7 cannot proceed to Phase 8 until validation complete
+
+---
+
+## Phase 8 — Meta-Evaluator (Deterministic Validation)
+
+**Component**: `rag_eval/services/evaluator/meta_eval.py`
+
+### Setup Tasks
+- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [ ] Create `rag_eval/services/evaluator/meta_eval.py` module
+- [ ] Ensure package `__init__.py` files are properly configured with exports
+- [ ] Verify imports work correctly
+- [ ] Review data structures: `MetaEvaluationResult` dataclass
+- [ ] Set up test fixtures for validation scenarios
+- [ ] Create test file: `backend/tests/components/meta_eval/test_evaluator_meta_eval.py`
+
+### Core Implementation
+- [ ] Implement `meta_evaluate_judge(judge_output: JudgeEvaluationResult, retrieved_context: List[RetrievalResult], model_answer: str, reference_answer: str, extracted_costs: Optional[Dict[str, Any]] = None, actual_costs: Optional[Dict[str, Any]] = None) -> MetaEvaluationResult`
+  - [ ] Validate inputs are non-empty
+  - [ ] Validation 1: Validate correctness_binary
+    - [ ] Compare model answer to reference answer (exact or semantic similarity)
+    - [ ] If judge says `correctness_binary: true`, verify model answer matches reference
+    - [ ] If judge says `correctness_binary: false`, verify model answer differs from reference
+  - [ ] Validation 2: Validate hallucination_binary
+    - [ ] Check if model answer claims are supported by retrieved chunks
+    - [ ] If judge says `hallucination_binary: true`, verify model answer contains unsupported claims
+    - [ ] If judge says `hallucination_binary: false`, verify all claims are supported
+  - [ ] Validation 3: Validate hallucination_cost (if costs available and hallucination detected)
+    - [ ] Compare extracted costs vs actual costs to determine expected cost direction
+    - [ ] Validate judge's `hallucination_cost` matches expected direction
+  - [ ] Validation 4: Validate hallucination_impact (if costs available and hallucination detected)
+    - [ ] Calculate expected impact magnitude based on cost differences
+    - [ ] Validate judge's `hallucination_impact` is within reasonable range of expected impact
+  - [ ] Determine overall judge correctness (all validations pass)
+  - [ ] Generate deterministic explanation of validation results
+  - [ ] Return `MetaEvaluationResult` object
+- [ ] Implement helper functions:
+  - [ ] `_validate_correctness(judge_correctness: bool, model_answer: str, reference_answer: str) -> bool`
+  - [ ] `_validate_hallucination(judge_hallucination: bool, model_answer: str, retrieved_context: List[RetrievalResult]) -> bool`
+  - [ ] `_validate_cost_classification(judge_cost: Optional[int], extracted_costs: Dict[str, Any], actual_costs: Dict[str, Any]) -> bool`
+  - [ ] `_validate_impact_magnitude(judge_impact: Optional[float], extracted_costs: Dict[str, Any], actual_costs: Dict[str, Any]) -> bool`
+  - [ ] `_generate_explanation(validation_results: Dict[str, bool]) -> str`
+
+### Testing Tasks
+- [ ] Unit tests for `meta_evaluate_judge()`
+  - [ ] Test judge_correct classification: correct correctness_binary verdict
+  - [ ] Test judge_incorrect classification: incorrect correctness_binary verdict
+  - [ ] Test judge_correct classification: correct hallucination_binary verdict
+  - [ ] Test judge_incorrect classification: incorrect hallucination_binary verdict
+  - [ ] Test validation of hallucination_cost against ground truth costs
+  - [ ] Test validation of hallucination_impact against ground truth costs
+  - [ ] Test deterministic explanation generation
+  - [ ] Test edge case: partial judge correctness (some verdicts correct, others incorrect)
+  - [ ] Test edge case: missing ground truth information
+  - [ ] Test edge case: zero retrieved chunks
+- [ ] **Document any failures** in fracas.md immediately when encountered
+
+### Documentation Tasks
+- [ ] Add docstrings to all functions
+- [ ] Document validation logic for each judge verdict type
+- [ ] Document deterministic nature (no LLM calls)
+- [ ] Document explanation generation approach
+- [ ] **Phase 8 Testing Summary** for handoff to Phase 9
+
+### Validation Requirements (Phase 8 Complete)
+- [ ] **REQUIRED**: All unit tests for Phase 8 must pass before proceeding to Phase 9
+- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/meta_eval/test_evaluator_meta_eval.py -v`
+- [ ] **REQUIRED**: Test coverage must meet minimum 80% for meta_eval.py module
+- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [ ] **REQUIRED**: Document any test failures in fracas.md
+- [ ] **REQUIRED**: Phase 8 is NOT complete until all tests pass
+- [ ] **Status**: ⏳ Pending - Phase 8 cannot proceed to Phase 9 until validation complete
+
+---
+
+## Phase 9 — BEIR Metrics Evaluator
+
+**Component**: `rag_eval/services/evaluator/beir_metrics.py`
+
+### Setup Tasks
+- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [ ] Create `rag_eval/services/evaluator/beir_metrics.py` module
+- [ ] Ensure package `__init__.py` files are properly configured with exports
+- [ ] Verify imports work correctly
+- [ ] Review data structures: `BEIRMetricsResult` dataclass
+- [ ] Review BEIR metric formulas (recall@k, precision@k, nDCG@k)
+- [ ] Set up test fixtures for retrieval results and ground-truth chunk IDs
+- [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_beir_metrics.py`
+
+### Core Implementation
+- [ ] Implement `compute_beir_metrics(retrieved_chunks: List[RetrievalResult], ground_truth_chunk_ids: List[str], k: int = 5) -> BEIRMetricsResult`
+  - [ ] Validate inputs are non-empty
+  - [ ] Extract chunk IDs from retrieved chunks (top-k)
+  - [ ] Compute recall@k
+  - [ ] Compute precision@k
+  - [ ] Compute nDCG@k
+  - [ ] Handle edge cases: zero relevant passages, all relevant passages retrieved
+  - [ ] Return `BEIRMetricsResult` object
+- [ ] Implement helper functions:
+  - [ ] `_compute_recall_at_k(retrieved_chunk_ids: List[str], ground_truth_chunk_ids: List[str], k: int) -> float`
+    - [ ] Formula: (Number of relevant chunks in top-k) / (Total number of relevant chunks)
+  - [ ] `_compute_precision_at_k(retrieved_chunk_ids: List[str], ground_truth_chunk_ids: List[str], k: int) -> float`
+    - [ ] Formula: (Number of relevant chunks in top-k) / k
+  - [ ] `_compute_ndcg_at_k(retrieved_chunks: List[RetrievalResult], ground_truth_chunk_ids: List[str], k: int) -> float`
+    - [ ] Formula: Normalized discounted cumulative gain using relevance scores (1 for relevant, 0 for irrelevant)
+
+### Testing Tasks
+- [ ] Unit tests for `compute_beir_metrics()`
+  - [ ] Test recall@k calculation
+  - [ ] Test precision@k calculation
+  - [ ] Test nDCG@k calculation
+  - [ ] Test metrics with ground-truth passage IDs
+  - [ ] Test edge case: zero relevant passages retrieved
+  - [ ] Test edge case: all relevant passages retrieved
+  - [ ] Test edge case: k larger than number of retrieved chunks
+  - [ ] Test edge case: empty ground-truth chunk IDs list
+- [ ] **Document any failures** in fracas.md immediately when encountered
+
+### Documentation Tasks
+- [ ] Add docstrings to all functions
+- [ ] Document BEIR metric formulas
+- [ ] Document edge case handling
+- [ ] **Phase 9 Testing Summary** for handoff to Phase 10
+
+### Validation Requirements (Phase 9 Complete)
+- [ ] **REQUIRED**: All unit tests for Phase 9 must pass before proceeding to Phase 10
+- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_beir_metrics.py -v`
+- [ ] **REQUIRED**: Test coverage must meet minimum 80% for beir_metrics.py module
+- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [ ] **REQUIRED**: Document any test failures in fracas.md
+- [ ] **REQUIRED**: Phase 9 is NOT complete until all tests pass
+- [ ] **Status**: ⏳ Pending - Phase 9 cannot proceed to Phase 10 until validation complete
+
+---
+
+## Phase 10 — Evaluation Pipeline Orchestration
+
+**Component**: `rag_eval/services/evaluator/orchestrator.py`
+
+### Setup Tasks
+- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [ ] Create `rag_eval/services/evaluator/orchestrator.py` module
+- [ ] Ensure package `__init__.py` files are properly configured with exports
+- [ ] Verify imports work correctly (judge, meta_eval, beir_metrics)
+- [ ] Review data structures: `EvaluationExample`, `EvaluationResult` dataclasses
+- [ ] Review RAG system components: `retrieve_chunks`, `generate_answer`
+- [ ] Set up test fixtures for evaluation dataset and mocked RAG components
+- [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_orchestrator.py`
+
+### Core Implementation
+- [ ] Implement `evaluate_rag_system(evaluation_dataset: List[EvaluationExample], rag_retriever: Callable[[str, int], List[RetrievalResult]], rag_generator: Callable[[str, List[RetrievalResult]], ModelAnswer], config: Optional[Config] = None) -> List[EvaluationResult]`
+  - [ ] Validate evaluation dataset is non-empty
+  - [ ] Load evaluation dataset (if passed as file path, otherwise use list directly)
+  - [ ] For each example in evaluation dataset:
+    - [ ] Step 1: Retrieve chunks using RAG retriever
+      - [ ] `retrieved_chunks = rag_retriever(example.question, k=5)`
+    - [ ] Step 2: Generate answer using RAG generator
+      - [ ] `model_answer = rag_generator(example.question, retrieved_chunks)`
+    - [ ] Step 3: Evaluate with LLM-as-Judge
+      - [ ] `judge_output = evaluate_answer_with_judge(example.question, retrieved_chunks, model_answer.text, example.reference_answer, config)`
+    - [ ] Step 4: Meta-evaluate judge verdict
+      - [ ] Extract costs if needed (for meta-evaluation)
+      - [ ] `meta_eval_output = meta_evaluate_judge(judge_output, retrieved_chunks, model_answer.text, example.reference_answer, extracted_costs, actual_costs)`
+    - [ ] Step 5: Compute BEIR metrics
+      - [ ] `beir_metrics = compute_beir_metrics(retrieved_chunks, example.ground_truth_chunk_ids, k=5)`
+    - [ ] Step 6: Assemble EvaluationResult
+      - [ ] `result = EvaluationResult(example_id=example.example_id, judge_output=judge_output, meta_eval_output=meta_eval_output, beir_metrics=beir_metrics, timestamp=datetime.now())`
+    - [ ] Handle errors gracefully with proper logging
+    - [ ] Measure and log latency metrics
+  - [ ] Return list of EvaluationResult objects
+- [ ] Implement `_evaluate_single_example(example: EvaluationExample, rag_retriever: Callable, rag_generator: Callable, config: Config) -> EvaluationResult`
+  - [ ] Extract single example evaluation logic
+  - [ ] Handle errors for individual examples (don't fail entire pipeline)
+
+### Testing Tasks
+- [ ] Unit tests for `evaluate_rag_system()`
+  - [ ] Test full pipeline: Retrieval → RAG generation → Judge → Meta-Eval → Metrics
+  - [ ] Test pipeline with mocked RAG components
+  - [ ] Test pipeline error handling and propagation
+  - [ ] Test pipeline logging and observability
+  - [ ] Test edge case: empty evaluation dataset
+  - [ ] Test edge case: RAG retriever failure
+  - [ ] Test edge case: RAG generator failure
+  - [ ] Test edge case: Judge evaluation failure
+- [ ] Integration tests with real RAG components (optional, requires full system setup)
+- [ ] **Document any failures** in fracas.md immediately when encountered
+
+### Documentation Tasks
+- [ ] Add docstrings to all functions
+- [ ] Document pipeline flow and error handling
+- [ ] Document integration with RAG system components
+- [ ] Document latency measurement approach
+- [ ] **Phase 10 Testing Summary** for handoff to Phase 11
+
+### Validation Requirements (Phase 10 Complete)
+- [ ] **REQUIRED**: All unit tests for Phase 10 must pass before proceeding to Phase 11
+- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_orchestrator.py -v`
+- [ ] **REQUIRED**: Test coverage must meet minimum 80% for orchestrator.py module
+- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [ ] **REQUIRED**: Document any test failures in fracas.md
+- [ ] **REQUIRED**: Phase 10 is NOT complete until all tests pass
+- [ ] **Status**: ⏳ Pending - Phase 10 cannot proceed to Phase 11 until validation complete
+
+---
+
+## Phase 11 — Logging and Persistence (Optional)
+
+**Component**: `rag_eval/services/evaluator/logging.py`
+
+**Status**: Optional - can be deferred if not needed for MVP
+
+### Setup Tasks
+- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [ ] Create `rag_eval/services/evaluator/logging.py` module
+- [ ] Review Supabase database schema for evaluation results table
+- [ ] Review existing `QueryExecutor` from `rag_eval/db/queries.py`
+- [ ] Set up test fixtures for database operations
+- [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_logging.py`
+
+### Core Implementation
+- [ ] Implement `log_evaluation_result(result: EvaluationResult, query_executor: Optional[QueryExecutor] = None) -> Optional[str]`
+  - [ ] If query_executor is None, skip logging (local-only mode)
+  - [ ] Serialize EvaluationResult to JSON
+  - [ ] Insert into Supabase Postgres `evaluation_results` table
+  - [ ] Handle logging failures gracefully (don't fail evaluation pipeline)
+  - [ ] Return result_id if successful, None otherwise
+- [ ] Implement `log_evaluation_batch(results: List[EvaluationResult], query_executor: Optional[QueryExecutor] = None) -> None`
+  - [ ] Batch insert evaluation results
+  - [ ] Handle partial failures gracefully
+  - [ ] Log batch operation status
+
+### Testing Tasks
+- [ ] Unit tests for `log_evaluation_result()`
+  - [ ] Test logging with query_executor (mocked)
+  - [ ] Test local-only mode (query_executor is None)
+  - [ ] Test error handling for database failures
+  - [ ] Test that logging failures don't fail evaluation pipeline
+- [ ] Connection test for Supabase (warns if credentials missing)
+- [ ] **Document any failures** in fracas.md immediately when encountered
+
+### Documentation Tasks
+- [ ] Add docstrings to all functions
+- [ ] Document optional nature of logging
+- [ ] Document database schema requirements
+- [ ] Document local-only vs. database logging modes
+- [ ] **Phase 11 Testing Summary** for final validation
+
+### Validation Requirements (Phase 11 Complete)
+- [ ] **REQUIRED**: All unit tests for Phase 11 must pass
+- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_logging.py -v`
+- [ ] **REQUIRED**: Test coverage must meet minimum 80% for logging.py module
+- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [ ] **REQUIRED**: Document any test failures in fracas.md
+- [ ] **REQUIRED**: Phase 11 is NOT complete until all tests pass
+- [ ] **Status**: ⏳ Pending - Phase 11 cannot proceed to Initiative Completion until validation complete
+
+---
+
+## Initiative Completion
+
+### Final Validation Tasks
+- [ ] **REQUIRED**: Run all evaluation tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/ tests/components/meta_eval/ -v --cov=rag_eval/services/evaluator --cov-report=term-missing`
+- [ ] **REQUIRED**: Verify all unit tests pass (minimum 80% coverage across all evaluator modules)
+- [ ] **REQUIRED**: Verify all integration tests pass
+- [ ] **REQUIRED**: Verify all connection tests documented
+- [ ] **REQUIRED**: Performance validation (latency < 30 seconds per example)
+- [ ] **REQUIRED**: If any tests fail, iterate on implementation until all tests pass
+- [ ] **Final Testing Summary** - Comprehensive testing report across all phases
+  - [ ] All unit tests pass (minimum 80% coverage)
+  - [ ] All integration tests pass
+  - [ ] All connection tests documented
+  - [ ] Performance validation (latency < 30 seconds per example)
+- [ ] **Technical Debt Documentation** - Complete technical debt catalog and remediation roadmap
+  - [ ] Document any shortcuts or deferred features
+  - [ ] Document known limitations
+  - [ ] Document future enhancement opportunities
+- [ ] Code review and quality check
+- [ ] Documentation review (all docstrings, README updates)
+- [ ] Stakeholder review and approval
+
+### Success Criteria Validation
+- [ ] Evaluation Coverage: 100% of evaluation components have unit tests with >80% coverage
+- [ ] Pipeline Latency: Average evaluation pipeline latency < 30 seconds per example
+- [ ] Judge Accuracy: Meta-Evaluator judge_correct rate > 85% (judge is reliable)
+- [ ] Reproducibility: Evaluation results are reproducible for same inputs (accounting for LLM non-determinism)
+- [ ] BEIR Metrics Coverage: All evaluation examples have recall@k, precision@k, nDCG@k computed
+
+---
+
+## Blockers
+- {List current blockers and dependencies as they arise}
+
+## Notes
+- {Implementation notes and decisions made during development}
+
+## Testing Environment Requirements
+
+### Venv Usage
+- **REQUIRED**: All backend testing MUST use the same virtual environment: `backend/venv/`
+- **REQUIRED**: Activate venv before running any tests: `cd backend && source venv/bin/activate`
+- **REQUIRED**: All pytest commands must be run from within the activated venv
+- **REQUIRED**: Do not create separate venvs for different phases - use the same venv throughout
+
+### Test Execution Commands
+- **Unit Tests**: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_<component>.py -v`
+- **Meta-Eval Tests**: `cd backend && source venv/bin/activate && pytest tests/components/meta_eval/test_evaluator_<component>.py -v`
+- **All Evaluator Tests**: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/ tests/components/meta_eval/ -v`
+- **With Coverage**: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/ tests/components/meta_eval/ -v --cov=rag_eval/services/evaluator --cov-report=term-missing`
+- **All RAG Tests**: `cd backend && source venv/bin/activate && pytest tests/components/rag/ -v`
+- **Connection Tests**: Run connection tests separately (they warn but don't fail if credentials missing)
+
+### Phase Completion Requirements
+- **REQUIRED**: Each phase must have all unit tests passing before proceeding to the next phase
+- **REQUIRED**: Test coverage must meet minimum 80% for each module
+- **REQUIRED**: If tests fail, iterate on implementation until all tests pass (may require multiple iterations)
+- **REQUIRED**: Document any test failures in fracas.md
+- **REQUIRED**: Phase status must be updated to "✅ Complete" only after all validation requirements pass
+
+## FRACAS Integration
+- **Failure Tracking**: All failures, bugs, and unexpected behaviors must be documented in `fracas.md`
+- **Investigation Process**: Follow systematic FRACAS methodology for root cause analysis
+- **Knowledge Building**: Use failure modes to build organizational knowledge and prevent recurrence
+- **Status Management**: Keep failure mode statuses current and move resolved issues to historical section
+
+**FRACAS Document Location**: `docs/initiatives/eval_system/fracas.md`
+
+---
+
+**Document Status**: Draft  
+**Last Updated**: 2024-12-19  
+**Author**: Documentation Agent  
+**Reviewers**: TBD
+

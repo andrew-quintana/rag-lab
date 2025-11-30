@@ -16,9 +16,17 @@ ADD COLUMN IF NOT EXISTS prompt_type VARCHAR(50) NOT NULL DEFAULT 'rag';
 
 -- Add new unique constraint on (prompt_type, version_name)
 -- This allows same version_name for different prompt types (if version_name constraint is removed)
-ALTER TABLE prompt_versions 
-ADD CONSTRAINT IF NOT EXISTS prompt_versions_prompt_type_version_name_unique 
-UNIQUE (prompt_type, version_name);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'prompt_versions_prompt_type_version_name_unique'
+    ) THEN
+        ALTER TABLE prompt_versions 
+        ADD CONSTRAINT prompt_versions_prompt_type_version_name_unique 
+        UNIQUE (prompt_type, version_name);
+    END IF;
+END $$;
 
 -- Create index for faster lookups by prompt_type
 CREATE INDEX IF NOT EXISTS idx_prompt_versions_prompt_type 

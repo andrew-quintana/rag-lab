@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchMetrics, Metrics } from '../api/metrics';
+import { fetchMetrics, type Metrics } from '../api/metrics';
 
 export function MetricsDashboard() {
   const [metrics, setMetrics] = useState<Metrics | null>(null);

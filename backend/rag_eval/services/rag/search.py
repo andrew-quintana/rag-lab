@@ -142,7 +142,7 @@ def _ensure_index_exists(config) -> None:
                     vector_search_dimensions=embedding_dimension,
                     vector_search_profile_name="default-vector-profile"
                 ),
-                SimpleField(name="document_id", type=SearchFieldDataType.String, retrievable=True),
+                SimpleField(name="document_id", type=SearchFieldDataType.String, retrievable=True, filterable=True),
                 SimpleField(name="metadata", type=SearchFieldDataType.String, retrievable=True)
             ],
             vector_search=VectorSearch(
@@ -411,5 +411,123 @@ def retrieve_chunks(query: Query, top_k: int = 5, config=None) -> List[Retrieval
         logger.error(f"Unexpected error retrieving chunks: {e}", exc_info=True)
         raise AzureServiceError(
             f"Unexpected error retrieving chunks: {str(e)}"
+        ) from e
+
+
+def delete_chunks_by_document_id(document_id: str, config) -> int:
+    """
+    Delete all chunks for a document from Azure AI Search.
+    
+    This function:
+    - Searches for all chunks with the given document_id
+    - Deletes all matching chunks from the index
+    - Returns the number of chunks deleted
+    - Implements retry logic with exponential backoff (3 retries max)
+    
+    Args:
+        document_id: Document identifier to delete chunks for
+        config: Application configuration with Azure AI Search credentials
+        
+    Returns:
+        Number of chunks deleted
+        
+    Raises:
+        AzureServiceError: If deletion fails
+        ValueError: If document_id is empty or config is missing required fields
+    """
+    if not document_id or not document_id.strip():
+        raise ValueError("document_id cannot be empty")
+    
+    # Validate configuration
+    if not config.azure_search_endpoint:
+        raise ValueError("Azure AI Search endpoint is not configured")
+    
+    if not config.azure_search_api_key:
+        raise ValueError("Azure AI Search API key is not configured")
+    
+    if not config.azure_search_index_name:
+        raise ValueError("Azure AI Search index name is not configured")
+    
+    logger.info(f"Deleting chunks for document '{document_id}' from Azure AI Search")
+    
+    try:
+        # Initialize search client
+        search_client = SearchClient(
+            endpoint=config.azure_search_endpoint,
+            index_name=config.azure_search_index_name,
+            credential=AzureKeyCredential(config.azure_search_api_key)
+        )
+        
+        # First, find all chunks for this document
+        # Try to use filter if document_id is filterable, otherwise search all and filter
+        def find_chunks():
+            try:
+                # Try filtering by document_id (if field is filterable)
+                results = search_client.search(
+                    search_text="*",
+                    filter=f"document_id eq '{document_id}'",
+                    select=["id", "document_id"],
+                    top=10000
+                )
+                return list(results)
+            except Exception as filter_error:
+                # If filtering fails (field not filterable), fall back to searching all and filtering
+                logger.warning(f"Could not filter by document_id, searching all chunks: {filter_error}")
+                results = search_client.search(
+                    search_text="*",
+                    select=["id", "document_id"],
+                    top=10000  # Large limit to get all chunks
+                )
+                chunks = [r for r in results if r.get("document_id") == document_id]
+                return chunks
+        
+        try:
+            matching_chunks = _retry_with_backoff(find_chunks)
+        except ResourceNotFoundError:
+            # Index doesn't exist, return 0 (graceful handling)
+            logger.warning(f"Index '{config.azure_search_index_name}' does not exist, no chunks to delete")
+            return 0
+        
+        if not matching_chunks:
+            logger.info(f"No chunks found for document '{document_id}'")
+            return 0
+        
+        chunk_ids = [chunk["id"] for chunk in matching_chunks]
+        logger.info(f"Found {len(chunk_ids)} chunks to delete for document '{document_id}'")
+        
+        # Delete chunks by ID
+        def delete_chunks():
+            # Prepare documents for deletion (only need ID field)
+            documents_to_delete = [{"id": chunk_id} for chunk_id in chunk_ids]
+            result = search_client.delete_documents(documents=documents_to_delete)
+            
+            # Check for failures
+            failed = [r for r in result if not r.succeeded]
+            if failed:
+                error_messages = [f"Chunk {r.key}: {r.error_message}" for r in failed]
+                raise AzureServiceError(
+                    f"Failed to delete {len(failed)} chunks: {', '.join(error_messages)}"
+                )
+            
+            return len(chunk_ids) - len(failed)
+        
+        deleted_count = _retry_with_backoff(delete_chunks)
+        logger.info(f"Successfully deleted {deleted_count} chunks for document '{document_id}'")
+        return deleted_count
+        
+    except AzureServiceError:
+        # Re-raise AzureServiceError as-is
+        raise
+    except ValueError:
+        # Re-raise ValueError as-is
+        raise
+    except ResourceNotFoundError:
+        # Index doesn't exist, return 0 (graceful handling)
+        logger.warning(f"Index '{config.azure_search_index_name}' does not exist, no chunks to delete")
+        return 0
+    except Exception as e:
+        logger.error(f"Unexpected error deleting chunks: {e}", exc_info=True)
+        raise AzureServiceError(
+            f"Unexpected error deleting chunks: {str(e)}"
         ) from e
 

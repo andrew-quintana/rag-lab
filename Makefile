@@ -1,10 +1,11 @@
 # Makefile for development automation
 
-.PHONY: help dev stop restart logs supabase-start supabase-stop supabase-status reset-db backend frontend
+.PHONY: help dev start stop restart logs supabase-start supabase-stop supabase-status reset-db backend frontend
 
 help:
 	@echo "Available commands:"
 	@echo "  make dev          - Start all services via Overmind"
+	@echo "  make start        - Alias for 'make dev'"
 	@echo "  make stop         - Stop all services"
 	@echo "  make restart      - Restart all services"
 	@echo "  make logs         - View logs from all processes"
@@ -21,22 +22,39 @@ dev:
 		echo "Overmind socket exists, attempting to stop existing instance..."; \
 		overmind stop 2>/dev/null || true; \
 		sleep 1; \
-		rm -f .overmind.sock; \
 	fi
 	@if tmux has-session -t rag-evaluator 2>/dev/null; then \
 		echo "Stopping existing tmux session..."; \
 		tmux kill-session -t rag-evaluator 2>/dev/null || true; \
 		sleep 1; \
 	fi
+	@rm -f .overmind.sock
 	overmind start -f .overmind
+
+start: dev
 
 stop:
 	@echo "Stopping all services..."
-	overmind stop
+	@if [ -f .overmind.sock ]; then \
+		overmind stop 2>/dev/null || true; \
+	fi
+	@echo "Killing any remaining processes..."
+	@pkill -f "uvicorn.*rag_eval" 2>/dev/null || true
+	@pkill -f "vite" 2>/dev/null || true
+	@pkill -f "node.*dev" 2>/dev/null || true
+	@# Kill processes on ports 8000 and 5173 if they exist
+	@lsof -ti:8000 2>/dev/null | xargs kill -9 2>/dev/null || true
+	@lsof -ti:5173 2>/dev/null | xargs kill -9 2>/dev/null || true
+	@echo "Services stopped."
 
 restart:
 	@echo "Restarting all services..."
-	overmind restart
+	@if [ -f .overmind.sock ]; then \
+		overmind restart; \
+	else \
+		echo "Overmind not running. Use 'make dev' to start services first."; \
+		exit 1; \
+	fi
 
 logs:
 	@echo "Viewing logs..."

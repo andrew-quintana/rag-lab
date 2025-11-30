@@ -70,3 +70,18 @@ class MetaEvalSummary:
     judge_consistency: float
     timestamp: datetime
 
+
+@dataclass
+class Document:
+    """Database record for uploaded document"""
+    document_id: str
+    filename: str
+    file_size: int
+    mime_type: Optional[str] = None
+    upload_timestamp: Optional[datetime] = None
+    status: str = "uploaded"
+    chunks_created: Optional[int] = None
+    storage_path: str = ""
+    preview_image_path: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+
