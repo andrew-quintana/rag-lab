@@ -15,7 +15,7 @@ def test_imports():
         ("RAG Services", "from rag_eval.services.rag import chunk_text, ingest_document, extract_text_from_document, upload_document_to_blob"),
         ("DB", "from rag_eval.db import QueryExecutor, DatabaseConnection, QueryRecord"),
         ("Utils", "from rag_eval.utils import generate_id, timer, read_prompt_file"),
-        ("Evaluator", "from rag_eval.services.evaluator import evaluate_answer, normalize_score, aggregate_scores"),
+        ("Evaluator", "from rag_eval.services.evaluator import normalize_score, aggregate_scores, classify_correctness"),
         ("Meta-eval", "from rag_eval.services.meta_eval import generate_summary, compute_judge_consistency, detect_drift, compare_versions"),
         ("Main Package", "from rag_eval import Chunk, Query, Config, get_logger, __version__"),
     ]

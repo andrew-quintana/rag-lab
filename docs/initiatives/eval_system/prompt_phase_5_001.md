@@ -47,12 +47,17 @@ def extract_costs(text: str, config: Optional[Config] = None) -> Dict[str, Any]
 
 ### Implementation Location
 - `rag_eval/services/evaluator/cost_extraction.py`
+- **Base Class**: `rag_eval/services/evaluator/base_evaluator.py` - Inherit from `BaseEvaluatorNode`
+- **LLM Provider**: `rag_eval/services/shared/llm_providers.py` - Use `LLMProvider` abstraction
 
 ### Test Location
 - `backend/tests/components/evaluator/test_evaluator_cost_extraction.py`
 
 ### Prompt Location
 - `backend/rag_eval/prompts/evaluation/cost_extraction_prompt.md` (or store in database)
+
+### Reference Implementation
+- See `rag_eval/services/evaluator/correctness.py` for example of `BaseEvaluatorNode` usage
 
 ## Phase 5 Tasks
 
@@ -79,16 +84,17 @@ def extract_costs(text: str, config: Optional[Config] = None) -> Dict[str, Any]
 3. Test prompt template with sample inputs
 
 ### Core Implementation
-1. Implement `extract_costs()` function matching RFC001 interface
-2. Load prompt template
-3. Construct prompt with text
-4. Call Azure Foundry GPT-4o-mini with structured output (JSON)
-5. Set temperature=0.1 for reproducibility
-6. Parse JSON response to extract cost fields (time, money, steps)
-7. Return dictionary with optional cost fields
-8. Handle LLM failures with proper error handling
-9. Validate input is non-empty
-10. Implement `_construct_cost_extraction_prompt()` helper function
+1. Create `CostExtractionEvaluator` class inheriting from `BaseEvaluatorNode`:
+   - Override `_construct_prompt()` method to build cost extraction-specific prompt
+   - Implement `extract_costs()` method using base class `_call_llm()` and `_parse_json_response()`
+   - Parse JSON response to extract cost fields (time, money, steps)
+   - Return dictionary with optional cost fields
+   - Validate input is non-empty
+2. Implement module-level `extract_costs()` function for backward compatibility:
+   - Create `CostExtractionEvaluator` instance
+   - Call `extract_costs()` method
+   - Return result
+3. **Note**: Base class handles prompt loading, LLM calls (via provider), JSON parsing, and error handling
 
 ### Testing
 1. Unit tests for `extract_costs()`:
