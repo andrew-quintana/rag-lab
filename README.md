@@ -6,10 +6,11 @@ A minimal but correct RAG evaluation platform for assessing retrieval-augmented 
 
 The platform consists of four independent but interoperable subsystems:
 
-1. **RAG Pipeline (Python)** - Ingestion → chunking → embeddings → Azure AI Search retrieval → answer generation → trace logging
-2. **Evaluator (Python)** - LLM-as-judge scoring of grounding, relevance, hallucination
-3. **Meta-Evaluation (Python)** - Version-to-version performance comparison; judge stability/delta analysis
-4. **Observability Dashboard (TypeScript)** - Lightweight client visualizing RAG/eval/meta-eval metrics
+1. **Document Chunk Ingestion (Python)** - Chunking → embedding → Azure AI Search indexing
+2. **RAG Query Flow (Python)** - Query → embedding → Azure AI Search retrieval → answer generation → trace logging
+3. **Evaluator (Python)** - LLM-as-judge scoring of grounding, relevance, hallucination
+4. **Meta-Evaluation (Python)** - Version-to-version performance comparison; judge stability/delta analysis
+5. **Observability Dashboard (TypeScript)** - Lightweight client visualizing RAG/eval/meta-eval metrics
 
 ## Tech Stack
 
