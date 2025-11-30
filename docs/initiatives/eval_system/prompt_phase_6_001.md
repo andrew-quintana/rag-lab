@@ -1,12 +1,12 @@
-# Phase 6 Prompt — Hallucination Impact LLM-Node
+# Phase 6 Prompt — Risk Impact LLM-Node
 
 ## Context
 
-This prompt guides the implementation of **Phase 6: Hallucination Impact LLM-Node** for the RAG Evaluation MVP system. This phase implements the impact magnitude calculation LLM node that computes hallucination impact on a 0-3 scale, handling mixed resource types (time, money, steps).
+This prompt guides the implementation of **Phase 6: Risk Impact LLM-Node** for the RAG Evaluation MVP system. This phase implements the impact magnitude calculation LLM node that computes system-level risk impact on a 0-3 scale, handling mixed resource types (time, money, steps).
 
 **Related Documents:**
-- @docs/initiatives/eval_system/PRD001.md - Product requirements (FR5: Hallucination Impact LLM-Node)
-- @docs/initiatives/eval_system/RFC001.md - Technical design (Phase 5: Hallucination Impact LLM-Node, Interface Contracts)
+- @docs/initiatives/eval_system/PRD001.md - Product requirements (FR5: Risk Impact LLM-Node)
+- @docs/initiatives/eval_system/RFC001.md - Technical design (Phase 5: Risk Impact LLM-Node, Interface Contracts)
 - @docs/initiatives/eval_system/TODO001.md - Implementation tasks (Phase 6 section - check off tasks as completed)
 - @docs/initiatives/eval_system/context.md - Project context
 
@@ -60,7 +60,9 @@ def calculate_risk_impact(
 - `backend/tests/components/evaluator/test_evaluator_risk_impact.py`
 
 ### Prompt Location
-- `backend/rag_eval/prompts/evaluation/risk_impact_prompt.md` (or store in database)
+- **Database**: Prompts are stored in `public.prompts` table with `prompt_type='evaluation'` and `name='risk_impact_evaluator'`
+- **Testing**: Use `prompt_path` parameter pointing to test fixtures in `tests/fixtures/prompts/` for unit tests
+- **Production**: Use `query_executor` parameter to load from database (required)
 
 ### Dependencies
 - Phase 5: Cost Extraction LLM-Node (for extracting costs from text)
@@ -80,9 +82,13 @@ def calculate_risk_impact(
 7. Create test file: `backend/tests/components/evaluator/test_evaluator_risk_impact.py`
 
 ### Prompt Creation
-1. Create prompt template for impact calculation
+1. **REQUIRED**: Store prompt template in database (`public.prompts` table)
+   - `prompt_type='evaluation'`
+   - `name='risk_impact_evaluator'`
+   - `version='0.1'` (or appropriate version)
+   - `live=true` (for live version)
 2. Prompt design:
-   - System instruction: "You are an expert evaluator calculating the real-world impact magnitude of hallucinations."
+   - System instruction: "You are an expert evaluator calculating the real-world impact magnitude of system-level deviations."
    - Input placeholders: `{model_answer_cost}`, `{actual_cost}`
    - Output format: JSON with `risk_impact` (float 0-3) and `reasoning` (str)
    - Explain impact scale:
@@ -91,11 +97,12 @@ def calculate_risk_impact(
      - 2: Moderate impact
      - 3: High/severe impact
    - **CRITICAL**: Emphasize considering mixed resource types (time, money, steps) and their relative importance
+   - **CRITICAL**: Evaluate impact of deviations regardless of origin (retrieval, augmentation, context ordering, prompting, model reasoning, or hallucination)
    - Include examples of impact calculations for different cost differences
 3. Test prompt template with sample inputs
 
 ### Core Implementation
-1. Create `HallucinationImpactEvaluator` class inheriting from `BaseEvaluatorNode`:
+1. Create `RiskImpactEvaluator` class inheriting from `BaseEvaluatorNode`:
    - Override `_construct_prompt()` method to build impact calculation-specific prompt
    - Implement `calculate_risk_impact()` method using base class `_call_llm()` and `_parse_json_response()`
    - Format cost dictionaries for prompt (JSON representation)
@@ -104,7 +111,7 @@ def calculate_risk_impact(
    - Return float impact magnitude
    - Validate inputs are non-empty dictionaries
 2. Implement module-level `calculate_risk_impact()` function for backward compatibility:
-   - Create `HallucinationImpactEvaluator` instance
+   - Create `RiskImpactEvaluator` instance
    - Call `calculate_risk_impact()` method
    - Return result
 3. **Note**: Base class handles prompt loading, LLM calls (via provider), JSON parsing, and error handling
@@ -143,7 +150,8 @@ def calculate_risk_impact(
 - **Impact Range**: Must validate impact is in range [0, 3]
 - **Temperature**: Use temperature=0.1 for all LLM calls
 - **Mixed Resources**: Must handle time, money, and steps with relative importance assessment
-- **LLM Rationale**: Uses LLM node (not deterministic function) because it requires nuanced reasoning about mixed resource types
+- **LLM Rationale**: Uses LLM node (not deterministic function) because it requires nuanced reasoning about mixed resource types and system-level deviations
+- **System-Level Focus**: Evaluates impact of deviations regardless of origin (retrieval, augmentation, context ordering, prompting, model reasoning, or hallucination)
 - **Test Coverage**: Minimum 80% coverage required
 
 ## Blockers

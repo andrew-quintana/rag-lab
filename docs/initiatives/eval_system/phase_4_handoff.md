@@ -83,7 +83,7 @@ def classify_risk_direction(
 Phase 5 will implement **Cost Extraction LLM-Node** (`cost_extraction.py`), which:
 - Extracts cost information (time, money, steps) from text
 - Will be used by Phase 7 orchestrator to extract costs from model answers and retrieved chunks
-- Will provide input to Phase 6 (Hallucination Impact) for impact calculation
+- Will provide input to Phase 6 (Risk Impact) for impact calculation
 
 ### Integration Points
 1. **Phase 7 Orchestrator**: Will call `classify_risk_direction()` when hallucination is detected

@@ -11,43 +11,91 @@ from rag_eval.services.evaluator.risk_direction import (
     RiskDirectionEvaluator,
 )
 from rag_eval.core.config import Config
-from rag_eval.core.exceptions import AzureServiceError
+from rag_eval.core.exceptions import AzureServiceError, ValidationError
 from rag_eval.core.interfaces import RetrievalResult
 from rag_eval.services.shared.llm_providers import AzureFoundryProvider
+from rag_eval.db.queries import QueryExecutor
 
 
 class TestRiskDirectionPrompt:
     """Tests for prompt construction"""
     
-    def test_load_prompt_template(self):
-        """Test that prompt template can be loaded"""
-        evaluator = RiskDirectionEvaluator()
+    def setup_method(self):
+        """Clear cache before each test"""
+        from rag_eval.services.rag.generation import _prompt_cache
+        _prompt_cache.clear()
+    
+    def test_load_prompt_template_from_file(self):
+        """Test that prompt template can be loaded from file (for testing)"""
+        test_prompt_path = Path(__file__).parent.parent.parent.parent / "tests" / "fixtures" / "prompts" / "prompt_v1.md"
+        evaluator = RiskDirectionEvaluator(prompt_path=test_prompt_path)
         template = evaluator._load_prompt_template()
+        assert isinstance(template, str)
+        assert len(template) > 0
+    
+    def test_load_prompt_template_from_database(self):
+        """Test that prompt template can be loaded from database"""
+        # Clear cache to ensure fresh database query
+        from rag_eval.services.rag.generation import _prompt_cache
+        _prompt_cache.clear()
+        
+        mock_query_executor = Mock(spec=QueryExecutor)
+        mock_query_executor.execute_query.return_value = [
+            {"prompt_text": "# System-Level Risk Direction Classification Prompt\n\nYou are an expert evaluator...\n\n**Retrieved Context:**\n{retrieved_context}\n\n**Model Answer:**\n{model_answer}\n"}
+        ]
+        
+        evaluator = RiskDirectionEvaluator(
+            query_executor=mock_query_executor,
+            live=True
+        )
+        template = evaluator._load_prompt_template()
+        
         assert isinstance(template, str)
         assert len(template) > 0
         assert "{retrieved_context}" in template
         assert "{model_answer}" in template
-        # Verify reference answer is NOT in template
         assert "{reference_answer}" not in template
+        
+        # Verify database query was called with correct parameters
+        # Note: version is not in query params when live=True
+        mock_query_executor.execute_query.assert_called_once()
+        call_args = mock_query_executor.execute_query.call_args
+        assert call_args[0][1] == ("evaluation", "risk_direction_evaluator")
     
     def test_load_prompt_template_custom_path(self):
-        """Test loading prompt template from custom path"""
-        default_path = Path(__file__).parent.parent.parent.parent / "rag_eval" / "prompts" / "evaluation" / "risk_direction_prompt.md"
-        evaluator = RiskDirectionEvaluator(prompt_path=default_path)
+        """Test loading prompt template from custom path (for testing)"""
+        test_prompt_path = Path(__file__).parent.parent.parent.parent / "tests" / "fixtures" / "prompts" / "prompt_v1.md"
+        evaluator = RiskDirectionEvaluator(prompt_path=test_prompt_path)
         template = evaluator._load_prompt_template()
         assert isinstance(template, str)
         assert len(template) > 0
     
-    def test_load_prompt_template_not_found(self):
-        """Test that loading non-existent prompt raises ValueError"""
+    def test_load_prompt_template_not_found_file(self):
+        """Test that loading non-existent prompt file raises ValueError"""
         fake_path = Path("/nonexistent/prompt.md")
         evaluator = RiskDirectionEvaluator(prompt_path=fake_path)
         with pytest.raises(ValueError, match="Prompt template not found"):
             evaluator._load_prompt_template()
     
+    def test_load_prompt_template_not_found_database(self):
+        """Test that loading non-existent prompt from database raises ValidationError"""
+        mock_query_executor = Mock(spec=QueryExecutor)
+        mock_query_executor.execute_query.return_value = []
+        
+        evaluator = RiskDirectionEvaluator(
+            query_executor=mock_query_executor,
+            live=True
+        )
+        with pytest.raises(ValidationError, match="not found"):
+            evaluator._load_prompt_template()
+    
     def test_format_retrieved_context(self):
         """Test formatting retrieved context with chunk IDs"""
-        evaluator = RiskDirectionEvaluator()
+        mock_query_executor = Mock(spec=QueryExecutor)
+        mock_query_executor.execute_query.return_value = [
+            {"prompt_text": "# Risk Direction Prompt\n\n**Retrieved Context:**\n{retrieved_context}\n\n**Model Answer:**\n{model_answer}\n"}
+        ]
+        evaluator = RiskDirectionEvaluator(query_executor=mock_query_executor)
         
         retrieved_context = [
             RetrievalResult(
@@ -73,7 +121,11 @@ class TestRiskDirectionPrompt:
     
     def test_format_retrieved_context_empty(self):
         """Test formatting empty retrieved context"""
-        evaluator = RiskDirectionEvaluator()
+        mock_query_executor = Mock(spec=QueryExecutor)
+        mock_query_executor.execute_query.return_value = [
+            {"prompt_text": "# Risk Direction Prompt\n\n**Retrieved Context:**\n{retrieved_context}\n\n**Model Answer:**\n{model_answer}\n"}
+        ]
+        evaluator = RiskDirectionEvaluator(query_executor=mock_query_executor)
         formatted = evaluator._format_retrieved_context([])
         assert "[No retrieved context available]" in formatted
     
@@ -88,7 +140,11 @@ class TestRiskDirectionPrompt:
         ]
         model_answer = "The copay for specialist visits is $75."
         
-        evaluator = RiskDirectionEvaluator()
+        mock_query_executor = Mock(spec=QueryExecutor)
+        mock_query_executor.execute_query.return_value = [
+            {"prompt_text": "# Risk Direction Prompt\n\n**Retrieved Context:**\n{retrieved_context}\n\n**Model Answer:**\n{model_answer}\n"}
+        ]
+        evaluator = RiskDirectionEvaluator(query_executor=mock_query_executor)
         prompt = evaluator._construct_prompt(model_answer, retrieved_context)
         
         assert isinstance(prompt, str)

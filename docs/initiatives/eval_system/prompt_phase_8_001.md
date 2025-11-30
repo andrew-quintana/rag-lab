@@ -84,10 +84,10 @@ def meta_evaluate_judge(
    - Check if model answer claims are supported by retrieved chunks
    - If judge says `hallucination_binary: true`, verify model answer contains unsupported claims
    - If judge says `hallucination_binary: false`, verify all claims are supported
-5. **Validation 3**: Validate risk_direction (if costs available and hallucination detected)
+5. **Validation 3**: Validate risk_direction (if costs available and correctness is True)
    - Compare extracted costs vs actual costs to determine expected cost direction
    - Validate judge's `risk_direction` matches expected direction
-6. **Validation 4**: Validate risk_impact (if costs available and hallucination detected)
+6. **Validation 4**: Validate risk_impact (if costs available and correctness is True)
    - Calculate expected impact magnitude based on cost differences
    - Validate judge's `risk_impact` is within reasonable range of expected impact
 7. Determine overall judge correctness (all validations pass)

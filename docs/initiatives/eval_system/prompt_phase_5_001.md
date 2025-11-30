@@ -5,7 +5,7 @@
 This prompt guides the implementation of **Phase 5: Cost Extraction LLM-Node** for the RAG Evaluation MVP system. This phase implements the cost extraction LLM node that parses structured cost information (time, money, steps) from unstructured text.
 
 **Related Documents:**
-- @docs/initiatives/eval_system/PRD001.md - Product requirements (FR5: Hallucination Impact LLM-Node - requires cost extraction)
+- @docs/initiatives/eval_system/PRD001.md - Product requirements (FR5: Risk Impact LLM-Node - requires cost extraction)
 - @docs/initiatives/eval_system/RFC001.md - Technical design (Phase 4: Cost Extraction LLM-Node, Interface Contracts)
 - @docs/initiatives/eval_system/TODO001.md - Implementation tasks (Phase 5 section - check off tasks as completed)
 - @docs/initiatives/eval_system/context.md - Project context
@@ -54,7 +54,9 @@ def extract_costs(text: str, config: Optional[Config] = None) -> Dict[str, Any]
 - `backend/tests/components/evaluator/test_evaluator_cost_extraction.py`
 
 ### Prompt Location
-- `backend/rag_eval/prompts/evaluation/cost_extraction_prompt.md` (or store in database)
+- **Database**: Prompts are stored in `public.prompts` table with `prompt_type='evaluation'` and `name='cost_extraction_evaluator'`
+- **Testing**: Use `prompt_path` parameter pointing to test fixtures in `tests/fixtures/prompts/` for unit tests
+- **Production**: Use `query_executor` parameter to load from database (required)
 
 ### Reference Implementation
 - See `rag_eval/services/evaluator/correctness.py` for example of `BaseEvaluatorNode` usage
@@ -138,5 +140,5 @@ def extract_costs(text: str, config: Optional[Config] = None) -> Dict[str, Any]
 
 ## Next Phase
 
-After completing Phase 5, proceed to **Phase 6: Hallucination Impact LLM-Node** using @docs/initiatives/eval_system/prompt_phase_6_001.md
+After completing Phase 5, proceed to **Phase 6: Risk Impact LLM-Node** using @docs/initiatives/eval_system/prompt_phase_6_001.md
 

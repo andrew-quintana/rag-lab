@@ -8,32 +8,41 @@ from rag_eval.core.exceptions import AzureServiceError
 from rag_eval.core.interfaces import RetrievalResult
 from rag_eval.services.evaluator.base_evaluator import BaseEvaluatorNode
 from rag_eval.services.shared.llm_providers import LLMProvider
-
-# Default prompt template path
-_DEFAULT_PROMPT_PATH = Path(__file__).parent.parent.parent / "prompts" / "evaluation" / "hallucination_prompt.md"
-
+from rag_eval.db.queries import QueryExecutor
 
 class HallucinationEvaluator(BaseEvaluatorNode):
     """Hallucination classification evaluator using LLM"""
     
     def __init__(
         self,
+        prompt_version: Optional[str] = None,
+        live: bool = True,
+        query_executor: Optional[QueryExecutor] = None,
         config: Optional[Config] = None,
-        prompt_path: Optional[Path] = None,
-        llm_provider: Optional[LLMProvider] = None
+        llm_provider: Optional[LLMProvider] = None,
+        prompt_path: Optional[Path] = None  # Backward compatibility for testing
     ):
         """
         Initialize hallucination evaluator.
         
         Args:
+            prompt_version: Prompt version name (e.g., "v1"). Defaults to None (uses live version)
+            query_executor: QueryExecutor instance for database operations (required for database prompt loading)
             config: Application configuration (optional, defaults to Config.from_env())
-            prompt_path: Path to prompt template file (optional, uses default if None)
             llm_provider: LLM provider instance (optional, defaults to Azure from config)
+            prompt_path: Path to prompt template file (optional, for testing only).
+                        Either query_executor or prompt_path must be provided.
         """
-        if prompt_path is None:
-            prompt_path = _DEFAULT_PROMPT_PATH
-        
-        super().__init__(prompt_path=prompt_path, config=config, llm_provider=llm_provider)
+        super().__init__(
+            prompt_version=prompt_version,
+            prompt_type="evaluation",
+            name="hallucination_evaluator",
+            live=live,
+            query_executor=query_executor,
+            config=config,
+            llm_provider=llm_provider,
+            prompt_path=prompt_path
+        )
     
     def _format_retrieved_context(self, retrieved_context: List[RetrievalResult]) -> str:
         """
@@ -237,7 +246,10 @@ class HallucinationEvaluator(BaseEvaluatorNode):
 def classify_hallucination(
     retrieved_context: List[RetrievalResult],
     model_answer: str,
-    config: Optional[Config] = None
+    config: Optional[Config] = None,
+    query_executor: Optional[QueryExecutor] = None,
+    prompt_version: Optional[str] = None,
+    live: bool = True
 ) -> bool:
     """
     Binary classification: detect if model answer contains hallucinations.
@@ -260,6 +272,7 @@ def classify_hallucination(
         retrieved_context: List of retrieved chunks with similarity scores
         model_answer: Generated answer from RAG system
         config: Application configuration (optional, defaults to Config.from_env())
+        query_executor: QueryExecutor instance for database operations (optional, for database prompt loading)
         
     Returns:
         bool: True if hallucination detected, False otherwise
@@ -289,6 +302,11 @@ def classify_hallucination(
         >>> print(has_hallucination)
         False
     """
-    evaluator = HallucinationEvaluator(config=config)
+    evaluator = HallucinationEvaluator(
+        config=config,
+        query_executor=query_executor,
+        prompt_version=prompt_version,
+        live=live
+    )
     return evaluator.classify_hallucination(retrieved_context, model_answer)
 

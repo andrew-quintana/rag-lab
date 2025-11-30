@@ -7,9 +7,7 @@ from rag_eval.core.config import Config
 from rag_eval.core.exceptions import AzureServiceError
 from rag_eval.services.evaluator.base_evaluator import BaseEvaluatorNode
 from rag_eval.services.shared.llm_providers import LLMProvider
-
-# Default prompt template path
-_DEFAULT_PROMPT_PATH = Path(__file__).parent.parent.parent / "prompts" / "evaluation" / "correctness_prompt.md"
+from rag_eval.db.queries import QueryExecutor
 
 
 class CorrectnessEvaluator(BaseEvaluatorNode):
@@ -17,22 +15,34 @@ class CorrectnessEvaluator(BaseEvaluatorNode):
     
     def __init__(
         self,
+        prompt_version: Optional[str] = None,
+        live: bool = True,
+        query_executor: Optional[QueryExecutor] = None,
         config: Optional[Config] = None,
-        prompt_path: Optional[Path] = None,
-        llm_provider: Optional[LLMProvider] = None
+        llm_provider: Optional[LLMProvider] = None,
+        prompt_path: Optional[Path] = None  # Backward compatibility for testing
     ):
         """
         Initialize correctness evaluator.
         
         Args:
+            prompt_version: Prompt version name (e.g., "v1"). Defaults to None (uses live version)
+            query_executor: QueryExecutor instance for database operations (required for database prompt loading)
             config: Application configuration (optional, defaults to Config.from_env())
-            prompt_path: Path to prompt template file (optional, uses default if None)
             llm_provider: LLM provider instance (optional, defaults to Azure from config)
+            prompt_path: Path to prompt template file (optional, for testing only).
+                        Either query_executor or prompt_path must be provided.
         """
-        if prompt_path is None:
-            prompt_path = _DEFAULT_PROMPT_PATH
-        
-        super().__init__(prompt_path=prompt_path, config=config, llm_provider=llm_provider)
+        super().__init__(
+            prompt_version=prompt_version,
+            prompt_type="evaluation",
+            name="correctness_evaluator",
+            live=live,
+            query_executor=query_executor,
+            config=config,
+            llm_provider=llm_provider,
+            prompt_path=prompt_path
+        )
     
     def _construct_prompt(
         self,
@@ -202,7 +212,10 @@ def classify_correctness(
     query: str,
     model_answer: str,
     reference_answer: str,
-    config: Optional[Config] = None
+    config: Optional[Config] = None,
+    query_executor: Optional[QueryExecutor] = None,
+    prompt_version: Optional[str] = None,
+    live: bool = True
 ) -> bool:
     """
     Direct comparison: assess if model answer is correct compared to reference answer.
@@ -222,6 +235,7 @@ def classify_correctness(
         model_answer: Generated answer from RAG system
         reference_answer: Gold reference answer for comparison
         config: Application configuration (optional, defaults to Config.from_env())
+        query_executor: QueryExecutor instance for database operations (optional, for database prompt loading)
         
     Returns:
         bool: True if answer is correct, False otherwise
@@ -241,5 +255,10 @@ def classify_correctness(
         >>> print(is_correct)
         True
     """
-    evaluator = CorrectnessEvaluator(config=config)
+    evaluator = CorrectnessEvaluator(
+        config=config,
+        query_executor=query_executor,
+        prompt_version=prompt_version,
+        live=live
+    )
     return evaluator.classify_correctness(query, model_answer, reference_answer)
