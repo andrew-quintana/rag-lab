@@ -147,3 +147,9 @@ def meta_evaluate_judge(
 
 After completing Phase 8, proceed to **Phase 9: BEIR Metrics Evaluator** using @docs/initiatives/eval_system/prompt_phase_9_001.md
 
+## Phase 8 Enhancement: Data Science Metrics
+
+**Note**: Phase 8 has been enhanced with data science components to calculate judge performance metrics (recall, precision, F1) for each judge output metric. See @docs/initiatives/eval_system/phase_8_metrics_enhancement.md for details.
+
+**Integration Testing**: The `calculate_judge_metrics()` function will be tested in Phase 10 integration tests to ensure it works correctly with pipeline results.
+

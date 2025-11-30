@@ -62,3 +62,37 @@ class JudgeEvaluationResult:
     reasoning: str
     failure_mode: Optional[str] = None
 
+
+@dataclass
+class MetaEvaluationResult:
+    """Output from Meta-Evaluator."""
+    judge_correct: bool
+    explanation: Optional[str] = None
+    # Ground truth values for metrics calculation (optional)
+    ground_truth_correctness: Optional[bool] = None
+    ground_truth_hallucination: Optional[bool] = None
+    ground_truth_risk_direction: Optional[int] = None
+    ground_truth_risk_impact: Optional[int] = None
+
+
+@dataclass
+class JudgeMetricScores:
+    """Performance metrics for a single judge output metric."""
+    precision: float
+    recall: float
+    f1_score: float
+    true_positives: int
+    true_negatives: int
+    false_positives: int
+    false_negatives: int
+    total_samples: int
+
+
+@dataclass
+class JudgePerformanceMetrics:
+    """Comprehensive performance metrics for LLM-as-Judge across all output metrics."""
+    correctness: JudgeMetricScores
+    hallucination: JudgeMetricScores
+    risk_direction: Optional[JudgeMetricScores] = None  # None if insufficient data
+    risk_impact: Optional[JudgeMetricScores] = None  # None if insufficient data
+

@@ -643,72 +643,74 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 
 **Component**: `rag_eval/services/evaluator/meta_eval.py`
 
+**Status**: ✅ Complete (2024-12-19) - All tests pass, 86% coverage achieved
+
 ### Setup Tasks
-- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
-- [ ] Create `rag_eval/services/evaluator/meta_eval.py` module
-- [ ] Ensure package `__init__.py` files are properly configured with exports
-- [ ] Verify imports work correctly
-- [ ] Review data structures: `MetaEvaluationResult` dataclass
-- [ ] Set up test fixtures for validation scenarios
-- [ ] Create test file: `backend/tests/components/meta_eval/test_evaluator_meta_eval.py`
+- [x] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [x] Create `rag_eval/services/evaluator/meta_eval.py` module
+- [x] Ensure package `__init__.py` files are properly configured with exports
+- [x] Verify imports work correctly
+- [x] Review data structures: `MetaEvaluationResult` dataclass
+- [x] Set up test fixtures for validation scenarios
+- [x] Create test file: `backend/tests/components/meta_eval/test_evaluator_meta_eval.py`
 
 ### Core Implementation
-- [ ] Implement `meta_evaluate_judge(judge_output: JudgeEvaluationResult, retrieved_context: List[RetrievalResult], model_answer: str, reference_answer: str, extracted_costs: Optional[Dict[str, Any]] = None, actual_costs: Optional[Dict[str, Any]] = None) -> MetaEvaluationResult`
-  - [ ] Validate inputs are non-empty
-  - [ ] Validation 1: Validate correctness_binary
-    - [ ] Compare model answer to reference answer (exact or semantic similarity)
-    - [ ] If judge says `correctness_binary: true`, verify model answer matches reference
-    - [ ] If judge says `correctness_binary: false`, verify model answer differs from reference
-  - [ ] Validation 2: Validate hallucination_binary
-    - [ ] Check if model answer claims are supported by retrieved chunks
-    - [ ] If judge says `hallucination_binary: true`, verify model answer contains unsupported claims
-    - [ ] If judge says `hallucination_binary: false`, verify all claims are supported
-  - [ ] Validation 3: Validate risk_direction (if costs available and correctness is True)
-    - [ ] Compare extracted costs vs actual costs to determine expected cost direction
-    - [ ] Validate judge's `risk_direction` matches expected direction
-  - [ ] Validation 4: Validate risk_impact (if costs available and correctness is True)
-    - [ ] Calculate expected impact magnitude based on cost differences
-    - [ ] Validate judge's `risk_impact` is within reasonable range of expected impact
-  - [ ] Determine overall judge correctness (all validations pass)
-  - [ ] Generate deterministic explanation of validation results
-  - [ ] Return `MetaEvaluationResult` object
-- [ ] Implement helper functions:
-  - [ ] `_validate_correctness(judge_correctness: bool, model_answer: str, reference_answer: str) -> bool`
-  - [ ] `_validate_hallucination(judge_hallucination: bool, model_answer: str, retrieved_context: List[RetrievalResult]) -> bool`
-  - [ ] `_validate_cost_classification(judge_cost: Optional[int], extracted_costs: Dict[str, Any], actual_costs: Dict[str, Any]) -> bool`
-  - [ ] `_validate_impact_magnitude(judge_impact: Optional[float], extracted_costs: Dict[str, Any], actual_costs: Dict[str, Any]) -> bool`
-  - [ ] `_generate_explanation(validation_results: Dict[str, bool]) -> str`
+- [x] Implement `meta_evaluate_judge(judge_output: JudgeEvaluationResult, retrieved_context: List[RetrievalResult], model_answer: str, reference_answer: str, extracted_costs: Optional[Dict[str, Any]] = None, actual_costs: Optional[Dict[str, Any]] = None) -> MetaEvaluationResult`
+  - [x] Validate inputs are non-empty
+  - [x] Validation 1: Validate correctness_binary
+    - [x] Compare model answer to reference answer (exact or semantic similarity)
+    - [x] If judge says `correctness_binary: true`, verify model answer matches reference
+    - [x] If judge says `correctness_binary: false`, verify model answer differs from reference
+  - [x] Validation 2: Validate hallucination_binary
+    - [x] Check if model answer claims are supported by retrieved chunks
+    - [x] If judge says `hallucination_binary: true`, verify model answer contains unsupported claims
+    - [x] If judge says `hallucination_binary: false`, verify all claims are supported
+  - [x] Validation 3: Validate risk_direction (if costs available and correctness is True)
+    - [x] Compare extracted costs vs actual costs to determine expected cost direction
+    - [x] Validate judge's `risk_direction` matches expected direction
+  - [x] Validation 4: Validate risk_impact (if costs available and correctness is True)
+    - [x] Calculate expected impact magnitude based on cost differences
+    - [x] Validate judge's `risk_impact` is within reasonable range of expected impact
+  - [x] Determine overall judge correctness (all validations pass)
+  - [x] Generate deterministic explanation of validation results
+  - [x] Return `MetaEvaluationResult` object
+- [x] Implement helper functions:
+  - [x] `_validate_correctness(judge_correctness: bool, model_answer: str, reference_answer: str) -> bool`
+  - [x] `_validate_hallucination(judge_hallucination: bool, model_answer: str, retrieved_context: List[RetrievalResult]) -> bool`
+  - [x] `_validate_cost_classification(judge_cost: Optional[int], extracted_costs: Dict[str, Any], actual_costs: Dict[str, Any]) -> bool`
+  - [x] `_validate_impact_magnitude(judge_impact: Optional[float], extracted_costs: Dict[str, Any], actual_costs: Dict[str, Any]) -> bool`
+  - [x] `_generate_explanation(validation_results: Dict[str, bool]) -> str`
 
 ### Testing Tasks
-- [ ] Unit tests for `meta_evaluate_judge()`
-  - [ ] Test judge_correct classification: correct correctness_binary verdict
-  - [ ] Test judge_incorrect classification: incorrect correctness_binary verdict
-  - [ ] Test judge_correct classification: correct hallucination_binary verdict
-  - [ ] Test judge_incorrect classification: incorrect hallucination_binary verdict
-  - [ ] Test validation of risk_direction against ground truth costs
-  - [ ] Test validation of risk_impact against ground truth costs
-  - [ ] Test deterministic explanation generation
-  - [ ] Test edge case: partial judge correctness (some verdicts correct, others incorrect)
-  - [ ] Test edge case: missing ground truth information
-  - [ ] Test edge case: zero retrieved chunks
-- [ ] **Document any failures** in fracas.md immediately when encountered
+- [x] Unit tests for `meta_evaluate_judge()`
+  - [x] Test judge_correct classification: correct correctness_binary verdict
+  - [x] Test judge_incorrect classification: incorrect correctness_binary verdict
+  - [x] Test judge_correct classification: correct hallucination_binary verdict
+  - [x] Test judge_incorrect classification: incorrect hallucination_binary verdict
+  - [x] Test validation of risk_direction against ground truth costs
+  - [x] Test validation of risk_impact against ground truth costs
+  - [x] Test deterministic explanation generation
+  - [x] Test edge case: partial judge correctness (some verdicts correct, others incorrect)
+  - [x] Test edge case: missing ground truth information
+  - [x] Test edge case: zero retrieved chunks
+- [x] **Document any failures** in fracas.md immediately when encountered
 
 ### Documentation Tasks
-- [ ] Add docstrings to all functions
-- [ ] Document validation logic for each judge verdict type
-- [ ] Document deterministic nature (no LLM calls)
-- [ ] Document explanation generation approach
-- [ ] **Phase 8 Testing Summary** for handoff to Phase 9
+- [x] Add docstrings to all functions
+- [x] Document validation logic for each judge verdict type
+- [x] Document deterministic nature (no LLM calls)
+- [x] Document explanation generation approach
+- [x] **Phase 8 Testing Summary** for handoff to Phase 9
 
 ### Validation Requirements (Phase 8 Complete)
-- [ ] **REQUIRED**: All unit tests for Phase 8 must pass before proceeding to Phase 9
-- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/meta_eval/test_evaluator_meta_eval.py -v`
-- [ ] **REQUIRED**: Test coverage must meet minimum 80% for meta_eval.py module
-- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
-- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
-- [ ] **REQUIRED**: Document any test failures in fracas.md
-- [ ] **REQUIRED**: Phase 8 is NOT complete until all tests pass
-- [ ] **Status**: ⏳ Pending - Phase 8 cannot proceed to Phase 9 until validation complete
+- [x] **REQUIRED**: All unit tests for Phase 8 must pass before proceeding to Phase 9
+- [x] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/meta_eval/test_evaluator_meta_eval.py -v`
+- [x] **REQUIRED**: Test coverage must meet minimum 80% for meta_eval.py module
+- [x] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [x] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [x] **REQUIRED**: Document any test failures in fracas.md
+- [x] **REQUIRED**: Phase 8 is NOT complete until all tests pass
+- [x] **Status**: ✅ Complete - All tests pass (36/36), 86% coverage, ready for Phase 9
 
 ---
 
@@ -811,6 +813,10 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 - [ ] Implement `_evaluate_single_example(example: EvaluationExample, rag_retriever: Callable, rag_generator: Callable, config: Config) -> EvaluationResult`
   - [ ] Extract single example evaluation logic
   - [ ] Handle errors for individual examples (don't fail entire pipeline)
+- [ ] **Optional**: Implement judge performance metrics calculation helper
+  - [ ] After pipeline execution, collect all (judge_output, meta_eval_output) pairs
+  - [ ] Call `calculate_judge_metrics()` to compute precision, recall, F1 for all judge metrics
+  - [ ] Return or log `JudgePerformanceMetrics` for analysis
 
 ### Testing Tasks
 - [ ] Unit tests for `evaluate_rag_system()`
@@ -822,6 +828,15 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
   - [ ] Test edge case: RAG retriever failure
   - [ ] Test edge case: RAG generator failure
   - [ ] Test edge case: Judge evaluation failure
+- [ ] Integration tests for judge performance metrics:
+  - [ ] Test `calculate_judge_metrics()` integration with pipeline results
+  - [ ] Test metrics calculation from batch of EvaluationResult objects
+  - [ ] Verify correctness metrics (precision, recall, F1) are calculated correctly
+  - [ ] Verify hallucination metrics (precision, recall, F1) are calculated correctly
+  - [ ] Verify risk_direction metrics (if cost data available) are calculated correctly
+  - [ ] Verify risk_impact metrics (if cost data available) are calculated correctly
+  - [ ] Test metrics calculation with mixed scenarios (some with costs, some without)
+  - [ ] Test metrics calculation handles missing optional metrics gracefully
 - [ ] Integration tests with real RAG components (optional, requires full system setup)
 - [ ] **Document any failures** in fracas.md immediately when encountered
 
@@ -853,44 +868,103 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 ### Setup Tasks
 - [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
 - [ ] Create `rag_eval/services/evaluator/logging.py` module
-- [ ] Review Supabase database schema for evaluation results table
+- [ ] Review Supabase database schema and existing migrations
 - [ ] Review existing `QueryExecutor` from `rag_eval/db/queries.py`
 - [ ] Set up test fixtures for database operations
 - [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_logging.py`
+- [ ] **Database Schema**: Create migration file for `evaluation_results` table
+
+### Database Schema Implementation
+- [ ] **Create Migration File**: `infra/supabase/migrations/0011_add_evaluation_results_table.sql`
+- [ ] **Design Table Schema**:
+  - [ ] `result_id` (VARCHAR(255) PRIMARY KEY)
+  - [ ] `example_id` (VARCHAR(255) NOT NULL) - Reference to evaluation example
+  - [ ] `timestamp` (TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
+  - [ ] `judge_output` (JSONB) - Store `JudgeEvaluationResult` as JSON
+  - [ ] `meta_eval_output` (JSONB) - Store `MetaEvaluationResult` as JSON (includes ground truth)
+  - [ ] `beir_metrics` (JSONB) - Store `BEIRMetricsResult` as JSON
+  - [ ] `judge_performance_metrics` (JSONB, NULLABLE) - Store `JudgePerformanceMetrics` as JSON (if calculated)
+  - [ ] `metadata` (JSONB, NULLABLE) - Additional flexible metadata
+- [ ] **Create Indexes**:
+  - [ ] Index on `example_id` for lookups
+  - [ ] Index on `timestamp` for time-based queries
+  - [ ] GIN index on JSONB columns for efficient JSON queries
+- [ ] **Test Migration**: Verify migration runs successfully
 
 ### Core Implementation
 - [ ] Implement `log_evaluation_result(result: EvaluationResult, query_executor: Optional[QueryExecutor] = None) -> Optional[str]`
   - [ ] If query_executor is None, skip logging (local-only mode)
-  - [ ] Serialize EvaluationResult to JSON
-  - [ ] Insert into Supabase Postgres `evaluation_results` table
+  - [ ] **Serialize to JSON**: Convert all evaluation result components to JSON:
+    - [ ] `JudgeEvaluationResult` → JSON (correctness_binary, hallucination_binary, risk_direction, risk_impact, reasoning, failure_mode)
+    - [ ] `MetaEvaluationResult` → JSON (judge_correct, explanation, ground_truth_* fields)
+    - [ ] `BEIRMetricsResult` → JSON (recall_at_k, precision_at_k, ndcg_at_k)
+    - [ ] `JudgePerformanceMetrics` → JSON (if provided, optional)
+  - [ ] Insert into Supabase Postgres `evaluation_results` table with JSONB columns
   - [ ] Handle logging failures gracefully (don't fail evaluation pipeline)
   - [ ] Return result_id if successful, None otherwise
 - [ ] Implement `log_evaluation_batch(results: List[EvaluationResult], query_executor: Optional[QueryExecutor] = None) -> None`
-  - [ ] Batch insert evaluation results
+  - [ ] Batch insert evaluation results (all as JSONB)
   - [ ] Handle partial failures gracefully
   - [ ] Log batch operation status
+  - [ ] Ensure ground truth fields from `MetaEvaluationResult` are properly logged
+- [ ] **JSON Serialization Helpers**: Create helper functions to serialize dataclasses to JSON-compatible dicts
+  - [ ] Handle datetime objects
+  - [ ] Handle Optional fields
+  - [ ] Handle nested dataclasses
+- [ ] **Optional**: Implement judge performance metrics logging
+  - [ ] If `JudgePerformanceMetrics` are calculated, support logging them separately
+  - [ ] Enable metrics retrieval and recalculation from logged results
 
 ### Testing Tasks
+- [ ] **Database Schema Tests**:
+  - [ ] Test migration file executes successfully
+  - [ ] Verify table structure matches specification
+  - [ ] Verify indexes are created correctly
+  - [ ] Test JSONB column queries work correctly
 - [ ] Unit tests for `log_evaluation_result()`
   - [ ] Test logging with query_executor (mocked)
   - [ ] Test local-only mode (query_executor is None)
+  - [ ] Test JSON serialization of all result components
+  - [ ] Test JSONB insertion into database
   - [ ] Test error handling for database failures
   - [ ] Test that logging failures don't fail evaluation pipeline
+  - [ ] Test logging of `MetaEvaluationResult` with ground truth fields (for metrics calculation)
+  - [ ] Test logging of `JudgePerformanceMetrics` (optional field)
+- [ ] Unit tests for `log_evaluation_batch()`
+  - [ ] Test batch logging with query_executor (mocked)
+  - [ ] Test local-only mode (query_executor is None)
+  - [ ] Test partial failure handling
+  - [ ] Test batch logging includes all meta-evaluation ground truth data
+  - [ ] Test batch JSON serialization and insertion
+- [ ] Integration tests for JSON retrieval and deserialization:
+  - [ ] Test retrieving logged evaluation results from database
+  - [ ] Test deserializing JSONB back to Python objects
+  - [ ] Test that all fields are preserved in JSON round-trip
+  - [ ] Test metrics recalculation from retrieved JSON data
+- [ ] Integration tests for judge performance metrics logging:
+  - [ ] Test logging of `JudgePerformanceMetrics` results (if metrics are calculated)
+  - [ ] Test that metrics can be retrieved and recalculated from logged evaluation results
+  - [ ] Test metrics calculation from logged batch results
 - [ ] Connection test for Supabase (warns if credentials missing)
 - [ ] **Document any failures** in fracas.md immediately when encountered
 
 ### Documentation Tasks
 - [ ] Add docstrings to all functions
 - [ ] Document optional nature of logging
-- [ ] Document database schema requirements
+- [ ] Document database schema requirements (JSONB structure)
 - [ ] Document local-only vs. database logging modes
+- [ ] Document JSON serialization format for each result type
+- [ ] Document how to query JSONB columns for analysis
+- [ ] Document migration file location and usage
 - [ ] **Phase 11 Testing Summary** for final validation
 
 ### Validation Requirements (Phase 11 Complete)
+- [ ] **REQUIRED**: Database migration file created and tested
 - [ ] **REQUIRED**: All unit tests for Phase 11 must pass
 - [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_logging.py -v`
 - [ ] **REQUIRED**: Test coverage must meet minimum 80% for logging.py module
 - [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [ ] **REQUIRED**: JSON serialization/deserialization tested and verified
 - [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
 - [ ] **REQUIRED**: Document any test failures in fracas.md
 - [ ] **REQUIRED**: Phase 11 is NOT complete until all tests pass
