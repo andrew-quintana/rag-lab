@@ -75,18 +75,18 @@ This context will be fed into a documentation agent to generate PRD, RFC, TODO l
      - Process:
        - Analyzes the difference between model answer cost and actual cost from chunks
        - Considers the mixed resource types (time, money, steps) and their relative importance
-       - Computes **risk_impact** (range [0, 3]) representing the magnitude of real-world consequence
+       - Computes **risk_impact** (discrete values: 0, 1, 2, or 3) representing the magnitude of real-world consequence
      - Output:
-       - **risk_impact**: Numeric scaling factor [0, 3]
-     - risk_impact serves as a scaling factor that, combined with risk_direction (-1 or +1), determines total real-world consequence.
+       - **risk_impact**: Discrete scaling factor in {0, 1, 2, 3}
+     - risk_impact serves as a scaling factor that, combined with risk_direction (-1, 0, or +1), determines total real-world consequence.
 
 - Output schema:
   ```json
   {
     "correctness_binary": true | false,
     "hallucination_binary": true | false,
-    "risk_direction": -1 | 1,         // -1 = care avoidance risk (overestimated, dissuaded from care), +1 = unexpected cost risk (underestimated, persuaded to care)
-    "risk_impact": number,       // [0, 3], from risk_impact LLM-node
+    "risk_direction": -1 | 0 | 1,         // -1 = care avoidance risk (overestimated, dissuaded from care), 0 = no clear direction, +1 = unexpected cost risk (underestimated, persuaded to care)
+    "risk_impact": 0 | 1 | 2 | 3,       // Discrete impact magnitude from risk_impact LLM-node
     "reasoning": string,                  // Reasoning trace constructed from LLM node outputs, including correctness classification, risk direction classification (via risk_direction LLM-node) and impact calculation (via risk_impact LLM-node) steps
     "failure_mode": string                // Optional: e.g., "cost misstatement", "omitted deductible", "incorrect coverage rule"
   }
@@ -121,6 +121,7 @@ This context will be fed into a documentation agent to generate PRD, RFC, TODO l
   - Output:
     - **risk_direction**: Classification value
       - **-1 = Care Avoidance Risk**: Model answer overestimated cost (time/money/steps), potentially dissuading user from seeking care and causing them to miss the opportunity.
+      - **0 = No Clear Direction**: Unable to determine clear risk direction
       - **+1 = Unexpected Cost Risk**: Model answer underestimated cost (time/money/steps), potentially persuading user to pursue care that ended up costing them those resources.
   - This classification is made for all deviations (both quantitative and non-quantitative).
 
@@ -134,9 +135,9 @@ This context will be fed into a documentation agent to generate PRD, RFC, TODO l
     - Analyzes the difference between model answer cost and actual cost from chunks
     - Considers the mixed resource types (time, money, steps) and their relative importance
     - Assesses the magnitude of real-world consequence across these different dimensions
-    - Computes **risk_impact** (range [0, 3]) representing the scaling factor for impact
+    - Computes **risk_impact** (discrete values: 0, 1, 2, or 3) representing the scaling factor for impact
   - Output:
-    - **risk_impact**: Numeric scaling factor [0, 3] representing the magnitude of real-world consequence
+    - **risk_impact**: Discrete scaling factor in {0, 1, 2, 3} representing the magnitude of real-world consequence
   - This node is used for all deviations (both quantitative and non-quantitative), as it can handle both numeric and qualitative assessments of impact.
 
 - Failure modes remain tied to key insurance dimensions:
@@ -200,7 +201,7 @@ This context will be fed into a documentation agent to generate PRD, RFC, TODO l
   - judge (deterministic script orchestrator)
   - hallucination LLM-node (binary classification)
   - risk_direction LLM-node (risk direction classification: -1 or +1)
-  - risk_impact LLM-node (impact magnitude calculation: 0-3)
+  - risk_impact LLM-node (impact magnitude calculation: discrete values 0, 1, 2, or 3)
   - meta-judge
   - BEIR evaluator
 
@@ -226,8 +227,8 @@ This context will be fed into a documentation agent to generate PRD, RFC, TODO l
 ### Phase 3 — LLM-as-Judge Implementation
 - Implement deterministic Python script orchestrator for LLM-as-Judge (sequential calls with conditional branching).
 - Implement separate hallucination LLM-node for binary classification.
-- Implement separate risk_direction LLM-node (GPT-4o-mini) for risk direction classification (-1 for care avoidance risk, +1 for unexpected cost risk).
-- Implement separate risk_impact LLM-node (GPT-4o-mini) for impact magnitude calculation (0-3), handling mixed resource types (time/money/steps).
+- Implement separate risk_direction LLM-node (GPT-4o-mini) for risk direction classification (-1 for care avoidance risk, 0 for no clear direction, +1 for unexpected cost risk).
+- Implement separate risk_impact LLM-node (GPT-4o-mini) for impact magnitude calculation (discrete values: 0, 1, 2, or 3), handling mixed resource types (time/money/steps).
 - Implement failure mode tagging.
 
 ### Phase 4 — Meta-Evaluator
@@ -270,11 +271,11 @@ By measuring only hallucinations, we hide these other failure modes and produce 
 
 ### 7.3 Risk Metrics
 
-- **risk_direction** (INT: -1 or +1): Classifies the direction of system-level deviations
+- **risk_direction** (INT: -1, 0, or +1): Classifies the direction of system-level deviations
   - **-1 (Care Avoidance Risk)**: Model overestimated cost, dissuading user from seeking care
   - **+1 (Unexpected Cost Risk)**: Model underestimated cost, persuading user to pursue care
   
-- **risk_impact** (FLOAT: 0-3): Measures the magnitude of real-world consequence
+- **risk_impact** (INT: 0, 1, 2, or 3): Measures the magnitude of real-world consequence as discrete value
   - **0**: Minimal/no impact
   - **1**: Low impact
   - **2**: Moderate impact

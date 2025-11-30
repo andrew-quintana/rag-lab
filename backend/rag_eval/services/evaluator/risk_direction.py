@@ -137,6 +137,7 @@ class RiskDirectionEvaluator(BaseEvaluatorNode):
         
         **Risk Classification**:
         - **-1 (Care Avoidance Risk)**: Model overestimated cost, dissuading user from seeking care
+        - **0 (No Clear Risk Direction)**: Unable to determine clear risk direction
         - **+1 (Unexpected Cost Risk)**: Model underestimated cost, persuading user to pursue care
         
         **Temperature Setting**: Uses temperature=0.1 for reproducibility, as specified
@@ -154,7 +155,7 @@ class RiskDirectionEvaluator(BaseEvaluatorNode):
             retrieved_context: List of retrieved chunks with similarity scores
             
         Returns:
-            int: -1 for care avoidance risk (overestimated), +1 for unexpected cost risk (underestimated)
+            int: -1 for care avoidance risk (overestimated), 0 for no clear direction, +1 for unexpected cost risk (underestimated)
             
         Raises:
             AzureServiceError: If LLM call fails
@@ -222,22 +223,27 @@ class RiskDirectionEvaluator(BaseEvaluatorNode):
                     f"Response: {classification}"
                 )
             
-            # Validate risk_direction is -1 or +1
+            # Validate risk_direction is -1, 0, or +1
             risk_direction = classification["risk_direction"]
             if not isinstance(risk_direction, int):
                 raise ValueError(
                     f"risk_direction must be an integer, got {type(risk_direction)}: {risk_direction}"
                 )
             
-            if risk_direction not in [-1, 1]:
+            if risk_direction not in [-1, 0, 1]:
                 raise ValueError(
-                    f"risk_direction must be -1 (care avoidance risk) or +1 (unexpected cost risk), "
+                    f"risk_direction must be -1 (care avoidance risk), 0 (no clear direction), or +1 (unexpected cost risk), "
                     f"got {risk_direction}"
                 )
             
             reasoning = classification.get("reasoning", "No reasoning provided")
             
-            risk_type = "care avoidance risk" if risk_direction == -1 else "unexpected cost risk"
+            if risk_direction == -1:
+                risk_type = "care avoidance risk"
+            elif risk_direction == 0:
+                risk_type = "no clear direction"
+            else:
+                risk_type = "unexpected cost risk"
             self.logger.info(
                 f"Risk direction classification: {risk_direction} ({risk_type}) "
                 f"(reasoning: {reasoning[:100]}...)"
@@ -273,14 +279,15 @@ def classify_risk_direction(
     This is a convenience function that maintains backward compatibility.
     It creates a RiskDirectionEvaluator instance and calls classify_risk_direction().
     
-    Determines whether a deviation from the gold answer represents a care avoidance risk (-1)
-    or unexpected cost risk (+1) by comparing the model answer's cost claims
+    Determines whether a deviation from the gold answer represents a care avoidance risk (-1),
+    no clear direction (0), or unexpected cost risk (+1) by comparing the model answer's cost claims
     against the retrieved context. This evaluates the entire RAG pipeline as a black box,
     capturing deviations regardless of origin (retrieval, augmentation, context ordering,
     prompting, model reasoning, or hallucination).
     
     **Risk Classification**:
     - **-1 (Care Avoidance Risk)**: Model overestimated cost, dissuading user from seeking care
+    - **0 (No Clear Direction)**: Unable to determine clear risk direction
     - **+1 (Unexpected Cost Risk)**: Model underestimated cost, persuading user to pursue care
     
     **Temperature Setting**: Uses temperature=0.1 for reproducibility, as specified
@@ -300,7 +307,7 @@ def classify_risk_direction(
         query_executor: QueryExecutor instance for database operations (optional, for database prompt loading)
         
     Returns:
-        int: -1 for care avoidance risk (overestimated), +1 for unexpected cost risk (underestimated)
+        int: -1 for care avoidance risk (overestimated), 0 for no clear direction, +1 for unexpected cost risk (underestimated)
         
     Raises:
         AzureServiceError: If Azure Foundry LLM call fails

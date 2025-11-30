@@ -51,8 +51,8 @@ def evaluate_answer_with_judge(
 - `JudgeEvaluationResult` dataclass (from RFC001.md):
   - `correctness_binary: bool`
   - `hallucination_binary: bool`
-  - `risk_direction: Optional[int]` (-1 or +1)
-  - `risk_impact: Optional[float]` (0-3)
+  - `risk_direction: Optional[int]` (-1, 0, or 1)
+  - `risk_impact: Optional[int]` (0, 1, 2, or 3)
   - `reasoning: str`
   - `failure_mode: Optional[str]`
 

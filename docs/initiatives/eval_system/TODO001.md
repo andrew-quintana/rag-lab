@@ -336,7 +336,7 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 - [x] Prompt design:
   - [x] System instruction: "You are an expert evaluator classifying the cost impact direction of hallucinations."
   - [x] Input placeholders: `{model_answer}`, `{retrieved_context}`
-  - [x] Output format: JSON with `risk_direction` (-1 or +1) and `reasoning` (str)
+  - [x] Output format: JSON with `risk_direction` (-1, 0, or +1) and `reasoning` (str)
   - [x] Explain cost classification:
     - [x] -1 = Opportunity Cost: Model overestimated cost, dissuading user from seeking care
     - [x] +1 = Resource Cost: Model underestimated cost, persuading user to pursue care
@@ -349,7 +349,7 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
   - [x] Override `_construct_prompt()` method to build cost classification-specific prompt
   - [x] Implement `classify_risk_direction()` method using base class `_call_llm()` and `_parse_json_response()`
   - [x] Format retrieved context
-  - [x] Validate `risk_direction` field in parsed JSON response (-1 or +1)
+  - [x] Validate `risk_direction` field in parsed JSON response (-1, 0, or +1)
   - [x] Return integer classification
   - [x] Handle LLM failures with proper error handling (inherited from base class)
   - [x] Validate inputs are non-empty
@@ -373,7 +373,7 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 
 ### Documentation Tasks
 - [x] Add docstrings to all functions
-- [x] Document cost classification logic (-1 vs. +1)
+- [x] Document cost classification logic (-1, 0, or +1)
 - [x] Document that reference answer is NOT used
 - [x] Document prompt design and cost direction analysis
 - [x] **Phase 4 Testing Summary** for handoff to Phase 5
@@ -489,7 +489,7 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 - [x] Prompt design:
   - [x] System instruction: "You are an expert evaluator calculating the real-world impact magnitude of system-level deviations."
   - [x] Input placeholders: `{model_answer_cost}`, `{actual_cost}`
-  - [x] Output format: JSON with `risk_impact` (float 0-3) and `reasoning` (str)
+  - [x] Output format: JSON with `risk_impact` (int: 0, 1, 2, or 3) and `reasoning` (str)
   - [x] Explain impact scale:
     - [x] 0: Minimal/no impact
     - [x] 1: Low impact
@@ -505,8 +505,8 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
   - [x] Override `_construct_prompt()` method to build impact calculation-specific prompt
   - [x] Implement `calculate_risk_impact()` method using base class `_call_llm()` and `_parse_json_response()`
   - [x] Format cost dictionaries for prompt (JSON representation)
-  - [x] Parse JSON response to extract `risk_impact` (0-3)
-  - [x] Validate impact is in range [0, 3]
+  - [x] Parse JSON response to extract `risk_impact` (0, 1, 2, or 3)
+  - [x] Validate impact is a discrete value in {0, 1, 2, 3}
   - [x] Return float impact magnitude
   - [x] Handle LLM failures with proper error handling (inherited from base class)
   - [x] Validate inputs are non-empty dictionaries
@@ -521,7 +521,7 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
   - [x] Test impact calculation for money-based costs
   - [x] Test impact calculation for step-based costs
   - [x] Test impact calculation for mixed resource types
-  - [x] Test impact scaling factor range [0, 3]
+  - [x] Test impact scaling factor discrete values {0, 1, 2, 3}
   - [x] Test edge case: zero impact scenarios
   - [x] Test edge case: maximum impact scenarios
   - [x] Test error handling for LLM failures
@@ -530,7 +530,7 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 
 ### Documentation Tasks
 - [x] Add docstrings to all functions
-- [x] Document impact scale (0-3) and rationale
+- [x] Document impact scale (discrete values: 0, 1, 2, or 3) and rationale
 - [x] Document handling of mixed resource types
 - [x] Document why LLM node is used (not deterministic function)
 - [x] **Phase 6 Testing Summary** for handoff to Phase 7
@@ -551,89 +551,91 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 
 **Component**: `rag_eval/services/evaluator/judge.py`
 
+**Status**: ✅ Complete (2024-12-19) - All tests pass, 99% coverage achieved
+
 ### Setup Tasks
-- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
-- [ ] Create `rag_eval/services/evaluator/judge.py` module
-- [ ] Ensure package `__init__.py` files are properly configured with exports
-- [ ] Verify imports work correctly (correctness, hallucination, cost, impact, cost_extraction nodes)
-- [ ] Review data structures: `JudgeEvaluationResult` dataclass
-- [ ] Set up test fixtures for mocked LLM node responses
-- [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_judge.py`
+- [x] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [x] Create `rag_eval/services/evaluator/judge.py` module
+- [x] Ensure package `__init__.py` files are properly configured with exports
+- [x] Verify imports work correctly (correctness, hallucination, cost, impact, cost_extraction nodes)
+- [x] Review data structures: `JudgeEvaluationResult` dataclass
+- [x] Set up test fixtures for mocked LLM node responses
+- [x] Create test file: `backend/tests/components/evaluator/test_evaluator_judge.py`
 
 ### Core Implementation
-- [ ] Implement `evaluate_answer_with_judge(query: str, retrieved_context: List[RetrievalResult], model_answer: str, reference_answer: str, config: Optional[Config] = None) -> JudgeEvaluationResult`
-  - [ ] Validate all inputs are non-empty
-  - [ ] Step 1: Call correctness LLM-node (always)
-    - [ ] `correctness_binary = classify_correctness(query, model_answer, reference_answer, config)`
-  - [ ] Step 2: Call hallucination LLM-node (always)
-    - [ ] `hallucination_binary = classify_hallucination(retrieved_context, model_answer, config)`
-  - [ ] Step 3: Conditional - if correctness is True, call cost classification node
-    - [ ] `risk_direction = None`
-    - [ ] `if correctness_binary: risk_direction = classify_risk_direction(model_answer, retrieved_context, config)`
-  - [ ] Step 4: Conditional - if correctness is True, extract costs and calculate impact
-    - [ ] `risk_impact = None`
-    - [ ] `if correctness_binary:`
-      - [ ] Extract costs from model answer: `model_answer_cost = extract_costs(model_answer, config)`
-      - [ ] Extract costs from retrieved chunks: `chunks_text = " ".join([chunk.chunk_text for chunk in retrieved_context])`
-      - [ ] `actual_cost = extract_costs(chunks_text, config)`
-      - [ ] Calculate impact: `risk_impact = calculate_risk_impact(model_answer_cost, actual_cost, config)`
-  - [ ] Step 5: Construct reasoning trace from all LLM node outputs
-    - [ ] Collect reasoning from correctness node
-    - [ ] Collect reasoning from hallucination node
-    - [ ] Collect reasoning from cost node (if called)
-    - [ ] Collect reasoning from impact node (if called)
-    - [ ] Construct combined reasoning trace
-  - [ ] Step 6: Assemble `JudgeEvaluationResult` with all fields
-    - [ ] `correctness_binary`
-    - [ ] `hallucination_binary`
-    - [ ] `risk_direction` (optional)
-    - [ ] `risk_impact` (optional)
-    - [ ] `reasoning` (combined trace)
-    - [ ] `failure_mode` (optional, extracted from reasoning or LLM output)
-  - [ ] Handle edge cases: zero chunks, empty answers, LLM failures
-  - [ ] Return `JudgeEvaluationResult` object
-- [ ] Implement `_orchestrate_judge_evaluation(...)` helper function (if needed for organization)
-- [ ] Implement `_construct_reasoning_trace(correctness_result: bool, hallucination_result: bool, cost_result: Optional[int], impact_result: Optional[float], node_reasonings: List[str]) -> str`
-  - [ ] Combine reasoning from all invoked LLM nodes
-  - [ ] Format as structured reasoning trace
-  - [ ] Return combined reasoning string
+- [x] Implement `evaluate_answer_with_judge(query: str, retrieved_context: List[RetrievalResult], model_answer: str, reference_answer: str, config: Optional[Config] = None) -> JudgeEvaluationResult`
+  - [x] Validate all inputs are non-empty
+  - [x] Step 1: Call correctness LLM-node (always)
+    - [x] `correctness_binary = classify_correctness(query, model_answer, reference_answer, config)`
+  - [x] Step 2: Call hallucination LLM-node (always)
+    - [x] `hallucination_binary = classify_hallucination(retrieved_context, model_answer, config)`
+  - [x] Step 3: Conditional - if correctness is True, call cost classification node
+    - [x] `risk_direction = None`
+    - [x] `if correctness_binary: risk_direction = classify_risk_direction(model_answer, retrieved_context, config)`
+  - [x] Step 4: Conditional - if correctness is True, extract costs and calculate impact
+    - [x] `risk_impact = None`
+    - [x] `if correctness_binary:`
+      - [x] Extract costs from model answer: `model_answer_cost = extract_costs(model_answer, config)`
+      - [x] Extract costs from retrieved chunks: `chunks_text = " ".join([chunk.chunk_text for chunk in retrieved_context])`
+      - [x] `actual_cost = extract_costs(chunks_text, config)`
+      - [x] Calculate impact: `risk_impact = calculate_risk_impact(model_answer_cost, actual_cost, config)`
+  - [x] Step 5: Construct reasoning trace from all LLM node outputs
+    - [x] Collect reasoning from correctness node
+    - [x] Collect reasoning from hallucination node
+    - [x] Collect reasoning from cost node (if called)
+    - [x] Collect reasoning from impact node (if called)
+    - [x] Construct combined reasoning trace
+  - [x] Step 6: Assemble `JudgeEvaluationResult` with all fields
+    - [x] `correctness_binary`
+    - [x] `hallucination_binary`
+    - [x] `risk_direction` (optional)
+    - [x] `risk_impact` (optional)
+    - [x] `reasoning` (combined trace)
+    - [x] `failure_mode` (optional, extracted from reasoning or LLM output)
+  - [x] Handle edge cases: zero chunks, empty answers, LLM failures
+  - [x] Return `JudgeEvaluationResult` object
+- [x] Implement `_call_evaluator_with_reasoning()` helper function for extracting result and reasoning
+- [x] Implement `_construct_reasoning_trace()` helper function
+  - [x] Combine reasoning from all invoked LLM nodes
+  - [x] Format as structured reasoning trace
+  - [x] Return combined reasoning string
 
 ### Testing Tasks
-- [ ] Unit tests for `evaluate_answer_with_judge()`
-  - [ ] Test deterministic script orchestration with mocked LLM calls
-  - [ ] Test correctness LLM-node invocation (always called)
-  - [ ] Test hallucination LLM-node invocation (always called)
-  - [ ] Test conditional branching: correctness_binary true path (cost and impact nodes called)
-  - [ ] Test conditional branching: correctness_binary false path (cost and impact nodes NOT called)
-  - [ ] Test invocation of cost classification node when correctness is True
-  - [ ] Test invocation of cost extraction node when correctness is True
-  - [ ] Test invocation of impact node when correctness is True
-  - [ ] Test that cost/impact nodes are NOT called when correctness is False
-  - [ ] Test output schema validation (all required fields present including correctness fields)
-  - [ ] Test reasoning trace construction from LLM node outputs
-  - [ ] Test error handling when LLM calls fail
-  - [ ] Test edge case: zero retrieved chunks
-  - [ ] Test edge case: empty model answer
-  - [ ] Test edge case: empty reference answer
-- [ ] Integration tests with mocked LLM nodes
-- [ ] **Document any failures** in fracas.md immediately when encountered
+- [x] Unit tests for `evaluate_answer_with_judge()`
+  - [x] Test deterministic script orchestration with mocked LLM calls
+  - [x] Test correctness LLM-node invocation (always called)
+  - [x] Test hallucination LLM-node invocation (always called)
+  - [x] Test conditional branching: correctness_binary true path (cost and impact nodes called)
+  - [x] Test conditional branching: correctness_binary false path (cost and impact nodes NOT called)
+  - [x] Test invocation of cost classification node when correctness is True
+  - [x] Test invocation of cost extraction node when correctness is True
+  - [x] Test invocation of impact node when correctness is True
+  - [x] Test that cost/impact nodes are NOT called when correctness is False
+  - [x] Test output schema validation (all required fields present including correctness fields)
+  - [x] Test reasoning trace construction from LLM node outputs
+  - [x] Test error handling when LLM calls fail
+  - [x] Test edge case: zero retrieved chunks
+  - [x] Test edge case: empty model answer
+  - [x] Test edge case: empty reference answer
+- [x] Integration tests with mocked LLM nodes
+- [x] **Document any failures** in fracas.md immediately when encountered
 
 ### Documentation Tasks
-- [ ] Add docstrings to all functions
-- [ ] Document orchestration logic and conditional branching
-- [ ] Document reasoning trace construction
-- [ ] Document edge case handling
-- [ ] **Phase 7 Testing Summary** for handoff to Phase 8
+- [x] Add docstrings to all functions
+- [x] Document orchestration logic and conditional branching
+- [x] Document reasoning trace construction
+- [x] Document edge case handling
+- [x] **Phase 7 Testing Summary** for handoff to Phase 8
 
 ### Validation Requirements (Phase 7 Complete)
-- [ ] **REQUIRED**: All unit tests for Phase 7 must pass before proceeding to Phase 8
-- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_judge.py -v`
-- [ ] **REQUIRED**: Test coverage must meet minimum 80% for judge.py module
-- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
-- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
-- [ ] **REQUIRED**: Document any test failures in fracas.md
-- [ ] **REQUIRED**: Phase 7 is NOT complete until all tests pass
-- [ ] **Status**: ⏳ Pending - Phase 7 cannot proceed to Phase 8 until validation complete
+- [x] **REQUIRED**: All unit tests for Phase 7 must pass before proceeding to Phase 8
+- [x] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_judge.py -v`
+- [x] **REQUIRED**: Test coverage must meet minimum 80% for judge.py module
+- [x] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [x] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [x] **REQUIRED**: Document any test failures in fracas.md
+- [x] **REQUIRED**: Phase 7 is NOT complete until all tests pass
+- [x] **Status**: ✅ Complete - All tests pass (19/19), 99% coverage, ready for Phase 8
 
 ---
 
