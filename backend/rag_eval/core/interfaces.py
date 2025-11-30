@@ -96,3 +96,11 @@ class JudgePerformanceMetrics:
     risk_direction: Optional[JudgeMetricScores] = None  # None if insufficient data
     risk_impact: Optional[JudgeMetricScores] = None  # None if insufficient data
 
+
+@dataclass
+class BEIRMetricsResult:
+    """BEIR-style retrieval metrics result."""
+    recall_at_k: float
+    precision_at_k: float
+    ndcg_at_k: float
+

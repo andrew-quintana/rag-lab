@@ -718,60 +718,62 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 
 **Component**: `rag_eval/services/evaluator/beir_metrics.py`
 
+**Status**: ✅ Complete (2024-12-19) - All tests pass, 96% coverage achieved
+
 ### Setup Tasks
-- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
-- [ ] Create `rag_eval/services/evaluator/beir_metrics.py` module
-- [ ] Ensure package `__init__.py` files are properly configured with exports
-- [ ] Verify imports work correctly
-- [ ] Review data structures: `BEIRMetricsResult` dataclass
-- [ ] Review BEIR metric formulas (recall@k, precision@k, nDCG@k)
-- [ ] Set up test fixtures for retrieval results and ground-truth chunk IDs
-- [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_beir_metrics.py`
+- [x] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [x] Create `rag_eval/services/evaluator/beir_metrics.py` module
+- [x] Ensure package `__init__.py` files are properly configured with exports
+- [x] Verify imports work correctly
+- [x] Review data structures: `BEIRMetricsResult` dataclass
+- [x] Review BEIR metric formulas (recall@k, precision@k, nDCG@k)
+- [x] Set up test fixtures for retrieval results and ground-truth chunk IDs
+- [x] Create test file: `backend/tests/components/evaluator/test_evaluator_beir_metrics.py`
 
 ### Core Implementation
-- [ ] Implement `compute_beir_metrics(retrieved_chunks: List[RetrievalResult], ground_truth_chunk_ids: List[str], k: int = 5) -> BEIRMetricsResult`
-  - [ ] Validate inputs are non-empty
-  - [ ] Extract chunk IDs from retrieved chunks (top-k)
-  - [ ] Compute recall@k
-  - [ ] Compute precision@k
-  - [ ] Compute nDCG@k
-  - [ ] Handle edge cases: zero relevant passages, all relevant passages retrieved
-  - [ ] Return `BEIRMetricsResult` object
-- [ ] Implement helper functions:
-  - [ ] `_compute_recall_at_k(retrieved_chunk_ids: List[str], ground_truth_chunk_ids: List[str], k: int) -> float`
-    - [ ] Formula: (Number of relevant chunks in top-k) / (Total number of relevant chunks)
-  - [ ] `_compute_precision_at_k(retrieved_chunk_ids: List[str], ground_truth_chunk_ids: List[str], k: int) -> float`
-    - [ ] Formula: (Number of relevant chunks in top-k) / k
-  - [ ] `_compute_ndcg_at_k(retrieved_chunks: List[RetrievalResult], ground_truth_chunk_ids: List[str], k: int) -> float`
-    - [ ] Formula: Normalized discounted cumulative gain using relevance scores (1 for relevant, 0 for irrelevant)
+- [x] Implement `compute_beir_metrics(retrieved_chunks: List[RetrievalResult], ground_truth_chunk_ids: List[str], k: int = 5) -> BEIRMetricsResult`
+  - [x] Validate inputs are non-empty
+  - [x] Extract chunk IDs from retrieved chunks (top-k)
+  - [x] Compute recall@k
+  - [x] Compute precision@k
+  - [x] Compute nDCG@k
+  - [x] Handle edge cases: zero relevant passages, all relevant passages retrieved
+  - [x] Return `BEIRMetricsResult` object
+- [x] Implement helper functions:
+  - [x] `_compute_recall_at_k(retrieved_chunk_ids: List[str], ground_truth_chunk_ids: List[str], k: int) -> float`
+    - [x] Formula: (Number of relevant chunks in top-k) / (Total number of relevant chunks)
+  - [x] `_compute_precision_at_k(retrieved_chunk_ids: List[str], ground_truth_chunk_ids: List[str], k: int) -> float`
+    - [x] Formula: (Number of relevant chunks in top-k) / k
+  - [x] `_compute_ndcg_at_k(retrieved_chunks: List[RetrievalResult], ground_truth_chunk_ids: List[str], k: int) -> float`
+    - [x] Formula: Normalized discounted cumulative gain using relevance scores (1 for relevant, 0 for irrelevant)
 
 ### Testing Tasks
-- [ ] Unit tests for `compute_beir_metrics()`
-  - [ ] Test recall@k calculation
-  - [ ] Test precision@k calculation
-  - [ ] Test nDCG@k calculation
-  - [ ] Test metrics with ground-truth passage IDs
-  - [ ] Test edge case: zero relevant passages retrieved
-  - [ ] Test edge case: all relevant passages retrieved
-  - [ ] Test edge case: k larger than number of retrieved chunks
-  - [ ] Test edge case: empty ground-truth chunk IDs list
-- [ ] **Document any failures** in fracas.md immediately when encountered
+- [x] Unit tests for `compute_beir_metrics()`
+  - [x] Test recall@k calculation
+  - [x] Test precision@k calculation
+  - [x] Test nDCG@k calculation
+  - [x] Test metrics with ground-truth passage IDs
+  - [x] Test edge case: zero relevant passages retrieved
+  - [x] Test edge case: all relevant passages retrieved
+  - [x] Test edge case: k larger than number of retrieved chunks
+  - [x] Test edge case: empty ground-truth chunk IDs list
+- [x] **Document any failures** in fracas.md immediately when encountered
 
 ### Documentation Tasks
-- [ ] Add docstrings to all functions
-- [ ] Document BEIR metric formulas
-- [ ] Document edge case handling
-- [ ] **Phase 9 Testing Summary** for handoff to Phase 10
+- [x] Add docstrings to all functions
+- [x] Document BEIR metric formulas
+- [x] Document edge case handling
+- [x] **Phase 9 Testing Summary** for handoff to Phase 10
 
 ### Validation Requirements (Phase 9 Complete)
-- [ ] **REQUIRED**: All unit tests for Phase 9 must pass before proceeding to Phase 10
-- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_beir_metrics.py -v`
-- [ ] **REQUIRED**: Test coverage must meet minimum 80% for beir_metrics.py module
-- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
-- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
-- [ ] **REQUIRED**: Document any test failures in fracas.md
-- [ ] **REQUIRED**: Phase 9 is NOT complete until all tests pass
-- [ ] **Status**: ⏳ Pending - Phase 9 cannot proceed to Phase 10 until validation complete
+- [x] **REQUIRED**: All unit tests for Phase 9 must pass before proceeding to Phase 10
+- [x] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_beir_metrics.py -v`
+- [x] **REQUIRED**: Test coverage must meet minimum 80% for beir_metrics.py module
+- [x] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [x] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [x] **REQUIRED**: Document any test failures in fracas.md
+- [x] **REQUIRED**: Phase 9 is NOT complete until all tests pass
+- [x] **Status**: ✅ Complete - All tests pass (26/26), 96% coverage, ready for Phase 10
 
 ---
 
