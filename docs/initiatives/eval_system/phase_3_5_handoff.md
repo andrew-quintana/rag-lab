@@ -72,7 +72,7 @@ def correctness_node(state: JudgeEvaluationState) -> dict:
 
 `JudgeEvaluationState` includes:
 - Required fields: `query`, `retrieved_context`, `model_answer`, `reference_answer`
-- Optional results: `correctness_binary`, `hallucination_binary`, `hallucination_cost`, `hallucination_impact`
+- Optional results: `correctness_binary`, `hallucination_binary`, `risk_direction`, `risk_impact`
 - `reasoning`: List of strings accumulated from all nodes
 - `config`: Optional Config instance (defaults to `Config.from_env()`)
 

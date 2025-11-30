@@ -51,8 +51,8 @@ def evaluate_answer_with_judge(
 - `JudgeEvaluationResult` dataclass (from RFC001.md):
   - `correctness_binary: bool`
   - `hallucination_binary: bool`
-  - `hallucination_cost: Optional[int]` (-1 or +1)
-  - `hallucination_impact: Optional[float]` (0-3)
+  - `risk_direction: Optional[int]` (-1 or +1)
+  - `risk_impact: Optional[float]` (0-3)
   - `reasoning: str`
   - `failure_mode: Optional[str]`
 
@@ -88,15 +88,15 @@ def evaluate_answer_with_judge(
 4. **Step 2**: Call hallucination LLM-node (always)
    - `hallucination_binary = classify_hallucination(retrieved_context, model_answer, config)`
 5. **Step 3**: Conditional - if hallucination detected, call cost classification node
-   - `hallucination_cost = None`
-   - `if hallucination_binary: hallucination_cost = classify_hallucination_cost(model_answer, retrieved_context, config)`
+   - `risk_direction = None`
+   - `if hallucination_binary: risk_direction = classify_risk_direction(model_answer, retrieved_context, config)`
 6. **Step 4**: Conditional - if hallucination detected, extract costs and calculate impact
-   - `hallucination_impact = None`
+   - `risk_impact = None`
    - `if hallucination_binary:`
      - Extract costs from model answer: `model_answer_cost = extract_costs(model_answer, config)`
      - Extract costs from retrieved chunks: `chunks_text = " ".join([chunk.chunk_text for chunk in retrieved_context])`
      - `actual_cost = extract_costs(chunks_text, config)`
-     - Calculate impact: `hallucination_impact = calculate_hallucination_impact(model_answer_cost, actual_cost, config)`
+     - Calculate impact: `risk_impact = calculate_risk_impact(model_answer_cost, actual_cost, config)`
 7. **Step 5**: Construct reasoning trace from all LLM node outputs
    - Collect reasoning from correctness node
    - Collect reasoning from hallucination node
@@ -106,8 +106,8 @@ def evaluate_answer_with_judge(
 8. **Step 6**: Assemble `JudgeEvaluationResult` with all fields
    - `correctness_binary`
    - `hallucination_binary`
-   - `hallucination_cost` (optional)
-   - `hallucination_impact` (optional)
+   - `risk_direction` (optional)
+   - `risk_impact` (optional)
    - `reasoning` (combined trace)
    - `failure_mode` (optional, extracted from reasoning or LLM output)
 9. Handle edge cases: zero chunks, empty answers, LLM failures

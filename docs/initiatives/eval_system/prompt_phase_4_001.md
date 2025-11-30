@@ -25,8 +25,8 @@ This prompt guides the implementation of **Phase 4: Hallucination Cost LLM-Node*
 
 ### Validation
 - **REQUIRED**: All unit tests for Phase 4 must pass before proceeding to Phase 5
-- **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_hallucination_cost.py -v`
-- **REQUIRED**: Test coverage must meet minimum 80% for hallucination_cost.py module
+- **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_risk_direction.py -v`
+- **REQUIRED**: Test coverage must meet minimum 80% for risk_direction.py module
 - **REQUIRED**: All test assertions must pass (no failures, no errors)
 
 ### Documentation
@@ -38,7 +38,7 @@ This prompt guides the implementation of **Phase 4: Hallucination Cost LLM-Node*
 
 ### Interface Contract (from RFC001.md)
 ```python
-def classify_hallucination_cost(
+def classify_risk_direction(
     model_answer: str,
     retrieved_context: List[RetrievalResult],
     config: Optional[Config] = None
@@ -50,15 +50,15 @@ def classify_hallucination_cost(
 - **+1 = Resource Cost**: Model underestimated cost, persuading user to pursue care
 
 ### Implementation Location
-- `rag_eval/services/evaluator/hallucination_cost.py`
+- `rag_eval/services/evaluator/risk_direction.py`
 - **Base Class**: `rag_eval/services/evaluator/base_evaluator.py` - Inherit from `BaseEvaluatorNode`
 - **LLM Provider**: `rag_eval/services/shared/llm_providers.py` - Use `LLMProvider` abstraction
 
 ### Test Location
-- `backend/tests/components/evaluator/test_evaluator_hallucination_cost.py`
+- `backend/tests/components/evaluator/test_evaluator_risk_direction.py`
 
 ### Prompt Location
-- `backend/rag_eval/prompts/evaluation/hallucination_cost_prompt.md` (or store in database)
+- `backend/rag_eval/prompts/evaluation/risk_direction_prompt.md` (or store in database)
 
 ### Reference Implementation
 - See `rag_eval/services/evaluator/correctness.py` for example of `BaseEvaluatorNode` usage
@@ -67,19 +67,19 @@ def classify_hallucination_cost(
 
 ### Setup
 1. **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
-2. Create `rag_eval/services/evaluator/hallucination_cost.py` module
+2. Create `rag_eval/services/evaluator/risk_direction.py` module
 3. Ensure package `__init__.py` files are properly configured with exports
 4. Verify imports work correctly
 5. Review Azure Foundry API configuration
 6. Set up test fixtures for mock LLM responses
-7. Create test file: `backend/tests/components/evaluator/test_evaluator_hallucination_cost.py`
+7. Create test file: `backend/tests/components/evaluator/test_evaluator_risk_direction.py`
 
 ### Prompt Creation
 1. Create prompt template for cost classification
 2. Prompt design:
    - System instruction: "You are an expert evaluator classifying the cost impact direction of hallucinations."
    - Input placeholders: `{model_answer}`, `{retrieved_context}`
-   - Output format: JSON with `hallucination_cost` (-1 or +1) and `reasoning` (str)
+   - Output format: JSON with `risk_direction` (-1 or +1) and `reasoning` (str)
    - Explain cost classification:
      - -1 = Opportunity Cost: Model overestimated cost, dissuading user from seeking care
      - +1 = Resource Cost: Model underestimated cost, persuading user to pursue care
@@ -90,20 +90,20 @@ def classify_hallucination_cost(
 ### Core Implementation
 1. Create `HallucinationCostEvaluator` class inheriting from `BaseEvaluatorNode`:
    - Override `_construct_prompt()` method to build cost classification-specific prompt
-   - Implement `classify_hallucination_cost()` method using base class `_call_llm()` and `_parse_json_response()`
+   - Implement `classify_risk_direction()` method using base class `_call_llm()` and `_parse_json_response()`
    - Format retrieved context
-   - Validate `hallucination_cost` field in parsed JSON response (-1 or +1)
+   - Validate `risk_direction` field in parsed JSON response (-1 or +1)
    - Return integer classification
    - Validate inputs are non-empty
    - Handle ambiguous cost direction cases
-2. Implement module-level `classify_hallucination_cost()` function for backward compatibility:
+2. Implement module-level `classify_risk_direction()` function for backward compatibility:
    - Create `HallucinationCostEvaluator` instance
-   - Call `classify_hallucination_cost()` method
+   - Call `classify_risk_direction()` method
    - Return result
 3. **Note**: Base class handles prompt loading, LLM calls (via provider), JSON parsing, and error handling
 
 ### Testing
-1. Unit tests for `classify_hallucination_cost()`:
+1. Unit tests for `classify_risk_direction()`:
    - Test opportunity cost classification (-1): overestimated cost
    - Test resource cost classification (+1): underestimated cost
    - Test cost analysis for quantitative hallucinations
@@ -122,7 +122,7 @@ def classify_hallucination_cost(
 
 ## Success Criteria
 
-- [ ] `classify_hallucination_cost()` function implemented matching RFC001 interface
+- [ ] `classify_risk_direction()` function implemented matching RFC001 interface
 - [ ] Prompt template created with clear cost classification explanation
 - [ ] All unit tests pass with 80%+ coverage
 - [ ] Tests verify reference answer is NOT used

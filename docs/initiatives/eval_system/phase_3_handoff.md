@@ -155,14 +155,14 @@ See `phase_3_decisions.md` for detailed decisions:
 - ✅ Grounding analysis pattern established
 
 ### Phase 4 Requirements
-1. **Hallucination Cost LLM-Node**: Implement `classify_hallucination_cost()` function
-   - Interface: `classify_hallucination_cost(model_answer: str, retrieved_context: List[RetrievalResult], config: Optional[Config] = None) -> int`
+1. **Hallucination Cost LLM-Node**: Implement `classify_risk_direction()` function
+   - Interface: `classify_risk_direction(model_answer: str, retrieved_context: List[RetrievalResult], config: Optional[Config] = None) -> int`
    - Returns: -1 (opportunity cost) or +1 (resource cost)
    - Similar structure to hallucination node
    - Uses retrieved context (not reference answer)
-   - Prompt template: `backend/rag_eval/prompts/evaluation/hallucination_cost_prompt.md`
+   - Prompt template: `backend/rag_eval/prompts/evaluation/risk_direction_prompt.md`
 
-2. **Test File**: `backend/tests/components/evaluator/test_evaluator_hallucination_cost.py`
+2. **Test File**: `backend/tests/components/evaluator/test_evaluator_risk_direction.py`
    - Follow same test patterns as hallucination tests
    - Test cost classification (-1 vs. +1)
    - Test that reference answer is NOT used

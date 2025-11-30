@@ -84,12 +84,12 @@ def meta_evaluate_judge(
    - Check if model answer claims are supported by retrieved chunks
    - If judge says `hallucination_binary: true`, verify model answer contains unsupported claims
    - If judge says `hallucination_binary: false`, verify all claims are supported
-5. **Validation 3**: Validate hallucination_cost (if costs available and hallucination detected)
+5. **Validation 3**: Validate risk_direction (if costs available and hallucination detected)
    - Compare extracted costs vs actual costs to determine expected cost direction
-   - Validate judge's `hallucination_cost` matches expected direction
-6. **Validation 4**: Validate hallucination_impact (if costs available and hallucination detected)
+   - Validate judge's `risk_direction` matches expected direction
+6. **Validation 4**: Validate risk_impact (if costs available and hallucination detected)
    - Calculate expected impact magnitude based on cost differences
-   - Validate judge's `hallucination_impact` is within reasonable range of expected impact
+   - Validate judge's `risk_impact` is within reasonable range of expected impact
 7. Determine overall judge correctness (all validations pass)
 8. Generate deterministic explanation of validation results
 9. Return `MetaEvaluationResult` object
@@ -106,8 +106,8 @@ def meta_evaluate_judge(
    - Test judge_incorrect classification: incorrect correctness_binary verdict
    - Test judge_correct classification: correct hallucination_binary verdict
    - Test judge_incorrect classification: incorrect hallucination_binary verdict
-   - Test validation of hallucination_cost against ground truth costs
-   - Test validation of hallucination_impact against ground truth costs
+   - Test validation of risk_direction against ground truth costs
+   - Test validation of risk_impact against ground truth costs
    - Test deterministic explanation generation
    - Test edge case: partial judge correctness (some verdicts correct, others incorrect)
    - Test edge case: missing ground truth information

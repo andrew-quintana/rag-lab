@@ -316,75 +316,77 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 
 ## Phase 4 — Hallucination Cost LLM-Node
 
-**Component**: `rag_eval/services/evaluator/hallucination_cost.py`
+**Component**: `rag_eval/services/evaluator/risk_direction.py`
+
+**Status**: ✅ Complete (2024-12-19) - All tests pass, 87% coverage achieved
 
 ### Setup Tasks
-- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
-- [ ] Review `rag_eval/services/evaluator/base_evaluator.py` and `rag_eval/services/shared/llm_providers.py` to understand the base class pattern
-- [ ] Create `rag_eval/services/evaluator/hallucination_cost.py` module
-- [ ] Create `HallucinationCostEvaluator` class inheriting from `BaseEvaluatorNode`
-- [ ] Ensure package `__init__.py` files are properly configured with exports
-- [ ] Verify imports work correctly
-- [ ] Set up test fixtures for mock LLM responses
-- [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_hallucination_cost.py`
+- [x] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [x] Review `rag_eval/services/evaluator/base_evaluator.py` and `rag_eval/services/shared/llm_providers.py` to understand the base class pattern
+- [x] Create `rag_eval/services/evaluator/risk_direction.py` module
+- [x] Create `HallucinationCostEvaluator` class inheriting from `BaseEvaluatorNode`
+- [x] Ensure package `__init__.py` files are properly configured with exports
+- [x] Verify imports work correctly
+- [x] Set up test fixtures for mock LLM responses
+- [x] Create test file: `backend/tests/components/evaluator/test_evaluator_risk_direction.py`
 
 ### Prompt Creation Tasks
-- [ ] Create prompt template for cost classification
-- [ ] Prompt location: `backend/rag_eval/prompts/evaluation/hallucination_cost_prompt.md` (or store in database)
-- [ ] Prompt design:
-  - [ ] System instruction: "You are an expert evaluator classifying the cost impact direction of hallucinations."
-  - [ ] Input placeholders: `{model_answer}`, `{retrieved_context}`
-  - [ ] Output format: JSON with `hallucination_cost` (-1 or +1) and `reasoning` (str)
-  - [ ] Explain cost classification:
-    - [ ] -1 = Opportunity Cost: Model overestimated cost, dissuading user from seeking care
-    - [ ] +1 = Resource Cost: Model underestimated cost, persuading user to pursue care
-  - [ ] Emphasize: reference answer is NOT used (only retrieved chunks for ground truth)
-  - [ ] Include examples of opportunity cost vs. resource cost classifications
-- [ ] Test prompt template with sample inputs
+- [x] Create prompt template for cost classification
+- [x] Prompt location: `backend/rag_eval/prompts/evaluation/risk_direction_prompt.md` (or store in database)
+- [x] Prompt design:
+  - [x] System instruction: "You are an expert evaluator classifying the cost impact direction of hallucinations."
+  - [x] Input placeholders: `{model_answer}`, `{retrieved_context}`
+  - [x] Output format: JSON with `risk_direction` (-1 or +1) and `reasoning` (str)
+  - [x] Explain cost classification:
+    - [x] -1 = Opportunity Cost: Model overestimated cost, dissuading user from seeking care
+    - [x] +1 = Resource Cost: Model underestimated cost, persuading user to pursue care
+  - [x] Emphasize: reference answer is NOT used (only retrieved chunks for ground truth)
+  - [x] Include examples of opportunity cost vs. resource cost classifications
+- [x] Test prompt template with sample inputs
 
 ### Core Implementation
-- [ ] Implement `HallucinationCostEvaluator` class inheriting from `BaseEvaluatorNode`:
-  - [ ] Override `_construct_prompt()` method to build cost classification-specific prompt
-  - [ ] Implement `classify_hallucination_cost()` method using base class `_call_llm()` and `_parse_json_response()`
-  - [ ] Format retrieved context
-  - [ ] Validate `hallucination_cost` field in parsed JSON response (-1 or +1)
-  - [ ] Return integer classification
-  - [ ] Handle LLM failures with proper error handling (inherited from base class)
-  - [ ] Validate inputs are non-empty
-  - [ ] Handle ambiguous cost direction cases
-- [ ] Implement module-level `classify_hallucination_cost()` function for backward compatibility:
-  - [ ] Create `HallucinationCostEvaluator` instance
-  - [ ] Call `classify_hallucination_cost()` method
-  - [ ] Return result
+- [x] Implement `HallucinationCostEvaluator` class inheriting from `BaseEvaluatorNode`:
+  - [x] Override `_construct_prompt()` method to build cost classification-specific prompt
+  - [x] Implement `classify_risk_direction()` method using base class `_call_llm()` and `_parse_json_response()`
+  - [x] Format retrieved context
+  - [x] Validate `risk_direction` field in parsed JSON response (-1 or +1)
+  - [x] Return integer classification
+  - [x] Handle LLM failures with proper error handling (inherited from base class)
+  - [x] Validate inputs are non-empty
+  - [x] Handle ambiguous cost direction cases
+- [x] Implement module-level `classify_risk_direction()` function for backward compatibility:
+  - [x] Create `HallucinationCostEvaluator` instance
+  - [x] Call `classify_risk_direction()` method
+  - [x] Return result
 
 ### Testing Tasks
-- [ ] Unit tests for `classify_hallucination_cost()`
-  - [ ] Test opportunity cost classification (-1): overestimated cost
-  - [ ] Test resource cost classification (+1): underestimated cost
-  - [ ] Test cost analysis for quantitative hallucinations
-  - [ ] Test cost analysis for non-quantitative hallucinations
-  - [ ] Test edge case: ambiguous cost direction
-  - [ ] Test that reference answer is NOT used in cost classification
-  - [ ] Test error handling for LLM failures
-- [ ] Connection test for Azure Foundry API
-- [ ] **Document any failures** in fracas.md immediately when encountered
+- [x] Unit tests for `classify_risk_direction()`
+  - [x] Test opportunity cost classification (-1): overestimated cost
+  - [x] Test resource cost classification (+1): underestimated cost
+  - [x] Test cost analysis for quantitative hallucinations
+  - [x] Test cost analysis for non-quantitative hallucinations
+  - [x] Test edge case: ambiguous cost direction
+  - [x] Test that reference answer is NOT used in cost classification
+  - [x] Test error handling for LLM failures
+- [x] Connection test for Azure Foundry API
+- [x] **Document any failures** in fracas.md immediately when encountered
 
 ### Documentation Tasks
-- [ ] Add docstrings to all functions
-- [ ] Document cost classification logic (-1 vs. +1)
-- [ ] Document that reference answer is NOT used
-- [ ] Document prompt design and cost direction analysis
-- [ ] **Phase 4 Testing Summary** for handoff to Phase 5
+- [x] Add docstrings to all functions
+- [x] Document cost classification logic (-1 vs. +1)
+- [x] Document that reference answer is NOT used
+- [x] Document prompt design and cost direction analysis
+- [x] **Phase 4 Testing Summary** for handoff to Phase 5
 
 ### Validation Requirements (Phase 4 Complete)
-- [ ] **REQUIRED**: All unit tests for Phase 4 must pass before proceeding to Phase 5
-- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_hallucination_cost.py -v`
-- [ ] **REQUIRED**: Test coverage must meet minimum 80% for hallucination_cost.py module
-- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
-- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
-- [ ] **REQUIRED**: Document any test failures in fracas.md
-- [ ] **REQUIRED**: Phase 4 is NOT complete until all tests pass
-- [ ] **Status**: ⏳ Pending - Phase 4 cannot proceed to Phase 5 until validation complete
+- [x] **REQUIRED**: All unit tests for Phase 4 must pass before proceeding to Phase 5
+- [x] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_risk_direction.py -v`
+- [x] **REQUIRED**: Test coverage must meet minimum 80% for risk_direction.py module
+- [x] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [x] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [x] **REQUIRED**: Document any test failures in fracas.md
+- [x] **REQUIRED**: Phase 4 is NOT complete until all tests pass
+- [x] **Status**: ✅ Complete - All tests pass (30/30), 87% coverage, ready for Phase 5
 
 ---
 
@@ -462,25 +464,25 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 
 ## Phase 6 — Hallucination Impact LLM-Node
 
-**Component**: `rag_eval/services/evaluator/hallucination_impact.py`
+**Component**: `rag_eval/services/evaluator/risk_impact.py`
 
 ### Setup Tasks
 - [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
 - [ ] Review `rag_eval/services/evaluator/base_evaluator.py` and `rag_eval/services/shared/llm_providers.py` to understand the base class pattern
-- [ ] Create `rag_eval/services/evaluator/hallucination_impact.py` module
+- [ ] Create `rag_eval/services/evaluator/risk_impact.py` module
 - [ ] Create `HallucinationImpactEvaluator` class inheriting from `BaseEvaluatorNode`
 - [ ] Ensure package `__init__.py` files are properly configured with exports
 - [ ] Verify imports work correctly
 - [ ] Set up test fixtures for mock LLM responses
-- [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_hallucination_impact.py`
+- [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_risk_impact.py`
 
 ### Prompt Creation Tasks
 - [ ] Create prompt template for impact calculation
-- [ ] Prompt location: `backend/rag_eval/prompts/evaluation/hallucination_impact_prompt.md` (or store in database)
+- [ ] Prompt location: `backend/rag_eval/prompts/evaluation/risk_impact_prompt.md` (or store in database)
 - [ ] Prompt design:
   - [ ] System instruction: "You are an expert evaluator calculating the real-world impact magnitude of hallucinations."
   - [ ] Input placeholders: `{model_answer_cost}`, `{actual_cost}`
-  - [ ] Output format: JSON with `hallucination_impact` (float 0-3) and `reasoning` (str)
+  - [ ] Output format: JSON with `risk_impact` (float 0-3) and `reasoning` (str)
   - [ ] Explain impact scale:
     - [ ] 0: Minimal/no impact
     - [ ] 1: Low impact
@@ -493,20 +495,20 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 ### Core Implementation
 - [ ] Implement `HallucinationImpactEvaluator` class inheriting from `BaseEvaluatorNode`:
   - [ ] Override `_construct_prompt()` method to build impact calculation-specific prompt
-  - [ ] Implement `calculate_hallucination_impact()` method using base class `_call_llm()` and `_parse_json_response()`
+  - [ ] Implement `calculate_risk_impact()` method using base class `_call_llm()` and `_parse_json_response()`
   - [ ] Format cost dictionaries for prompt (JSON representation)
-  - [ ] Parse JSON response to extract `hallucination_impact` (0-3)
+  - [ ] Parse JSON response to extract `risk_impact` (0-3)
   - [ ] Validate impact is in range [0, 3]
   - [ ] Return float impact magnitude
   - [ ] Handle LLM failures with proper error handling (inherited from base class)
   - [ ] Validate inputs are non-empty dictionaries
-- [ ] Implement module-level `calculate_hallucination_impact()` function for backward compatibility:
+- [ ] Implement module-level `calculate_risk_impact()` function for backward compatibility:
   - [ ] Create `HallucinationImpactEvaluator` instance
-  - [ ] Call `calculate_hallucination_impact()` method
+  - [ ] Call `calculate_risk_impact()` method
   - [ ] Return result
 
 ### Testing Tasks
-- [ ] Unit tests for `calculate_hallucination_impact()`
+- [ ] Unit tests for `calculate_risk_impact()`
   - [ ] Test impact calculation for time-based costs
   - [ ] Test impact calculation for money-based costs
   - [ ] Test impact calculation for step-based costs
@@ -527,8 +529,8 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 
 ### Validation Requirements (Phase 6 Complete)
 - [ ] **REQUIRED**: All unit tests for Phase 6 must pass before proceeding to Phase 7
-- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_hallucination_impact.py -v`
-- [ ] **REQUIRED**: Test coverage must meet minimum 80% for hallucination_impact.py module
+- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_risk_impact.py -v`
+- [ ] **REQUIRED**: Test coverage must meet minimum 80% for risk_impact.py module
 - [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
 - [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
 - [ ] **REQUIRED**: Document any test failures in fracas.md
@@ -558,15 +560,15 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
   - [ ] Step 2: Call hallucination LLM-node (always)
     - [ ] `hallucination_binary = classify_hallucination(retrieved_context, model_answer, config)`
   - [ ] Step 3: Conditional - if hallucination detected, call cost classification node
-    - [ ] `hallucination_cost = None`
-    - [ ] `if hallucination_binary: hallucination_cost = classify_hallucination_cost(model_answer, retrieved_context, config)`
+    - [ ] `risk_direction = None`
+    - [ ] `if hallucination_binary: risk_direction = classify_risk_direction(model_answer, retrieved_context, config)`
   - [ ] Step 4: Conditional - if hallucination detected, extract costs and calculate impact
-    - [ ] `hallucination_impact = None`
+    - [ ] `risk_impact = None`
     - [ ] `if hallucination_binary:`
       - [ ] Extract costs from model answer: `model_answer_cost = extract_costs(model_answer, config)`
       - [ ] Extract costs from retrieved chunks: `chunks_text = " ".join([chunk.chunk_text for chunk in retrieved_context])`
       - [ ] `actual_cost = extract_costs(chunks_text, config)`
-      - [ ] Calculate impact: `hallucination_impact = calculate_hallucination_impact(model_answer_cost, actual_cost, config)`
+      - [ ] Calculate impact: `risk_impact = calculate_risk_impact(model_answer_cost, actual_cost, config)`
   - [ ] Step 5: Construct reasoning trace from all LLM node outputs
     - [ ] Collect reasoning from correctness node
     - [ ] Collect reasoning from hallucination node
@@ -576,8 +578,8 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
   - [ ] Step 6: Assemble `JudgeEvaluationResult` with all fields
     - [ ] `correctness_binary`
     - [ ] `hallucination_binary`
-    - [ ] `hallucination_cost` (optional)
-    - [ ] `hallucination_impact` (optional)
+    - [ ] `risk_direction` (optional)
+    - [ ] `risk_impact` (optional)
     - [ ] `reasoning` (combined trace)
     - [ ] `failure_mode` (optional, extracted from reasoning or LLM output)
   - [ ] Handle edge cases: zero chunks, empty answers, LLM failures
@@ -651,12 +653,12 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
     - [ ] Check if model answer claims are supported by retrieved chunks
     - [ ] If judge says `hallucination_binary: true`, verify model answer contains unsupported claims
     - [ ] If judge says `hallucination_binary: false`, verify all claims are supported
-  - [ ] Validation 3: Validate hallucination_cost (if costs available and hallucination detected)
+  - [ ] Validation 3: Validate risk_direction (if costs available and hallucination detected)
     - [ ] Compare extracted costs vs actual costs to determine expected cost direction
-    - [ ] Validate judge's `hallucination_cost` matches expected direction
-  - [ ] Validation 4: Validate hallucination_impact (if costs available and hallucination detected)
+    - [ ] Validate judge's `risk_direction` matches expected direction
+  - [ ] Validation 4: Validate risk_impact (if costs available and hallucination detected)
     - [ ] Calculate expected impact magnitude based on cost differences
-    - [ ] Validate judge's `hallucination_impact` is within reasonable range of expected impact
+    - [ ] Validate judge's `risk_impact` is within reasonable range of expected impact
   - [ ] Determine overall judge correctness (all validations pass)
   - [ ] Generate deterministic explanation of validation results
   - [ ] Return `MetaEvaluationResult` object
@@ -673,8 +675,8 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
   - [ ] Test judge_incorrect classification: incorrect correctness_binary verdict
   - [ ] Test judge_correct classification: correct hallucination_binary verdict
   - [ ] Test judge_incorrect classification: incorrect hallucination_binary verdict
-  - [ ] Test validation of hallucination_cost against ground truth costs
-  - [ ] Test validation of hallucination_impact against ground truth costs
+  - [ ] Test validation of risk_direction against ground truth costs
+  - [ ] Test validation of risk_impact against ground truth costs
   - [ ] Test deterministic explanation generation
   - [ ] Test edge case: partial judge correctness (some verdicts correct, others incorrect)
   - [ ] Test edge case: missing ground truth information

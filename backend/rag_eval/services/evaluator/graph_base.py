@@ -19,8 +19,8 @@ class JudgeEvaluationState(TypedDict):
         reference_answer: Gold reference answer for comparison (required for initial state)
         correctness_binary: Correctness classification result (True/False)
         hallucination_binary: Hallucination classification result (True/False)
-        hallucination_cost: Cost type classification (-1 for opportunity cost, +1 for resource cost)
-        hallucination_impact: Impact magnitude calculation (0-3 scale)
+        risk_direction: System-level risk direction classification (-1 for care avoidance risk, +1 for unexpected cost risk)
+        risk_impact: System-level impact magnitude calculation (0-3 scale)
         reasoning: List of reasoning strings from all invoked LLM nodes
         config: Application configuration (optional, defaults to Config.from_env())
     """
@@ -30,8 +30,8 @@ class JudgeEvaluationState(TypedDict):
     reference_answer: str
     correctness_binary: Optional[bool]
     hallucination_binary: Optional[bool]
-    hallucination_cost: Optional[int]
-    hallucination_impact: Optional[float]
+    risk_direction: Optional[int]
+    risk_impact: Optional[float]
     reasoning: List[str]
     config: Optional[Config]
 

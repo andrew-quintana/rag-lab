@@ -37,13 +37,20 @@ class ModelAnswerRecord:
 
 @dataclass
 class EvalJudgment:
-    """Database record for evaluation judgment"""
+    """Database record for evaluation judgment
+    
+    Note: The `hallucination_risk` field is a FLOAT (0-1) representing an aggregated
+    risk score, which is different from the `risk_direction` field (INT -1/+1) used
+    in the evaluation state schema. The `risk_direction` field classifies the direction
+    of system-level deviations, while `hallucination_risk` represents an overall risk
+    magnitude score.
+    """
     judgment_id: str
     query_id: str
     prompt_version: str
     grounding_score: float
     relevance_score: float
-    hallucination_risk: float
+    hallucination_risk: float  # Aggregated risk score (0-1), distinct from risk_direction (-1/+1)
     judge_reasoning: Optional[str] = None
     timestamp: Optional[datetime] = None
 

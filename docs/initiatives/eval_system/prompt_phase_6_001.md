@@ -25,8 +25,8 @@ This prompt guides the implementation of **Phase 6: Hallucination Impact LLM-Nod
 
 ### Validation
 - **REQUIRED**: All unit tests for Phase 6 must pass before proceeding to Phase 7
-- **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_hallucination_impact.py -v`
-- **REQUIRED**: Test coverage must meet minimum 80% for hallucination_impact.py module
+- **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_risk_impact.py -v`
+- **REQUIRED**: Test coverage must meet minimum 80% for risk_impact.py module
 - **REQUIRED**: All test assertions must pass (no failures, no errors)
 
 ### Documentation
@@ -38,7 +38,7 @@ This prompt guides the implementation of **Phase 6: Hallucination Impact LLM-Nod
 
 ### Interface Contract (from RFC001.md)
 ```python
-def calculate_hallucination_impact(
+def calculate_risk_impact(
     model_answer_cost: Dict[str, Any],  # {"time": ..., "money": ..., "steps": ...}
     actual_cost: Dict[str, Any],  # From retrieved chunks (ground truth)
     config: Optional[Config] = None
@@ -52,15 +52,15 @@ def calculate_hallucination_impact(
 - **3**: High/severe impact
 
 ### Implementation Location
-- `rag_eval/services/evaluator/hallucination_impact.py`
+- `rag_eval/services/evaluator/risk_impact.py`
 - **Base Class**: `rag_eval/services/evaluator/base_evaluator.py` - Inherit from `BaseEvaluatorNode`
 - **LLM Provider**: `rag_eval/services/shared/llm_providers.py` - Use `LLMProvider` abstraction
 
 ### Test Location
-- `backend/tests/components/evaluator/test_evaluator_hallucination_impact.py`
+- `backend/tests/components/evaluator/test_evaluator_risk_impact.py`
 
 ### Prompt Location
-- `backend/rag_eval/prompts/evaluation/hallucination_impact_prompt.md` (or store in database)
+- `backend/rag_eval/prompts/evaluation/risk_impact_prompt.md` (or store in database)
 
 ### Dependencies
 - Phase 5: Cost Extraction LLM-Node (for extracting costs from text)
@@ -72,19 +72,19 @@ def calculate_hallucination_impact(
 
 ### Setup
 1. **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
-2. Create `rag_eval/services/evaluator/hallucination_impact.py` module
+2. Create `rag_eval/services/evaluator/risk_impact.py` module
 3. Ensure package `__init__.py` files are properly configured with exports
 4. Verify imports work correctly
 5. Review Azure Foundry API configuration
 6. Set up test fixtures for mock LLM responses
-7. Create test file: `backend/tests/components/evaluator/test_evaluator_hallucination_impact.py`
+7. Create test file: `backend/tests/components/evaluator/test_evaluator_risk_impact.py`
 
 ### Prompt Creation
 1. Create prompt template for impact calculation
 2. Prompt design:
    - System instruction: "You are an expert evaluator calculating the real-world impact magnitude of hallucinations."
    - Input placeholders: `{model_answer_cost}`, `{actual_cost}`
-   - Output format: JSON with `hallucination_impact` (float 0-3) and `reasoning` (str)
+   - Output format: JSON with `risk_impact` (float 0-3) and `reasoning` (str)
    - Explain impact scale:
      - 0: Minimal/no impact
      - 1: Low impact
@@ -97,20 +97,20 @@ def calculate_hallucination_impact(
 ### Core Implementation
 1. Create `HallucinationImpactEvaluator` class inheriting from `BaseEvaluatorNode`:
    - Override `_construct_prompt()` method to build impact calculation-specific prompt
-   - Implement `calculate_hallucination_impact()` method using base class `_call_llm()` and `_parse_json_response()`
+   - Implement `calculate_risk_impact()` method using base class `_call_llm()` and `_parse_json_response()`
    - Format cost dictionaries for prompt (JSON representation)
-   - Parse JSON response to extract `hallucination_impact` (0-3)
+   - Parse JSON response to extract `risk_impact` (0-3)
    - Validate impact is in range [0, 3]
    - Return float impact magnitude
    - Validate inputs are non-empty dictionaries
-2. Implement module-level `calculate_hallucination_impact()` function for backward compatibility:
+2. Implement module-level `calculate_risk_impact()` function for backward compatibility:
    - Create `HallucinationImpactEvaluator` instance
-   - Call `calculate_hallucination_impact()` method
+   - Call `calculate_risk_impact()` method
    - Return result
 3. **Note**: Base class handles prompt loading, LLM calls (via provider), JSON parsing, and error handling
 
 ### Testing
-1. Unit tests for `calculate_hallucination_impact()`:
+1. Unit tests for `calculate_risk_impact()`:
    - Test impact calculation for time-based costs
    - Test impact calculation for money-based costs
    - Test impact calculation for step-based costs
@@ -130,7 +130,7 @@ def calculate_hallucination_impact(
 
 ## Success Criteria
 
-- [ ] `calculate_hallucination_impact()` function implemented matching RFC001 interface
+- [ ] `calculate_risk_impact()` function implemented matching RFC001 interface
 - [ ] Prompt template created with emphasis on mixed resource types
 - [ ] All unit tests pass with 80%+ coverage
 - [ ] Tests verify impact range [0, 3]

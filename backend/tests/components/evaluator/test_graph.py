@@ -157,8 +157,8 @@ def run_test_evaluation(
         "reference_answer": reference_answer,
         "correctness_binary": None,
         "hallucination_binary": None,
-        "hallucination_cost": None,
-        "hallucination_impact": None,
+        "risk_direction": None,
+        "risk_impact": None,
         "reasoning": [],
         "config": config,
     }
