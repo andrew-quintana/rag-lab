@@ -141,3 +141,4 @@ if __name__ == "__main__":
     exit_code = validate_prompts_in_db()
     sys.exit(exit_code)
 
+

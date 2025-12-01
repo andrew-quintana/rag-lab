@@ -1,8 +1,11 @@
 -- Initial database schema for RAG Evaluation Platform
 
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Prompt versions table
 CREATE TABLE IF NOT EXISTS prompt_versions (
-    version_id VARCHAR(255) PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     version_name VARCHAR(100) NOT NULL UNIQUE,
     prompt_text TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -10,7 +13,7 @@ CREATE TABLE IF NOT EXISTS prompt_versions (
 
 -- Queries table
 CREATE TABLE IF NOT EXISTS queries (
-    query_id VARCHAR(255) PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     query_text TEXT NOT NULL,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     metadata JSONB
@@ -18,8 +21,8 @@ CREATE TABLE IF NOT EXISTS queries (
 
 -- Retrieval logs table
 CREATE TABLE IF NOT EXISTS retrieval_logs (
-    log_id VARCHAR(255) PRIMARY KEY,
-    query_id VARCHAR(255) NOT NULL REFERENCES queries(query_id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    query_id UUID NOT NULL REFERENCES queries(id) ON DELETE CASCADE,
     chunk_id VARCHAR(255) NOT NULL,
     similarity_score FLOAT NOT NULL,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -27,8 +30,8 @@ CREATE TABLE IF NOT EXISTS retrieval_logs (
 
 -- Model answers table
 CREATE TABLE IF NOT EXISTS model_answers (
-    answer_id VARCHAR(255) PRIMARY KEY,
-    query_id VARCHAR(255) NOT NULL REFERENCES queries(query_id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    query_id UUID NOT NULL REFERENCES queries(id) ON DELETE CASCADE,
     answer_text TEXT NOT NULL,
     prompt_version VARCHAR(100) NOT NULL REFERENCES prompt_versions(version_name),
     retrieved_chunk_ids TEXT[] NOT NULL,
@@ -37,8 +40,8 @@ CREATE TABLE IF NOT EXISTS model_answers (
 
 -- Evaluation judgments table
 CREATE TABLE IF NOT EXISTS eval_judgments (
-    judgment_id VARCHAR(255) PRIMARY KEY,
-    query_id VARCHAR(255) NOT NULL REFERENCES queries(query_id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    query_id UUID NOT NULL REFERENCES queries(id) ON DELETE CASCADE,
     prompt_version VARCHAR(100) NOT NULL REFERENCES prompt_versions(version_name),
     grounding_score FLOAT NOT NULL CHECK (grounding_score >= 0 AND grounding_score <= 1),
     relevance_score FLOAT NOT NULL CHECK (relevance_score >= 0 AND relevance_score <= 1),
@@ -49,7 +52,7 @@ CREATE TABLE IF NOT EXISTS eval_judgments (
 
 -- Meta-evaluation summaries table
 CREATE TABLE IF NOT EXISTS meta_eval_summaries (
-    summary_id VARCHAR(255) PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     version_1 VARCHAR(100) NOT NULL REFERENCES prompt_versions(version_name),
     version_2 VARCHAR(100) NOT NULL REFERENCES prompt_versions(version_name),
     delta_grounding FLOAT NOT NULL,

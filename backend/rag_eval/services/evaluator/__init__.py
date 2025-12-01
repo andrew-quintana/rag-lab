@@ -16,6 +16,10 @@ from rag_eval.services.evaluator.meta_eval import (
 )
 from rag_eval.services.evaluator.beir_metrics import compute_beir_metrics
 from rag_eval.services.evaluator.orchestrator import evaluate_rag_system
+from rag_eval.services.evaluator.logging import (
+    log_evaluation_result,
+    log_evaluation_batch
+)
 from rag_eval.services.evaluator.graph_base import (
     JudgeEvaluationState,
     validate_initial_state,
@@ -35,6 +39,8 @@ __all__ = [
     "calculate_judge_metrics",
     "compute_beir_metrics",
     "evaluate_rag_system",
+    "log_evaluation_result",
+    "log_evaluation_batch",
     "JudgeEvaluationState",
     "validate_initial_state",
     "get_config_from_state",

@@ -6,9 +6,9 @@
 -- The code queries by (prompt_type, evaluator_type), so version_name can vary.
 
 -- Insert correctness evaluator prompt
-INSERT INTO prompt_versions (version_id, version_name, prompt_type, evaluator_type, prompt_text)
+INSERT INTO prompt_versions (id, version_name, prompt_type, evaluator_type, prompt_text)
 VALUES (
-    'eval_correctness_v1',
+    uuid_generate_v4(),
     'eval_correctness_v1',  -- Unique version_name
     'evaluation',
     'correctness_evaluator',
@@ -95,16 +95,16 @@ Provide your classification as a JSON object:
 
 $prompt$
 )
-ON CONFLICT (version_id) DO UPDATE 
+ON CONFLICT (version_name) DO UPDATE 
 SET prompt_text = EXCLUDED.prompt_text,
     version_name = EXCLUDED.version_name,
     prompt_type = EXCLUDED.prompt_type,
     evaluator_type = EXCLUDED.evaluator_type;
 
 -- Insert hallucination evaluator prompt
-INSERT INTO prompt_versions (version_id, version_name, prompt_type, evaluator_type, prompt_text)
+INSERT INTO prompt_versions (id, version_name, prompt_type, evaluator_type, prompt_text)
 VALUES (
-    'eval_hallucination_v1',
+    uuid_generate_v4(),
     'eval_hallucination_v1',  -- Unique version_name
     'evaluation',
     'hallucination_evaluator',
@@ -225,16 +225,16 @@ Provide your classification as a JSON object:
 
 $prompt$
 )
-ON CONFLICT (version_id) DO UPDATE 
+ON CONFLICT (version_name) DO UPDATE 
 SET prompt_text = EXCLUDED.prompt_text,
     version_name = EXCLUDED.version_name,
     prompt_type = EXCLUDED.prompt_type,
     evaluator_type = EXCLUDED.evaluator_type;
 
 -- Insert risk direction evaluator prompt
-INSERT INTO prompt_versions (version_id, version_name, prompt_type, evaluator_type, prompt_text)
+INSERT INTO prompt_versions (id, version_name, prompt_type, evaluator_type, prompt_text)
 VALUES (
-    'eval_risk_direction_v1',
+    uuid_generate_v4(),
     'eval_risk_direction_v1',  -- Unique version_name
     'evaluation',
     'risk_direction_evaluator',
@@ -390,7 +390,7 @@ The out-of-pocket maximum is $1,000 for all plans.
 Provide your classification as a JSON object:
 $prompt$
 )
-ON CONFLICT (version_id) DO UPDATE 
+ON CONFLICT (version_name) DO UPDATE 
 SET prompt_text = EXCLUDED.prompt_text,
     version_name = EXCLUDED.version_name,
     prompt_type = EXCLUDED.prompt_type,

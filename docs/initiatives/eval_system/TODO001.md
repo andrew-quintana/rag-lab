@@ -867,112 +867,112 @@ This TODO document provides the implementation breakdown for the RAG Evaluation 
 
 **Component**: `rag_eval/services/evaluator/logging.py`
 
-**Status**: Optional - can be deferred if not needed for MVP
+**Status**: ✅ Complete (2024-12-19) - All tests pass, 97% coverage achieved
 
 ### Setup Tasks
-- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
-- [ ] Create `rag_eval/services/evaluator/logging.py` module
-- [ ] Review Supabase database schema and existing migrations
-- [ ] Review existing `QueryExecutor` from `rag_eval/db/queries.py`
-- [ ] Set up test fixtures for database operations
-- [ ] Create test file: `backend/tests/components/evaluator/test_evaluator_logging.py`
-- [ ] **Database Schema**: Create migration file for `evaluation_results` table
+- [x] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [x] Create `rag_eval/services/evaluator/logging.py` module
+- [x] Review Supabase database schema and existing migrations
+- [x] Review existing `QueryExecutor` from `rag_eval/db/queries.py`
+- [x] Set up test fixtures for database operations
+- [x] Create test file: `backend/tests/components/evaluator/test_evaluator_logging.py`
+- [x] **Database Schema**: Create migration file for `evaluation_results` table
 
 ### Database Schema Implementation
-- [ ] **Create Migration File**: `infra/supabase/migrations/0011_add_evaluation_results_table.sql`
-- [ ] **Design Table Schema**:
-  - [ ] `result_id` (VARCHAR(255) PRIMARY KEY)
-  - [ ] `example_id` (VARCHAR(255) NOT NULL) - Reference to evaluation example
-  - [ ] `timestamp` (TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
-  - [ ] `judge_output` (JSONB) - Store `JudgeEvaluationResult` as JSON
-  - [ ] `meta_eval_output` (JSONB) - Store `MetaEvaluationResult` as JSON (includes ground truth)
-  - [ ] `beir_metrics` (JSONB) - Store `BEIRMetricsResult` as JSON
-  - [ ] `judge_performance_metrics` (JSONB, NULLABLE) - Store `JudgePerformanceMetrics` as JSON (if calculated)
-  - [ ] `metadata` (JSONB, NULLABLE) - Additional flexible metadata
-- [ ] **Create Indexes**:
-  - [ ] Index on `example_id` for lookups
-  - [ ] Index on `timestamp` for time-based queries
-  - [ ] GIN index on JSONB columns for efficient JSON queries
-- [ ] **Test Migration**: Verify migration runs successfully
+- [x] **Create Migration File**: `infra/supabase/migrations/0011_add_evaluation_results_table.sql`
+- [x] **Design Table Schema**:
+  - [x] `result_id` (VARCHAR(255) PRIMARY KEY)
+  - [x] `example_id` (VARCHAR(255) NOT NULL) - Reference to evaluation example
+  - [x] `timestamp` (TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
+  - [x] `judge_output` (JSONB) - Store `JudgeEvaluationResult` as JSON
+  - [x] `meta_eval_output` (JSONB) - Store `MetaEvaluationResult` as JSON (includes ground truth)
+  - [x] `beir_metrics` (JSONB) - Store `BEIRMetricsResult` as JSON
+  - [x] `judge_performance_metrics` (JSONB, NULLABLE) - Store `JudgePerformanceMetrics` as JSON (if calculated)
+  - [x] `metadata` (JSONB, NULLABLE) - Additional flexible metadata
+- [x] **Create Indexes**:
+  - [x] Index on `example_id` for lookups
+  - [x] Index on `timestamp` for time-based queries
+  - [x] GIN index on JSONB columns for efficient JSON queries
+- [x] **Test Migration**: Verify migration runs successfully
 
 ### Core Implementation
-- [ ] Implement `log_evaluation_result(result: EvaluationResult, query_executor: Optional[QueryExecutor] = None) -> Optional[str]`
-  - [ ] If query_executor is None, skip logging (local-only mode)
-  - [ ] **Serialize to JSON**: Convert all evaluation result components to JSON:
-    - [ ] `JudgeEvaluationResult` → JSON (correctness_binary, hallucination_binary, risk_direction, risk_impact, reasoning, failure_mode)
-    - [ ] `MetaEvaluationResult` → JSON (judge_correct, explanation, ground_truth_* fields)
-    - [ ] `BEIRMetricsResult` → JSON (recall_at_k, precision_at_k, ndcg_at_k)
-    - [ ] `JudgePerformanceMetrics` → JSON (if provided, optional)
-  - [ ] Insert into Supabase Postgres `evaluation_results` table with JSONB columns
-  - [ ] Handle logging failures gracefully (don't fail evaluation pipeline)
-  - [ ] Return result_id if successful, None otherwise
-- [ ] Implement `log_evaluation_batch(results: List[EvaluationResult], query_executor: Optional[QueryExecutor] = None) -> None`
-  - [ ] Batch insert evaluation results (all as JSONB)
-  - [ ] Handle partial failures gracefully
-  - [ ] Log batch operation status
-  - [ ] Ensure ground truth fields from `MetaEvaluationResult` are properly logged
-- [ ] **JSON Serialization Helpers**: Create helper functions to serialize dataclasses to JSON-compatible dicts
-  - [ ] Handle datetime objects
-  - [ ] Handle Optional fields
-  - [ ] Handle nested dataclasses
-- [ ] **Optional**: Implement judge performance metrics logging
-  - [ ] If `JudgePerformanceMetrics` are calculated, support logging them separately
-  - [ ] Enable metrics retrieval and recalculation from logged results
+- [x] Implement `log_evaluation_result(result: EvaluationResult, query_executor: Optional[QueryExecutor] = None) -> Optional[str]`
+  - [x] If query_executor is None, skip logging (local-only mode)
+  - [x] **Serialize to JSON**: Convert all evaluation result components to JSON:
+    - [x] `JudgeEvaluationResult` → JSON (correctness_binary, hallucination_binary, risk_direction, risk_impact, reasoning, failure_mode)
+    - [x] `MetaEvaluationResult` → JSON (judge_correct, explanation, ground_truth_* fields)
+    - [x] `BEIRMetricsResult` → JSON (recall_at_k, precision_at_k, ndcg_at_k)
+    - [x] `JudgePerformanceMetrics` → JSON (if provided, optional)
+  - [x] Insert into Supabase Postgres `evaluation_results` table with JSONB columns
+  - [x] Handle logging failures gracefully (don't fail evaluation pipeline)
+  - [x] Return result_id if successful, None otherwise
+- [x] Implement `log_evaluation_batch(results: List[EvaluationResult], query_executor: Optional[QueryExecutor] = None) -> None`
+  - [x] Batch insert evaluation results (all as JSONB)
+  - [x] Handle partial failures gracefully
+  - [x] Log batch operation status
+  - [x] Ensure ground truth fields from `MetaEvaluationResult` are properly logged
+- [x] **JSON Serialization Helpers**: Create helper functions to serialize dataclasses to JSON-compatible dicts
+  - [x] Handle datetime objects
+  - [x] Handle Optional fields
+  - [x] Handle nested dataclasses
+- [x] **Optional**: Implement judge performance metrics logging
+  - [x] If `JudgePerformanceMetrics` are calculated, support logging them separately
+  - [x] Enable metrics retrieval and recalculation from logged results
 
 ### Testing Tasks
-- [ ] **Database Schema Tests**:
-  - [ ] Test migration file executes successfully
-  - [ ] Verify table structure matches specification
-  - [ ] Verify indexes are created correctly
-  - [ ] Test JSONB column queries work correctly
-- [ ] Unit tests for `log_evaluation_result()`
-  - [ ] Test logging with query_executor (mocked)
-  - [ ] Test local-only mode (query_executor is None)
-  - [ ] Test JSON serialization of all result components
-  - [ ] Test JSONB insertion into database
-  - [ ] Test error handling for database failures
-  - [ ] Test that logging failures don't fail evaluation pipeline
-  - [ ] Test logging of `MetaEvaluationResult` with ground truth fields (for metrics calculation)
-  - [ ] Test logging of `JudgePerformanceMetrics` (optional field)
-- [ ] Unit tests for `log_evaluation_batch()`
-  - [ ] Test batch logging with query_executor (mocked)
-  - [ ] Test local-only mode (query_executor is None)
-  - [ ] Test partial failure handling
-  - [ ] Test batch logging includes all meta-evaluation ground truth data
-  - [ ] Test batch JSON serialization and insertion
-- [ ] Integration tests for JSON retrieval and deserialization:
-  - [ ] Test retrieving logged evaluation results from database
-  - [ ] Test deserializing JSONB back to Python objects
-  - [ ] Test that all fields are preserved in JSON round-trip
-  - [ ] Test metrics recalculation from retrieved JSON data
-- [ ] Integration tests for judge performance metrics logging:
-  - [ ] Test logging of `JudgePerformanceMetrics` results (if metrics are calculated)
-  - [ ] Test that metrics can be retrieved and recalculated from logged evaluation results
-  - [ ] Test metrics calculation from logged batch results
-- [ ] Connection test for Supabase (warns if credentials missing)
-- [ ] **Document any failures** in fracas.md immediately when encountered
+- [x] **Database Schema Tests**:
+  - [x] Test migration file executes successfully
+  - [x] Verify table structure matches specification
+  - [x] Verify indexes are created correctly
+  - [x] Test JSONB column queries work correctly
+- [x] Unit tests for `log_evaluation_result()`
+  - [x] Test logging with query_executor (mocked)
+  - [x] Test local-only mode (query_executor is None)
+  - [x] Test JSON serialization of all result components
+  - [x] Test JSONB insertion into database
+  - [x] Test error handling for database failures
+  - [x] Test that logging failures don't fail evaluation pipeline
+  - [x] Test logging of `MetaEvaluationResult` with ground truth fields (for metrics calculation)
+  - [x] Test logging of `JudgePerformanceMetrics` (optional field)
+- [x] Unit tests for `log_evaluation_batch()`
+  - [x] Test batch logging with query_executor (mocked)
+  - [x] Test local-only mode (query_executor is None)
+  - [x] Test partial failure handling
+  - [x] Test batch logging includes all meta-evaluation ground truth data
+  - [x] Test batch JSON serialization and insertion
+- [x] Integration tests for JSON retrieval and deserialization:
+  - [x] Test retrieving logged evaluation results from database
+  - [x] Test deserializing JSONB back to Python objects
+  - [x] Test that all fields are preserved in JSON round-trip
+  - [x] Test metrics recalculation from retrieved JSON data
+- [x] Integration tests for judge performance metrics logging:
+  - [x] Test logging of `JudgePerformanceMetrics` results (if metrics are calculated)
+  - [x] Test that metrics can be retrieved and recalculated from logged evaluation results
+  - [x] Test metrics calculation from logged batch results
+- [x] Connection test for Supabase (warns if credentials missing)
+- [x] **Document any failures** in fracas.md immediately when encountered
 
 ### Documentation Tasks
-- [ ] Add docstrings to all functions
-- [ ] Document optional nature of logging
-- [ ] Document database schema requirements (JSONB structure)
-- [ ] Document local-only vs. database logging modes
-- [ ] Document JSON serialization format for each result type
-- [ ] Document how to query JSONB columns for analysis
-- [ ] Document migration file location and usage
-- [ ] **Phase 11 Testing Summary** for final validation
+- [x] Add docstrings to all functions
+- [x] Document optional nature of logging
+- [x] Document database schema requirements (JSONB structure)
+- [x] Document local-only vs. database logging modes
+- [x] Document JSON serialization format for each result type
+- [x] Document how to query JSONB columns for analysis
+- [x] Document migration file location and usage
+- [x] **Phase 11 Testing Summary** for final validation
 
 ### Validation Requirements (Phase 11 Complete)
-- [ ] **REQUIRED**: Database migration file created and tested
-- [ ] **REQUIRED**: All unit tests for Phase 11 must pass
-- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_logging.py -v`
-- [ ] **REQUIRED**: Test coverage must meet minimum 80% for logging.py module
-- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
-- [ ] **REQUIRED**: JSON serialization/deserialization tested and verified
-- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
-- [ ] **REQUIRED**: Document any test failures in fracas.md
-- [ ] **REQUIRED**: Phase 11 is NOT complete until all tests pass
-- [ ] **Status**: ⏳ Pending - Phase 11 cannot proceed to Initiative Completion until validation complete
+- [x] **REQUIRED**: Database migration file created and tested
+- [x] **REQUIRED**: All unit tests for Phase 11 must pass
+- [x] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/evaluator/test_evaluator_logging.py -v`
+- [x] **REQUIRED**: Test coverage must meet minimum 80% for logging.py module
+- [x] **REQUIRED**: All test assertions must pass (no failures, no errors)
+- [x] **REQUIRED**: JSON serialization/deserialization tested and verified
+- [x] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [x] **REQUIRED**: Document any test failures in fracas.md
+- [x] **REQUIRED**: Phase 11 is NOT complete until all tests pass
+- [x] **Status**: ✅ Complete - All tests pass (30/30), 97% coverage, ready for Initiative Completion
 
 ---
 

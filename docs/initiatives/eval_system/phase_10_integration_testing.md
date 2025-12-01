@@ -140,3 +140,4 @@ Together, they provide comprehensive coverage:
 - Connection tests provide informational output about service status
 - Full integration tests validate the complete evaluation pipeline when all prerequisites are met
 
+

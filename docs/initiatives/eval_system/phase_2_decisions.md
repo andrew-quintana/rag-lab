@@ -82,3 +82,4 @@ This document captures implementation decisions made during Phase 2 that are not
 
 **Implementation**: `_retry_with_backoff()` helper function shared with RAG generation pattern.
 
+
