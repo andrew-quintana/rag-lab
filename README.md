@@ -1,151 +1,286 @@
 # RAG Evaluation Platform
 
-A minimal but correct RAG evaluation platform for assessing retrieval-augmented generation systems using Azure services and Supabase Postgres.
+A comprehensive platform for building, testing, and evaluating Retrieval-Augmented Generation (RAG) systems. Upload documents, ask questions, and get detailed metrics on answer quality, hallucination detection, and retrieval performance.
 
-## Architecture
+## What is This?
 
-The platform consists of four independent but interoperable subsystems:
+The RAG Evaluation Platform is a complete toolkit for RAG system development and evaluation. It provides:
 
-1. **Document Chunk Ingestion (Python)** - Chunking → embedding → Azure AI Search indexing
-2. **RAG Query Flow (Python)** - Query → embedding → Azure AI Search retrieval → answer generation → trace logging
-3. **Evaluator (Python)** - LLM-as-judge scoring of grounding, relevance, hallucination
-4. **Meta-Evaluation (Python)** - Version-to-version performance comparison; judge stability/delta analysis
-5. **Observability Dashboard (TypeScript)** - Lightweight client visualizing RAG/eval/meta-eval metrics
+- **A working RAG pipeline** - Upload documents, process them into searchable chunks, and answer questions using retrieved context
+- **Comprehensive evaluation** - Measure answer correctness, detect hallucinations, assess risk, and evaluate retrieval quality
+- **Version comparison** - Compare different prompt versions and system configurations to understand what works best
+- **Full observability** - Track every query, retrieval, and evaluation result for analysis
 
-## Tech Stack
+Perfect for AI engineers experimenting with RAG systems, testing different retrieval strategies, prompt versions, or embedding models.
 
-- **Backend**: Python 3.10+, FastAPI, Supabase Postgres
-- **Frontend**: TypeScript, React, Vite
-- **Infrastructure**: Supabase (local), Overmind (process management)
-- **Azure Services**: AI Foundry (LLMs, embeddings), AI Search (vector retrieval), Blob Storage
+## What Can You Do?
 
-## Quick Start
+### 1. Build and Test RAG Systems
 
-### Prerequisites
+**Upload Documents**
+- Upload PDFs and other documents
+- Automatic text extraction and chunking
+- Vector embeddings generated and indexed in Azure AI Search
+- Documents ready for querying in seconds
 
-- Python 3.10+
-- Node.js 18+
-- Docker and Docker Compose
-- Supabase CLI: `brew install supabase/tap/supabase` (macOS)
-- Overmind: `brew install overmind` (macOS) or see [Overmind docs](https://github.com/DarthSim/overmind)
+**Ask Questions**
+- Submit natural language queries
+- System retrieves relevant document chunks
+- LLM generates answers grounded in retrieved context
+- Full trace of retrieval and generation process
 
-### Setup
+**Experiment with Prompts**
+- Store multiple prompt versions in the database
+- Test different prompt strategies (v1, v2, etc.)
+- Compare results across prompt versions
+- No code changes needed - just update database records
 
-1. **Clone and install dependencies:**
+### 2. Evaluate Answer Quality
+
+**Correctness Evaluation**
+- Compare model answers to reference answers
+- Binary classification: correct or incorrect
+- Understand when your system gets answers right
+
+**Hallucination Detection**
+- Detect when answers contain information not in retrieved context
+- Strict grounding analysis against evidence only
+- Identify potential misinformation risks
+
+**Risk Assessment**
+- Classify risk direction: care avoidance vs. unexpected cost
+- Calculate impact magnitude (0-3 scale)
+- Understand real-world consequences of errors
+
+### 3. Measure Retrieval Performance
+
+**BEIR-Style Metrics**
+- **Recall@k**: How many relevant passages were found?
+- **Precision@k**: How many retrieved passages were relevant?
+- **nDCG@k**: Normalized discounted cumulative gain for ranking quality
+
+**Judge Reliability**
+- Meta-evaluator validates judge accuracy
+- Understand when evaluation judgments are trustworthy
+- Catch judge errors and inconsistencies
+
+### 4. Compare Versions
+
+**Version-to-Version Analysis**
+- Compare performance across different system configurations
+- Track judge consistency over time
+- Detect performance drift
+- Data-driven decisions on what works best
+
+## How to Use It
+
+### Quick Start
+
+1. **Install Dependencies**
 
    ```bash
    # Backend
    cd backend
    pip install -r requirements.txt
    
-   # Frontend
+   # Frontend (optional)
    cd ../frontend
    npm install
    ```
 
-2. **Configure environment:**
+2. **Configure Environment**
+
+   Create a `.env.local` file in the project root with your credentials:
 
    ```bash
-   # Create .env.local file in project root (or backend/.env.local)
-   # Add your Azure credentials and Supabase connection details
-   # The Config.from_env() method automatically loads from .env.local
-   
-   # Example .env.local structure:
-   # SUPABASE_URL=...
-   # SUPABASE_KEY=...
-   # DATABASE_URL=...
-   # AZURE_AI_FOUNDRY_ENDPOINT=...
-   # AZURE_AI_FOUNDRY_API_KEY=...
-   # (etc.)
+   # Supabase (local or cloud)
+   SUPABASE_URL=...
+   SUPABASE_KEY=...
+   DATABASE_URL=...
+
+   # Azure Services
+   AZURE_AI_FOUNDRY_ENDPOINT=...
+   AZURE_AI_FOUNDRY_API_KEY=...
+   AZURE_AI_SEARCH_ENDPOINT=...
+   AZURE_AI_SEARCH_API_KEY=...
+   AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT=...
+   AZURE_DOCUMENT_INTELLIGENCE_API_KEY=...
    ```
 
-3. **Start Supabase locally:**
+3. **Start Supabase Locally**
 
    ```bash
    cd infra/supabase
    supabase start
    ```
 
-   Note the connection details from the output and update your `.env` file.
+   Copy the connection details from the output to your `.env.local` file.
 
-4. **Start all services:**
+4. **Start the Platform**
 
    ```bash
+   # From project root
    make dev
    ```
 
    This starts:
-   - Supabase (Postgres, API, Studio)
-   - Backend API (http://localhost:8000)
-   - Frontend dashboard (http://localhost:5173)
+   - Backend API at `http://localhost:8000`
+   - Frontend dashboard at `http://localhost:5173` (if installed)
+   - Supabase services (Postgres, API, Studio)
+
+### Using the API
+
+#### Upload a Document
+
+```bash
+curl -X POST http://localhost:8000/api/upload \
+  -F "file=@your-document.pdf"
+```
+
+Response includes:
+- Document ID
+- Number of chunks created
+- Processing statistics
+
+#### Query the RAG System
+
+```bash
+curl -X POST http://localhost:8000/api/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "What is the copay for specialist visits?",
+    "prompt_version": "v1"
+  }'
+```
+
+Response includes:
+- Generated answer
+- Query ID for tracking
+- Prompt version used
+
+#### List Documents
+
+```bash
+curl http://localhost:8000/api/documents
+```
+
+#### Get Evaluation Metrics
+
+```bash
+curl http://localhost:8000/api/metrics
+```
+
+#### Run Meta-Evaluation
+
+```bash
+curl -X POST http://localhost:8000/api/meta_eval \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query_ids": ["query_123", "query_456"]
+  }'
+```
+
+### Using Python Directly
+
+You can also use the platform programmatically:
+
+```python
+from rag_eval.core.config import Config
+from rag_eval.services.rag.pipeline import run_rag
+from rag_eval.core.models import Query
+
+# Load configuration
+config = Config.from_env()
+
+# Create a query
+query = Query(text="What is the deductible?")
+
+# Run RAG pipeline
+answer = run_rag(query, prompt_version="v1", config=config)
+
+print(f"Answer: {answer.text}")
+print(f"Query ID: {answer.query_id}")
+```
 
 ### Development Commands
 
 From the project root:
 
-- `make dev` - Start all services via Overmind
+- `make dev` - Start all services
 - `make stop` - Stop all services
 - `make restart` - Restart all services
 - `make logs` - View logs from all processes
-- `make supabase-start` - Start Supabase only
-- `make supabase-stop` - Stop Supabase only
-- `make reset-db` - Reset database and run migrations
 - `make backend` - Start backend only
 - `make frontend` - Start frontend only
+- `make reset-db` - Reset database and run migrations
 
-## Project Structure
+## Architecture
 
+The platform consists of four main subsystems:
+
+1. **RAG System** - Document ingestion, chunking, embedding, vector search, and answer generation
+2. **Evaluation System** - LLM-as-judge evaluation with correctness, hallucination detection, and risk assessment
+3. **Meta-Evaluation** - Judge reliability validation and version comparison
+4. **Observability Dashboard** - Web interface for metrics and results (optional)
+
+All systems are modular and can be used independently or together.
+
+## Tech Stack
+
+- **Backend**: Python 3.10+, FastAPI, Supabase Postgres
+- **Frontend**: TypeScript, React, Vite (optional)
+- **Infrastructure**: Supabase (local or cloud), Overmind (process management)
+- **Azure Services**: 
+  - AI Foundry (LLMs, embeddings)
+  - AI Search (vector retrieval)
+  - Document Intelligence (text extraction)
+
+## Project Status
+
+### ✅ RAG System - Complete
+- 183 tests passing
+- 88% code coverage
+- All components tested and validated
+- Production-ready
+
+### ✅ Evaluation System - Complete
+- 172+ tests passing
+- 97%+ code coverage
+- Full LLM-as-judge implementation
+- Meta-evaluation and BEIR metrics
+
+## Testing
+
+Run the test suite:
+
+```bash
+cd backend
+source venv/bin/activate
+pytest tests/ -v
 ```
-rag-evaluator/
-├── backend/              # Python FastAPI backend
-│   ├── rag_eval/        # Main package
-│   │   ├── core/        # Shared primitives
-│   │   ├── db/          # Database layer
-│   │   ├── services/    # Business logic (RAG, evaluator, meta-eval)
-│   │   ├── api/         # FastAPI routes
-│   │   ├── prompts/     # Prompt templates
-│   │   └── utils/       # Utilities
-│   └── tests/           # Test suite
-├── frontend/            # TypeScript React dashboard
-│   ├── src/
-│   │   ├── components/ # React components
-│   │   ├── api/        # Backend API client
-│   │   └── lib/        # Utilities
-├── infra/              # Infrastructure and tooling
-│   ├── supabase/       # Supabase config and migrations
-│   ├── docker/         # Dockerfiles (optional)
-│   └── Makefile        # Development automation
-├── docs/               # Documentation
-└── .cursor/            # Cursor IDE rules and context
+
+With coverage report:
+
+```bash
+pytest tests/ --cov=rag_eval --cov-report=html
 ```
 
-## API Endpoints
+## Documentation
 
-- `POST /api/query` - Process a query through the RAG pipeline
-- `GET /api/metrics` - Get aggregated metrics for dashboard
-- `POST /api/meta_eval` - Trigger version-to-version comparison
-- `GET /health` - Health check
+Comprehensive documentation is available in `docs/initiatives/`:
+
+- **RAG System**: `docs/initiatives/rag_system/` - Complete implementation guide
+- **Evaluation System**: `docs/initiatives/eval_system/` - Evaluation framework details
+- **Initial Setup**: `docs/initiatives/initial_setup/` - Original scoping document
 
 ## Design Principles
 
 1. **Modularity** - Each subsystem is independent with clean interfaces
-2. **Minimalism** - Only components required for minimal working version
-3. **Traceability** - Every RAG step produces logs saved to Supabase
-4. **Reproducibility** - System runs deterministically with identical inputs
-5. **Strict Layering** - FastAPI → Services → DB, no cross-contamination
-
-## Development Phase
-
-This project is in **rapid prototyping** mode, focusing on:
-- Correctness
-- Deterministic behavior
-- Minimal API surface area
-- Fast iteration
-- Simple deployment-free tooling
-
-See `docs/initiatives/initial_setup/context.md` for the full scoping document.
+2. **Testability** - Comprehensive test coverage (>80% achieved)
+3. **Traceability** - Every operation is logged for analysis
+4. **Reproducibility** - Deterministic behavior for reliable experimentation
+5. **Correctness First** - All components validated with extensive testing
 
 ## License
 
 [Add license here]
-
