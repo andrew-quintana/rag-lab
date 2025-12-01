@@ -1,9 +1,12 @@
 -- Migration: Add documents table for tracking uploaded documents
 -- This table stores metadata about documents uploaded to Supabase Storage
 
+-- Enable UUID extension if not already enabled
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Documents table
 CREATE TABLE IF NOT EXISTS documents (
-    document_id VARCHAR(255) PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     filename VARCHAR(500) NOT NULL,
     file_size BIGINT NOT NULL,
     mime_type VARCHAR(100),
@@ -24,4 +27,5 @@ CREATE INDEX IF NOT EXISTS idx_documents_filename ON documents(filename);
 -- Add comment to document the table
 COMMENT ON TABLE documents IS 
 'Stores metadata about documents uploaded to Supabase Storage. Tracks file information, processing status, and storage paths.';
+
 

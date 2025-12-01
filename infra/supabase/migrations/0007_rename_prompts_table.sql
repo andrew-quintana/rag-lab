@@ -61,11 +61,11 @@ BEGIN
     END IF;
     
     -- Add new foreign key to prompts table
-    -- Note: This references (prompt_type, version) since name can be NULL
-    -- For now, we'll reference version only and assume prompt_type='rag' for existing data
-    ALTER TABLE model_answers
-    ADD CONSTRAINT model_answers_prompt_version_fkey
-    FOREIGN KEY (prompt_version) REFERENCES prompts(version);
+    -- Note: Since version is not unique, we'll remove the foreign key constraint
+    -- The application code will handle validation
+    -- ALTER TABLE model_answers
+    -- ADD CONSTRAINT model_answers_prompt_version_fkey
+    -- FOREIGN KEY (prompt_version) REFERENCES prompts(version);
 END $$;
 
 -- Update eval_judgments table
@@ -78,9 +78,11 @@ BEGIN
         ALTER TABLE eval_judgments DROP CONSTRAINT eval_judgments_prompt_version_fkey;
     END IF;
     
-    ALTER TABLE eval_judgments
-    ADD CONSTRAINT eval_judgments_prompt_version_fkey
-    FOREIGN KEY (prompt_version) REFERENCES prompts(version);
+    -- Note: Since version is not unique, we'll remove the foreign key constraint
+    -- The application code will handle validation
+    -- ALTER TABLE eval_judgments
+    -- ADD CONSTRAINT eval_judgments_prompt_version_fkey
+    -- FOREIGN KEY (prompt_version) REFERENCES prompts(version);
 END $$;
 
 -- Update meta_eval_summaries table
@@ -100,13 +102,15 @@ BEGIN
         ALTER TABLE meta_eval_summaries DROP CONSTRAINT meta_eval_summaries_version_2_fkey;
     END IF;
     
-    ALTER TABLE meta_eval_summaries
-    ADD CONSTRAINT meta_eval_summaries_version_1_fkey
-    FOREIGN KEY (version_1) REFERENCES prompts(version);
-    
-    ALTER TABLE meta_eval_summaries
-    ADD CONSTRAINT meta_eval_summaries_version_2_fkey
-    FOREIGN KEY (version_2) REFERENCES prompts(version);
+    -- Note: Since version is not unique, we'll remove the foreign key constraints
+    -- The application code will handle validation
+    -- ALTER TABLE meta_eval_summaries
+    -- ADD CONSTRAINT meta_eval_summaries_version_1_fkey
+    -- FOREIGN KEY (version_1) REFERENCES prompts(version);
+    --
+    -- ALTER TABLE meta_eval_summaries
+    -- ADD CONSTRAINT meta_eval_summaries_version_2_fkey
+    -- FOREIGN KEY (version_2) REFERENCES prompts(version);
 END $$;
 
 -- Step 4: Create indexes for performance

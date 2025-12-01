@@ -8,7 +8,7 @@ from datetime import datetime
 @dataclass
 class QueryRecord:
     """Database record for a query"""
-    query_id: str
+    id: str  # UUID
     query_text: str
     timestamp: datetime
     metadata: Optional[Dict[str, Any]] = None
@@ -17,8 +17,8 @@ class QueryRecord:
 @dataclass
 class RetrievalLog:
     """Database record for retrieval operation"""
-    log_id: str
-    query_id: str
+    id: str  # UUID
+    query_id: str  # UUID reference
     chunk_id: str
     similarity_score: float
     timestamp: datetime
@@ -27,8 +27,8 @@ class RetrievalLog:
 @dataclass
 class ModelAnswerRecord:
     """Database record for model answer"""
-    answer_id: str
-    query_id: str
+    id: str  # UUID
+    query_id: str  # UUID reference
     answer_text: str
     prompt_version: str
     retrieved_chunk_ids: List[str]
@@ -39,20 +39,13 @@ class ModelAnswerRecord:
 class EvalJudgment:
     """Database record for evaluation judgment
     
-    Note: The `hallucination_risk` field is a FLOAT (0-1) representing an aggregated
-    risk score, which is different from the `risk_direction` field (INT -1/+1) used
-    in the evaluation state schema. The `risk_direction` field classifies the direction
-    of system-level deviations, while `hallucination_risk` represents an overall risk
-    magnitude score.
+    Stores full JudgeEvaluationResult as JSONB in judge_output field.
     """
-    judgment_id: str
-    query_id: str
-    prompt_version: str
-    grounding_score: float
-    relevance_score: float
-    hallucination_risk: float  # Aggregated risk score (0-1), distinct from risk_direction (-1/+1)
-    judge_reasoning: Optional[str] = None
-    timestamp: Optional[datetime] = None
+    id: str  # UUID
+    query_id: str  # UUID reference
+    prompt_version_id: str
+    judge_output: Dict[str, Any]  # JSONB storage of JudgeEvaluationResult
+    created_at: Optional[datetime] = None
 
 
 @dataclass
@@ -70,20 +63,16 @@ class PromptVersion:
 @dataclass
 class MetaEvalSummary:
     """Database record for meta-evaluation summary"""
-    summary_id: str
-    version_1: str
-    version_2: str
-    delta_grounding: float
-    delta_relevance: float
-    delta_hallucination: float
-    judge_consistency: float
-    timestamp: datetime
+    id: str  # UUID
+    prompt_version_id: str
+    dataset_id: str  # UUID reference
+    meta_eval: Dict[str, Any]  # JSONB storage of MetaEvaluationResult
 
 
 @dataclass
 class Document:
     """Database record for uploaded document"""
-    document_id: str
+    id: str  # UUID
     filename: str
     file_size: int
     mime_type: Optional[str] = None
