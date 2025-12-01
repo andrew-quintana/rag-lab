@@ -8,7 +8,6 @@ The RAG Evaluation Platform is a complete toolkit for RAG system development and
 
 - **A working RAG pipeline** - Upload documents, process them into searchable chunks, and answer questions using retrieved context
 - **Comprehensive evaluation** - Measure answer correctness, detect hallucinations, assess risk, and evaluate retrieval quality
-- **Version comparison** - Compare different prompt versions and system configurations to understand what works best
 - **Full observability** - Track every query, retrieval, and evaluation result for analysis
 
 Perfect for AI engineers experimenting with RAG systems, testing different retrieval strategies, prompt versions, or embedding models.
@@ -32,7 +31,6 @@ Perfect for AI engineers experimenting with RAG systems, testing different retri
 **Experiment with Prompts**
 - Store multiple prompt versions in the database
 - Test different prompt strategies (v1, v2, etc.)
-- Compare results across prompt versions
 - No code changes needed - just update database records
 
 ### 2. Evaluate Answer Quality
@@ -63,14 +61,6 @@ Perfect for AI engineers experimenting with RAG systems, testing different retri
 - Meta-evaluator validates judge accuracy
 - Understand when evaluation judgments are trustworthy
 - Catch judge errors and inconsistencies
-
-### 4. Compare Versions
-
-**Version-to-Version Analysis**
-- Compare performance across different system configurations
-- Track judge consistency over time
-- Detect performance drift
-- Data-driven decisions on what works best
 
 ## How to Use It
 
@@ -220,7 +210,7 @@ The platform consists of four main subsystems:
 
 1. **RAG System** - Document ingestion, chunking, embedding, vector search, and answer generation
 2. **Evaluation System** - LLM-as-judge evaluation with correctness, hallucination detection, and risk assessment
-3. **Meta-Evaluation** - Judge reliability validation and version comparison
+3. **Meta-Evaluation** - Judge reliability validation
 4. **Observability Dashboard** - Web interface for metrics and results (optional)
 
 All systems are modular and can be used independently or together.
