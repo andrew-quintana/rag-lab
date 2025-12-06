@@ -15,7 +15,9 @@ from rag_eval.services.rag.supabase_storage import (
     delete_document_from_storage,
     get_public_url
 )
-from rag_eval.services.rag.search import delete_chunks_by_document_id
+from rag_eval.services.rag.search import delete_chunks_by_document_id as delete_chunks_from_ai_search
+from rag_eval.services.workers.persistence import delete_chunks_by_document_id as delete_chunks_from_db
+from rag_eval.db.queries import QueryExecutor
 import io
 
 logger = get_logger("api.routes.documents")
@@ -47,6 +49,25 @@ class DocumentListResponse(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+class DocumentStatusResponse(BaseModel):
+    """Response model for document status query"""
+    document_id: str
+    status: str
+    parsed_at: Optional[datetime] = None
+    chunked_at: Optional[datetime] = None
+    embedded_at: Optional[datetime] = None
+    indexed_at: Optional[datetime] = None
+    error_details: Optional[str] = None
+
+
+class DeleteDocumentResponse(BaseModel):
+    """Response model for document deletion"""
+    message: str
+    document_id: str
+    chunks_deleted_db: int = 0
+    chunks_deleted_ai_search: int = 0
 
 
 def _document_to_response(doc: Document) -> DocumentResponse:
@@ -204,6 +225,73 @@ async def download_document(document_id: str):
         raise HTTPException(status_code=500, detail=f"Failed to download document: {str(e)}")
 
 
+@router.get("/documents/{document_id}/status", response_model=DocumentStatusResponse)
+async def get_document_status(document_id: str):
+    """
+    Get document processing status.
+    
+    Returns current status, timestamps for each pipeline stage,
+    and error details if the document processing failed.
+    
+    Args:
+        document_id: Document identifier
+        
+    Returns:
+        DocumentStatusResponse with status, timestamps, and error details
+    """
+    logger.info(f"Getting document status: {document_id}")
+    
+    try:
+        # Get document metadata
+        document = doc_service.get_document(document_id)
+        if not document:
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        # Query timestamps directly from database
+        executor = QueryExecutor(db_conn)
+        query = """
+            SELECT status, parsed_at, chunked_at, embedded_at, indexed_at, metadata
+            FROM documents
+            WHERE id = %s
+        """
+        results = executor.execute_query(query, (document_id,))
+        
+        if not results:
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        row = results[0]
+        status = row.get("status", "uploaded")
+        
+        # Extract error details from metadata if status indicates failure
+        error_details = None
+        if status.startswith("failed_"):
+            metadata = row.get("metadata")
+            if metadata:
+                if isinstance(metadata, str):
+                    import json
+                    try:
+                        metadata = json.loads(metadata)
+                    except json.JSONDecodeError:
+                        metadata = None
+                if metadata and isinstance(metadata, dict):
+                    error_details = metadata.get("error_details") or metadata.get("error_message")
+        
+        return DocumentStatusResponse(
+            document_id=document_id,
+            status=status,
+            parsed_at=row.get("parsed_at"),
+            chunked_at=row.get("chunked_at"),
+            embedded_at=row.get("embedded_at"),
+            indexed_at=row.get("indexed_at"),
+            error_details=error_details
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get document status: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to get document status: {str(e)}")
+
+
 @router.get("/documents/{document_id}/preview")
 async def get_preview(document_id: str):
     """
@@ -244,21 +332,24 @@ async def get_preview(document_id: str):
         raise HTTPException(status_code=500, detail=f"Failed to get preview: {str(e)}")
 
 
-@router.delete("/documents/{document_id}")
+@router.delete("/documents/{document_id}", response_model=DeleteDocumentResponse)
 async def delete_document(document_id: str):
     """
-    Delete a document, its file from storage, and its chunks from Azure AI Search.
+    Delete a document and all associated data.
     
     This function performs a complete deletion:
     1. Deletes chunks from Azure AI Search
-    2. Deletes file from Supabase Storage (main file and preview if exists)
-    3. Deletes document record from database
+    2. Deletes chunks and embeddings from chunks table
+    3. Deletes file from Supabase Storage (main file and preview if exists)
+    4. Deletes document record from database
+    
+    All deletion operations are attempted even if one fails (graceful degradation).
     
     Args:
         document_id: Document identifier
         
     Returns:
-        Success message with number of chunks deleted
+        DeleteDocumentResponse with counts of deleted chunks from both systems
     """
     logger.info(f"Deleting document: {document_id}")
     
@@ -268,18 +359,28 @@ async def delete_document(document_id: str):
         if not document:
             raise HTTPException(status_code=404, detail="Document not found")
         
-        chunks_deleted = 0
+        chunks_deleted_ai_search = 0
+        chunks_deleted_db = 0
         
         # Step 1: Delete chunks from Azure AI Search
         try:
             logger.info(f"Deleting chunks from Azure AI Search for document: {document_id}")
-            chunks_deleted = delete_chunks_by_document_id(document_id, config)
-            logger.info(f"Deleted {chunks_deleted} chunks from Azure AI Search")
+            chunks_deleted_ai_search = delete_chunks_from_ai_search(document_id, config)
+            logger.info(f"Deleted {chunks_deleted_ai_search} chunks from Azure AI Search")
         except Exception as e:
             logger.warning(f"Failed to delete chunks from Azure AI Search (continuing with other deletions): {e}")
             # Continue with other deletions even if Azure AI Search deletion fails
         
-        # Step 2: Delete from storage (main file and preview if exists)
+        # Step 2: Delete chunks and embeddings from chunks table
+        try:
+            logger.info(f"Deleting chunks from chunks table for document: {document_id}")
+            chunks_deleted_db = delete_chunks_from_db(document_id, config)
+            logger.info(f"Deleted {chunks_deleted_db} chunks from chunks table")
+        except Exception as e:
+            logger.warning(f"Failed to delete chunks from chunks table (continuing with other deletions): {e}")
+            # Continue with other deletions even if chunks table deletion fails
+        
+        # Step 3: Delete from storage (main file and preview if exists)
         try:
             delete_document_from_storage(document_id, config)
             if document.preview_image_path:
@@ -287,14 +388,15 @@ async def delete_document(document_id: str):
         except Exception as e:
             logger.warning(f"Failed to delete file from storage (continuing with DB delete): {e}")
         
-        # Step 3: Delete from database
+        # Step 4: Delete from database
         doc_service.delete_document(document_id)
         
-        return {
-            "message": "Document deleted successfully",
-            "document_id": document_id,
-            "chunks_deleted": chunks_deleted
-        }
+        return DeleteDocumentResponse(
+            message="Document deleted successfully",
+            document_id=document_id,
+            chunks_deleted_db=chunks_deleted_db,
+            chunks_deleted_ai_search=chunks_deleted_ai_search
+        )
     except HTTPException:
         raise
     except Exception as e:
