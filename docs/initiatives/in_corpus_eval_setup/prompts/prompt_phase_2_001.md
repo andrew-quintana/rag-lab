@@ -56,9 +56,9 @@ This prompt guides the implementation of **Phase 2: Dataset Generator** for the 
 ## Phase 2 Tasks
 
 ### Implementation
-1. Create `generate_eval_dataset.py` script in `evaluations/{eval_name}/` directory
+1. Create `generate_eval_dataset.py` script in `evaluations/_shared/scripts/` directory
 2. Implement loading of `eval_inputs.json`:
-   - Load from same directory as script
+   - Load from `evaluations/{eval_name}/inputs/eval_inputs.json`
    - Validate JSON structure
    - Handle missing or invalid files
 3. Implement retrieval_query generation:
@@ -89,7 +89,7 @@ This prompt guides the implementation of **Phase 2: Dataset Generator** for the 
    - human_correctness, human_hallucination, human_risk_direction, human_risk_magnitude
 10. Implement saving to `eval_dataset.json`:
     - Use proper JSON structure as specified in RFC001.md
-    - Save to `evaluations/{eval_name}/in_corpus/eval_dataset.json`
+    - Save to `evaluations/{eval_name}/dataset/eval_dataset.json`
 11. Add error handling:
     - Handle missing prompts
     - Handle failed retrievals

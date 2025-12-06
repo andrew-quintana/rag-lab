@@ -83,8 +83,8 @@ This document summarizes Phase 0 completion and provides the entry point for Pha
 ### Implementation Target
 
 **Component**: Query Generator (AI Node)  
-**File**: `evaluations/{eval_name}/query_generator.py`  
-**Output**: `evaluations/{eval_name}/in_corpus/eval_inputs.json`
+**File**: `evaluations/_shared/scripts/query_generator.py`  
+**Output**: `evaluations/{eval_name}/inputs/eval_inputs.json`
 
 ### Key Requirements
 
@@ -112,7 +112,6 @@ This document summarizes Phase 0 completion and provides the entry point for Pha
        "metadata": {
          "source_chunk_ids": ["chunk_1", "chunk_2"],
          "document_id": "doc_123",
-         "generation_method": "ai_generated"
        }
      }
    ]
@@ -131,10 +130,14 @@ This document summarizes Phase 0 completion and provides the entry point for Pha
 Create the following structure:
 ```
 evaluations/
+  _shared/
+    scripts/
+      query_generator.py
   {eval_name}/
-    query_generator.py
-    in_corpus/
+    inputs/
       eval_inputs.json
+    dataset/
+      eval_dataset.json
 ```
 
 ### Key Functions to Implement

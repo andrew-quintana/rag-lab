@@ -193,7 +193,7 @@ def index_chunks(chunks: List[Chunk], embeddings: List[List[float]], config) -> 
     
     This function:
     - Ensures index exists (creates if needed, idempotent)
-    - Batch indexes chunks with embeddings and metadata
+    - Batch indexes chunks with embeddings and metadata (1000 documents per batch)
     - Validates chunks and embeddings match in length
     - Handles empty chunk list gracefully
     - Implements retry logic with exponential backoff (3 retries max)
@@ -229,7 +229,10 @@ def index_chunks(chunks: List[Chunk], embeddings: List[List[float]], config) -> 
     if not config.azure_search_index_name:
         raise ValueError("Azure AI Search index name is not configured")
     
-    logger.info(f"Indexing {len(chunks)} chunks into Azure AI Search")
+    # Azure AI Search batch limit: 1000 documents per batch
+    BATCH_SIZE = 1000
+    
+    logger.info(f"Indexing {len(chunks)} chunks into Azure AI Search (in batches of {BATCH_SIZE})")
     
     try:
         # Ensure index exists (idempotent)
@@ -242,37 +245,67 @@ def index_chunks(chunks: List[Chunk], embeddings: List[List[float]], config) -> 
             credential=AzureKeyCredential(config.azure_search_api_key)
         )
         
-        # Prepare documents for indexing
-        documents = []
-        for chunk, embedding in zip(chunks, embeddings):
-            # Serialize metadata to JSON string if present
-            metadata_str = None
-            if chunk.metadata:
-                metadata_str = json.dumps(chunk.metadata)
+        # Process in batches
+        total_indexed = 0
+        total_failed = 0
+        
+        for batch_start in range(0, len(chunks), BATCH_SIZE):
+            batch_end = min(batch_start + BATCH_SIZE, len(chunks))
+            batch_chunks = chunks[batch_start:batch_end]
+            batch_embeddings = embeddings[batch_start:batch_end]
             
-            doc = {
-                "id": chunk.chunk_id,
-                "chunk_text": chunk.text,
-                "embedding": embedding,
-                "document_id": chunk.document_id or "",
-                "metadata": metadata_str or ""
-            }
-            documents.append(doc)
+            logger.debug(f"Processing batch {batch_start // BATCH_SIZE + 1}: chunks {batch_start} to {batch_end - 1}")
+            
+            # Prepare documents for this batch
+            documents = []
+            for chunk, embedding in zip(batch_chunks, batch_embeddings):
+                # Serialize metadata to JSON string if present
+                metadata_str = None
+                if chunk.metadata:
+                    metadata_str = json.dumps(chunk.metadata)
+                
+                doc = {
+                    "id": chunk.chunk_id,
+                    "chunk_text": chunk.text,
+                    "embedding": embedding,
+                    "document_id": chunk.document_id or "",
+                    "metadata": metadata_str or ""
+                }
+                documents.append(doc)
+            
+            # Batch index documents with retry logic
+            def upload_documents():
+                result = search_client.upload_documents(documents=documents)
+                # Check for failures
+                failed = [r for r in result if not r.succeeded]
+                if failed:
+                    error_messages = [f"Document {r.key}: {r.error_message}" for r in failed]
+                    raise AzureServiceError(
+                        f"Failed to index {len(failed)} documents in batch: {', '.join(error_messages[:5])}"  # Limit error message length
+                    )
+                return result
+            
+            try:
+                result = _retry_with_backoff(upload_documents)
+                batch_indexed = len([r for r in result if r.succeeded])
+                batch_failed = len([r for r in result if not r.succeeded])
+                total_indexed += batch_indexed
+                total_failed += batch_failed
+                logger.info(f"Batch {batch_start // BATCH_SIZE + 1}: indexed {batch_indexed} chunks, {batch_failed} failed")
+            except AzureServiceError as e:
+                logger.error(f"Failed to index batch {batch_start // BATCH_SIZE + 1}: {e}")
+                total_failed += len(documents)
+                # Continue with next batch instead of failing completely
+                # This allows partial success for large document uploads
+                logger.warning(f"Continuing with remaining batches after batch failure")
         
-        # Batch index documents with retry logic
-        def upload_documents():
-            result = search_client.upload_documents(documents=documents)
-            # Check for failures
-            failed = [r for r in result if not r.succeeded]
-            if failed:
-                error_messages = [f"Document {r.key}: {r.error_message}" for r in failed]
-                raise AzureServiceError(
-                    f"Failed to index {len(failed)} documents: {', '.join(error_messages)}"
-                )
-            return None
-        
-        _retry_with_backoff(upload_documents)
-        logger.info(f"Successfully indexed {len(chunks)} chunks")
+        if total_failed > 0:
+            logger.warning(f"Indexing completed with {total_failed} failures out of {len(chunks)} total chunks")
+            if total_indexed == 0:
+                # If all batches failed, raise an error
+                raise AzureServiceError(f"Failed to index any chunks: all {len(chunks)} chunks failed")
+        else:
+            logger.info(f"Successfully indexed all {total_indexed} chunks")
         
     except AzureServiceError:
         # Re-raise AzureServiceError as-is

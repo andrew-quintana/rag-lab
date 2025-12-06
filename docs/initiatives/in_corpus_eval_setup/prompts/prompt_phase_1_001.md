@@ -42,17 +42,20 @@ This prompt guides the implementation of **Phase 1: Query Generator (AI Node)** 
 - @backend/rag_eval/services/shared/llm_providers.py - LLM provider abstraction for query generation
 - @backend/rag_eval/core/config.py - Configuration management
 - @backend/rag_eval/core/interfaces.py - Data structure definitions (Chunk, Query)
+- Script location: `evaluations/_shared/scripts/query_generator.py`
 
 ### Directory Structure
-- Create `evaluations/{eval_name}/` directory structure
-- Create `evaluations/{eval_name}/query_generator.py` module
-- Create `evaluations/{eval_name}/in_corpus/` directory for output files
+- Create `evaluations/{eval_name}/inputs/` and `evaluations/{eval_name}/dataset/` directory structure
+- Create `evaluations/_shared/scripts/query_generator.py` module
+- Scripts are shared across all evaluations in `evaluations/_shared/scripts/`
+- Input files go in `evaluations/{eval_name}/inputs/`
+- Dataset files go in `evaluations/{eval_name}/dataset/`
 
 ## Phase 1 Tasks
 
 ### Implementation
-1. Create `evaluations/{eval_name}/` directory structure
-2. Create `query_generator.py` module with proper imports and structure
+1. Create `evaluations/{eval_name}/inputs/` and `evaluations/{eval_name}/dataset/` directory structure
+2. Create `query_generator.py` module in `evaluations/_shared/scripts/` with proper imports and structure
 3. Implement function to sample chunks from Azure AI Search index:
    - Use existing `retrieve_chunks()` or create new sampling function
    - Sample diverse chunks across different documents/content areas
@@ -62,10 +65,10 @@ This prompt guides the implementation of **Phase 1: Query Generator (AI Node)** 
    - Generate diverse queries that are effective for RAG evaluation
 5. Include metadata linking queries to source chunks:
    - Track source_chunk_ids for each generated query
-   - Include document_id and generation_method
+   - Include document_id
 6. Implement saving to `eval_inputs.json`:
    - Use proper JSON structure as specified in RFC001.md
-   - Save to `evaluations/{eval_name}/in_corpus/eval_inputs.json`
+   - Save to `evaluations/{eval_name}/inputs/eval_inputs.json`
 7. Add error handling and retry logic:
    - Handle Azure AI Search failures
    - Handle LLM generation failures

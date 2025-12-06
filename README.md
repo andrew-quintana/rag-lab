@@ -21,26 +21,7 @@ Perfect for AI engineers experimenting with RAG systems, testing different retri
 - Automatic text extraction and chunking
 - Vector embeddings generated and indexed in Azure AI Search
 - Documents ready for querying in seconds
-
-**Upload Performance**
-
-Typical processing times for a 2.5MB PDF document:
-
-| Step | Duration |
-|------|----------|
-| File Read | 2ms |
-| Upload to Supabase Storage | 265ms |
-| Generate Preview Image | 198ms |
-| Save Metadata to Database | 5ms |
-| Extract Text (Azure Document Intelligence) | ~3.6 seconds |
-| Chunk Text | <1ms |
-| Generate Embeddings | 645ms |
-| Index to Azure AI Search | 588ms |
-| Update Status | 7ms |
-
-**Total Processing Time: ~5.3 seconds**
-
-Note: Text extraction time varies based on document complexity and Azure Document Intelligence service load. The example above extracted 118 characters from a 2.5MB PDF, resulting in 1 chunk.
+- Works with both Free and Standard Azure Document Intelligence tiers (automatic batch processing for Free tier)
 
 **Ask Questions**
 - Submit natural language queries

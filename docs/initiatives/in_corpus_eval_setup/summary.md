@@ -7,12 +7,12 @@ The In-Corpus Evaluation Dataset Generation System provides an end-to-end pipeli
 ## System Components
 
 ### 1. Query Generator (Phase 1)
-- **Location**: `evaluations/{eval_name}/query_generator.py`
+- **Location**: `evaluations/_shared/scripts/query_generator.py`
 - **Purpose**: Generate diverse, effective queries from Azure AI Search indexed documents using LLM
 - **Output**: `eval_inputs.json` with queries and metadata linking to source chunks
 
 ### 2. Dataset Generator (Phase 2)
-- **Location**: `evaluations/{eval_name}/generate_eval_dataset.py`
+- **Location**: `evaluations/_shared/scripts/generate_eval_dataset.py`
 - **Purpose**: Generate complete evaluation datasets from eval_inputs.json
 - **Output**: `eval_dataset.json` with all required fields including:
   - Input queries
@@ -25,7 +25,7 @@ The In-Corpus Evaluation Dataset Generation System provides an end-to-end pipeli
   - Placeholders for LLM and human evaluation fields
 
 ### 3. Output Generator (Phase 3)
-- **Location**: `evaluations/{eval_name}/generate_eval_outputs.py`
+- **Location**: `evaluations/_shared/scripts/generate_eval_outputs.py`
 - **Purpose**: Generate RAG outputs for evaluation dataset entries
 - **Output**: Updated `eval_dataset.json` with generated outputs
 
@@ -43,14 +43,21 @@ The In-Corpus Evaluation Dataset Generation System provides an end-to-end pipeli
 
 ```
 evaluations/
+  _shared/
+    scripts/
+      query_generator.py
+      generate_eval_dataset.py
+      generate_eval_outputs.py
+      create_system_prompts.py (optional)
   {eval_name}/
-    query_generator.py
-    generate_eval_dataset.py
-    generate_eval_outputs.py
-    create_system_prompts.py (optional)
-    in_corpus/
+    inputs/
       eval_inputs.json
+    dataset/
       eval_dataset.json
+  tests/
+    test_query_generator.py
+    test_generate_eval_dataset.py
+    test_generate_eval_outputs.py
 ```
 
 ## Documentation Organization

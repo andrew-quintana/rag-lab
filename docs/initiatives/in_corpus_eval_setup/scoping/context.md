@@ -39,6 +39,11 @@ Generates diverse, effective queries from indexed documents.
 **Output of Query Generator:**  
 A JSON file with diverse queries and metadata linking to source chunks.
 
+**File Generation Requirement:**
+- **REQUIRED**: Actually generate the `eval_inputs.json` file by running the query generator
+- File location: `evaluations/in_corpus_eval/inputs/eval_inputs.json`
+- Must contain at least 10 queries with proper structure
+
 #### 🔧 **2. Dataset Generator (`generate_eval_dataset.py`)**  
 Creates complete evaluation datasets from eval_inputs.json.
 
@@ -73,6 +78,11 @@ Creates complete evaluation datasets from eval_inputs.json.
 **Output of Dataset Generator:**  
 A complete evaluation dataset with all required fields for comprehensive RAG evaluation.
 
+**File Generation Requirement:**
+- **REQUIRED**: Actually generate the `eval_dataset.json` file by running the dataset generator
+- File location: `evaluations/in_corpus_eval/dataset/eval_dataset.json`
+- Must contain all required fields for each entry (input, retrieval_query, context, system_prompt, structured_prompt, beir_metrics, etc.)
+
 #### 🎯 **3. Output Generator (`generate_eval_outputs.py`)**  
 Generates RAG outputs for evaluation dataset entries.
 
@@ -92,6 +102,11 @@ Generates RAG outputs for evaluation dataset entries.
 
 **Output of Output Generator:**  
 Updated evaluation dataset with RAG outputs for all entries.
+
+**File Generation Requirement:**
+- **REQUIRED**: Actually update the `eval_dataset.json` file with RAG outputs by running the output generator
+- File location: `evaluations/in_corpus_eval/dataset/eval_dataset.json`
+- All entries must have `output` field populated with generated RAG responses
 
 ### Out of Scope
 (Not to be mentioned or implemented in PRD/RFC/TODO)
@@ -169,14 +184,21 @@ Support for different evaluation scenarios via configuration and prompt selectio
 
 ```
 evaluations/
+  _shared/
+    scripts/
+      query_generator.py
+      generate_eval_dataset.py
+      generate_eval_outputs.py
+      create_system_prompts.py (optional)
   {eval_name}/
-    query_generator.py
-    generate_eval_dataset.py
-    generate_eval_outputs.py
-    create_system_prompts.py (optional)
-    in_corpus/
+    inputs/
       eval_inputs.json
+    dataset/
       eval_dataset.json
+  tests/
+    test_query_generator.py
+    test_generate_eval_dataset.py
+    test_generate_eval_outputs.py
 ```
 
 ---
@@ -191,7 +213,6 @@ evaluations/
     "metadata": {
       "source_chunk_ids": ["chunk_1", "chunk_2"],
       "document_id": "doc_123",
-      "generation_method": "ai_generated"
     }
   }
 ]

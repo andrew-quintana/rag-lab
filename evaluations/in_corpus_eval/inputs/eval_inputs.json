@@ -1,0 +1,182 @@
+[
+  {
+    "input": "What type of Medicare Advantage Plan is offered in Alameda and San Mateo Counties?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_0"
+      ],
+      "document_id": "5fbbe4c0-746e-46cf-825e-fc1a09ce5a32"
+    }
+  },
+  {
+    "input": "What changes can be made to health coverage during the annual open enrollment period, and when does it take effect?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_3"
+      ],
+      "document_id": "6d1e5968-1e3d-46f6-9329-fa264f716445"
+    }
+  },
+  {
+    "input": "What are the copay amounts for different tiers of prescription medications?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_2"
+      ],
+      "document_id": "6d1e5968-1e3d-46f6-9329-fa264f716445"
+    }
+  },
+  {
+    "input": "What are the copay amounts for primary care physician visits and specialist visits under this health plan?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_1"
+      ],
+      "document_id": "6d1e5968-1e3d-46f6-9329-fa264f716445"
+    }
+  },
+  {
+    "input": "What is the time frame for submitting out-of-network claims and how can members request an expedited appeal review?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_4"
+      ],
+      "document_id": "6d1e5968-1e3d-46f6-9329-fa264f716445"
+    }
+  },
+  {
+    "input": "What type of Medicare plan is SCAN CLASSIC (HMO) offered in Alameda and San Mateo Counties?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_0"
+      ],
+      "document_id": "5fbbe4c0-746e-46cf-825e-fc1a09ce5a32"
+    }
+  },
+  {
+    "input": "What type of Medicare Advantage Plan is SCAN CLASSIC offered in Alameda and San Mateo Counties?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_0"
+      ],
+      "document_id": "5fbbe4c0-746e-46cf-825e-fc1a09ce5a32"
+    }
+  },
+  {
+    "input": "What are the requirements for a special enrollment period for health coverage changes?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_3"
+      ],
+      "document_id": "6d1e5968-1e3d-46f6-9329-fa264f716445"
+    }
+  },
+  {
+    "input": "What are the copay amounts for a 30-day supply of medications in different tiers?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_2"
+      ],
+      "document_id": "6d1e5968-1e3d-46f6-9329-fa264f716445"
+    }
+  },
+  {
+    "input": "What are the copayment amounts for primary care physician visits and specialist visits under this plan?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_1"
+      ],
+      "document_id": "6d1e5968-1e3d-46f6-9329-fa264f716445"
+    }
+  },
+  {
+    "input": "What are the conditions that trigger a special enrollment period for health coverage changes?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_3"
+      ],
+      "document_id": "6d1e5968-1e3d-46f6-9329-fa264f716445"
+    }
+  },
+  {
+    "input": "What is the time frame for submitting out-of-network claims and what form should be used?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_4"
+      ],
+      "document_id": "6d1e5968-1e3d-46f6-9329-fa264f716445"
+    }
+  },
+  {
+    "input": "What is the time limit for submitting out-of-network claims, and how can members request an expedited appeal review?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_4"
+      ],
+      "document_id": "6d1e5968-1e3d-46f6-9329-fa264f716445"
+    }
+  },
+  {
+    "input": "What are the copay costs for specialist visits and urgent care under this health plan?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_1"
+      ],
+      "document_id": "6d1e5968-1e3d-46f6-9329-fa264f716445"
+    }
+  },
+  {
+    "input": "What happens to your coverage for eligible expenses once you reach the out-of-pocket maximum under this plan?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_1"
+      ],
+      "document_id": "6d1e5968-1e3d-46f6-9329-fa264f716445"
+    }
+  },
+  {
+    "input": "What is the time frame for submitting out-of-network claims and filing appeals for claim decisions?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_4"
+      ],
+      "document_id": "6d1e5968-1e3d-46f6-9329-fa264f716445"
+    }
+  },
+  {
+    "input": "What is the duration of the special enrollment period triggered by qualifying life events such as marriage or birth?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_3"
+      ],
+      "document_id": "6d1e5968-1e3d-46f6-9329-fa264f716445"
+    }
+  },
+  {
+    "input": "What are the eligibility criteria for dependent coverage under the HealthGuard Select network?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_3"
+      ],
+      "document_id": "6d1e5968-1e3d-46f6-9329-fa264f716445"
+    }
+  },
+  {
+    "input": "What is the time frame for submitting out-of-network claims and appeals according to the document?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_4"
+      ],
+      "document_id": "6d1e5968-1e3d-46f6-9329-fa264f716445"
+    }
+  },
+  {
+    "input": "What is the process for members to submit out-of-network claims for services?",
+    "metadata": {
+      "source_chunk_ids": [
+        "chunk_3"
+      ],
+      "document_id": "6d1e5968-1e3d-46f6-9329-fa264f716445"
+    }
+  }
+]

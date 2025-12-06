@@ -128,7 +128,7 @@ def generate_embeddings(chunks: List[Chunk], config) -> List[List[float]]:
     
     This function:
     - Connects to Azure AI Foundry embedding API
-    - Processes chunks in batches for efficiency
+    - Processes chunks in batches (1000 texts per batch to stay within API limits)
     - Validates embedding dimensions match expected model output
     - Handles empty chunk list gracefully
     - Implements retry logic with exponential backoff (3 retries max)
@@ -164,27 +164,60 @@ def generate_embeddings(chunks: List[Chunk], config) -> List[List[float]]:
     if not model:
         raise ValueError("Azure AI Foundry embedding model is not configured")
     
-    logger.info(f"Generating embeddings for {len(chunks)} chunks using model '{model}'")
+    # Azure AI Foundry embedding API batch limit: typically 2048, but we use 1000 to be safe
+    # This accounts for token limits and rate limiting
+    BATCH_SIZE = 1000
+    
+    logger.info(f"Generating embeddings for {len(chunks)} chunks using model '{model}' (in batches of {BATCH_SIZE})")
     
     try:
         # Extract text from chunks
         texts = [chunk.text for chunk in chunks]
         
-        # Call embedding API with batch processing
-        # Azure AI Foundry supports batch processing natively
-        embeddings = _call_embedding_api(
-            texts=texts,
-            model=model,
-            endpoint=config.azure_ai_foundry_endpoint,
-            api_key=config.azure_ai_foundry_api_key
-        )
+        # Process in batches
+        all_embeddings = []
+        total_processed = 0
+        
+        for batch_start in range(0, len(texts), BATCH_SIZE):
+            batch_end = min(batch_start + BATCH_SIZE, len(texts))
+            batch_texts = texts[batch_start:batch_end]
+            
+            logger.debug(f"Processing embedding batch {batch_start // BATCH_SIZE + 1}: texts {batch_start} to {batch_end - 1}")
+            
+            # Call embedding API for this batch with retry logic
+            batch_embeddings = _call_embedding_api(
+                texts=batch_texts,
+                model=model,
+                endpoint=config.azure_ai_foundry_endpoint,
+                api_key=config.azure_ai_foundry_api_key
+            )
+            
+            all_embeddings.extend(batch_embeddings)
+            total_processed += len(batch_embeddings)
+            logger.debug(f"Batch {batch_start // BATCH_SIZE + 1}: generated {len(batch_embeddings)} embeddings")
+        
+        # Validate we got the expected number of embeddings
+        if len(all_embeddings) != len(chunks):
+            raise ValueError(
+                f"Embedding count mismatch: expected {len(chunks)} embeddings, got {len(all_embeddings)}"
+            )
+        
+        # Validate embedding dimensions are consistent
+        if all_embeddings:
+            expected_dim = len(all_embeddings[0])
+            for idx, emb in enumerate(all_embeddings):
+                if len(emb) != expected_dim:
+                    raise ValueError(
+                        f"Embedding dimension mismatch: embedding {idx} has {len(emb)} dimensions, "
+                        f"expected {expected_dim}"
+                    )
         
         logger.info(
-            f"Successfully generated {len(embeddings)} embeddings "
-            f"(dimension: {len(embeddings[0]) if embeddings else 0})"
+            f"Successfully generated {len(all_embeddings)} embeddings "
+            f"(dimension: {len(all_embeddings[0]) if all_embeddings else 0})"
         )
         
-        return embeddings
+        return all_embeddings
         
     except AzureServiceError:
         # Re-raise AzureServiceError as-is

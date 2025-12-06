@@ -28,7 +28,7 @@ This TODO document provides the implementation breakdown for the In-Corpus Evalu
 - [x] **REQUIRED**: Set up and activate backend virtual environment (`backend/venv/`)
 - [x] **REQUIRED**: Verify pytest is installed in venv (`pip install pytest pytest-cov`)
 - [x] **REQUIRED**: Verify all backend dependencies are installed (`pip install -r backend/requirements.txt`)
-- [x] **REQUIRED**: Verify pytest can discover tests (`pytest backend/tests/ --collect-only`)
+- [x] **REQUIRED**: Verify pytest can discover tests (`pytest evaluations/tests/ --collect-only`)
 - [x] **REQUIRED**: Document venv activation command for all subsequent phases
 - [x] **REQUIRED**: All testing in subsequent phases MUST use the same venv (`backend/venv/`)
 - [x] Block: Implementation cannot proceed until Phase 0 complete
@@ -45,48 +45,53 @@ This TODO document provides the implementation breakdown for the In-Corpus Evalu
 
 ## Phase 1 — Query Generator (AI Node)
 
-**Component**: `evaluations/{eval_name}/query_generator.py`
+**Component**: `evaluations/_shared/scripts/query_generator.py`
 
-**Status**: ⏳ Pending
+**Status**: ✅ Complete
 
 ### Implementation Tasks
-- [ ] Create `evaluations/{eval_name}/` directory structure
-- [ ] Create `query_generator.py` module
-- [ ] Implement function to sample chunks from Azure AI Search index
-- [ ] Implement LLM-based query generation from chunks
-- [ ] Ensure queries are "In-Corpus" (answerable from indexed documents)
-- [ ] Include metadata linking queries to source chunks
-- [ ] Implement saving to `eval_inputs.json`
-- [ ] Add error handling and retry logic
-- [ ] Add logging for query generation process
+- [x] Create `evaluations/{eval_name}/inputs/` and `evaluations/{eval_name}/dataset/` directory structure
+- [x] Create `query_generator.py` module
+- [x] Implement function to sample chunks from Azure AI Search index
+- [x] Implement LLM-based query generation from chunks
+- [x] Ensure queries are "In-Corpus" (answerable from indexed documents)
+- [x] Include metadata linking queries to source chunks
+- [x] Implement saving to `eval_inputs.json`
+- [x] Add error handling and retry logic
+- [x] Add logging for query generation process
 
 ### Testing Requirements
-- [ ] **REQUIRED**: Unit tests for query generation function
-- [ ] **REQUIRED**: Integration tests with mocked Azure AI Search
-- [ ] **REQUIRED**: Test coverage must meet minimum 80% for query_generator.py module
-- [ ] **REQUIRED**: Test with sample chunks from index
-- [ ] **REQUIRED**: Validate output JSON structure
+- [x] **REQUIRED**: Unit tests for query generation function
+- [x] **REQUIRED**: Integration tests with mocked Azure AI Search
+- [x] **REQUIRED**: Test coverage must meet minimum 80% for query_generator.py module
+- [x] **REQUIRED**: Test with sample chunks from index
+- [x] **REQUIRED**: Validate output JSON structure
 
 ### Phase 1 Deliverables
-- [ ] `query_generator.py` implemented
-- [ ] `eval_inputs.json` generated with sample queries
-- [ ] Unit tests passing
-- [ ] Integration tests passing
-- [ ] Test coverage >= 80%
-- [ ] Created `phase_1_decisions.md` if any decisions made
-- [ ] Created `phase_1_testing.md` documenting test results
-- [ ] Created `phase_1_handoff.md` summarizing Phase 2 entry point
+- [x] `query_generator.py` implemented
+- [x] `eval_inputs.json` generated with sample queries (actual file created)
+- [x] Unit tests passing
+- [x] Integration tests passing
+- [x] Test coverage >= 80% (83% achieved)
+- [x] Created `phase_1_decisions.md` if any decisions made
+- [x] Created `phase_1_testing.md` documenting test results
+- [x] Created `phase_1_handoff.md` summarizing Phase 2 entry point
+
+### Phase 1 File Generation
+- [x] **REQUIRED**: Run query generator to create actual `eval_inputs.json` file
+- [x] **REQUIRED**: Verify `evaluations/in_corpus_eval/inputs/eval_inputs.json` exists
+- [x] **REQUIRED**: Validate generated file contains at least 10 queries with proper structure
 
 ---
 
 ## Phase 2 — Dataset Generator
 
-**Component**: `evaluations/{eval_name}/generate_eval_dataset.py`
+**Component**: `evaluations/_shared/scripts/generate_eval_dataset.py`
 
 **Status**: ⏳ Pending
 
 ### Implementation Tasks
-- [ ] Create `generate_eval_dataset.py` script
+- [ ] Create `generate_eval_dataset.py` script in `evaluations/_shared/scripts/`
 - [ ] Implement loading of `eval_inputs.json`
 - [ ] Implement retrieval_query generation (with LLM sanitization if needed)
 - [ ] Implement ground truth context retrieval using retrieval_query
@@ -109,7 +114,7 @@ This TODO document provides the implementation breakdown for the In-Corpus Evalu
 
 ### Phase 2 Deliverables
 - [ ] `generate_eval_dataset.py` implemented
-- [ ] `eval_dataset.json` generated with all required fields
+- [ ] `eval_dataset.json` generated with all required fields (actual file created)
 - [ ] Unit tests passing
 - [ ] Integration tests passing
 - [ ] Test coverage >= 80%
@@ -117,16 +122,22 @@ This TODO document provides the implementation breakdown for the In-Corpus Evalu
 - [ ] Created `phase_2_testing.md` documenting test results
 - [ ] Created `phase_2_handoff.md` summarizing Phase 3 entry point
 
+### Phase 2 File Generation
+- [ ] **REQUIRED**: Run dataset generator to create actual `eval_dataset.json` file
+- [ ] **REQUIRED**: Verify `evaluations/in_corpus_eval/dataset/eval_dataset.json` exists
+- [ ] **REQUIRED**: Validate generated file contains all required fields for each entry
+- [ ] **REQUIRED**: Verify BEIR metrics are computed and included
+
 ---
 
 ## Phase 3 — Output Generator
 
-**Component**: `evaluations/{eval_name}/generate_eval_outputs.py`
+**Component**: `evaluations/_shared/scripts/generate_eval_outputs.py`
 
 **Status**: ⏳ Pending
 
 ### Implementation Tasks
-- [ ] Create `generate_eval_outputs.py` script
+- [ ] Create `generate_eval_outputs.py` script in `evaluations/_shared/scripts/`
 - [ ] Implement loading of `eval_dataset.json`
 - [ ] Implement RAG output generation using system_prompt and structured_prompt
 - [ ] Implement updating output field in dataset
@@ -144,13 +155,18 @@ This TODO document provides the implementation breakdown for the In-Corpus Evalu
 
 ### Phase 3 Deliverables
 - [ ] `generate_eval_outputs.py` implemented
-- [ ] Outputs generated for sample dataset
+- [ ] Outputs generated for sample dataset (actual file updated)
 - [ ] Unit tests passing
 - [ ] Integration tests passing
 - [ ] Test coverage >= 80%
 - [ ] Created `phase_3_decisions.md` if any decisions made
 - [ ] Created `phase_3_testing.md` documenting test results
 - [ ] Created `phase_3_handoff.md` summarizing Phase 4 entry point
+
+### Phase 3 File Generation
+- [ ] **REQUIRED**: Run output generator to update `eval_dataset.json` with RAG outputs
+- [ ] **REQUIRED**: Verify `evaluations/in_corpus_eval/dataset/eval_dataset.json` is updated
+- [ ] **REQUIRED**: Validate all entries have `output` field populated
 
 ---
 
