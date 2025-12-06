@@ -12,37 +12,37 @@ This TODO document provides the implementation breakdown for converting the sync
 
 ## Phase 0 — Context Harvest
 
-**Status**: ⏳ Pending
+**Status**: ✅ Complete
 
 ### Setup Tasks
-- [ ] Review adjacent components in [context.md](./context.md)
-- [ ] Review PRD001.md and RFC001.md for complete requirements understanding
-- [ ] Review existing RAG system components (`rag_eval/services/rag/`)
-  - [ ] `ingestion.py` - `extract_text_from_document()` function
-  - [ ] `chunking.py` - `chunk_text()` function
-  - [ ] `embeddings.py` - `generate_embeddings()` function
-  - [ ] `search.py` - `index_chunks()` function
-  - [ ] `storage.py` - Azure Blob Storage functions
-  - [ ] `supabase_storage.py` - Supabase Storage functions
-- [ ] Review existing database schema (`infra/supabase/migrations/`)
-- [ ] Validate Azure resources configuration (Storage Account, Functions, Document Intelligence, AI Foundry, AI Search)
-- [ ] Review test fixtures structure (`backend/tests/fixtures/`)
-- [ ] **Create fracas.md** for failure tracking using FRACAS methodology
+- [x] Review adjacent components in [context.md](./context.md)
+- [x] Review PRD001.md and RFC001.md for complete requirements understanding
+- [x] Review existing RAG system components (`rag_eval/services/rag/`)
+  - [x] `ingestion.py` - `extract_text_from_document()` function
+  - [x] `chunking.py` - `chunk_text()` function
+  - [x] `embeddings.py` - `generate_embeddings()` function
+  - [x] `search.py` - `index_chunks()` function
+  - [x] `storage.py` - Azure Blob Storage functions
+  - [x] `supabase_storage.py` - Supabase Storage functions
+- [x] Review existing database schema (`infra/supabase/migrations/`)
+- [x] Validate Azure resources configuration (Storage Account, Functions, Document Intelligence, AI Foundry, AI Search)
+- [x] Review test fixtures structure (`backend/tests/fixtures/`)
+- [x] **Create fracas.md** for failure tracking using FRACAS methodology
 
 ### Testing Environment Setup
-- [ ] **REQUIRED**: Set up and activate backend virtual environment (`backend/venv/`)
-- [ ] **REQUIRED**: Verify pytest is installed in venv (`pip install pytest pytest-cov`)
-- [ ] **REQUIRED**: Verify all backend dependencies are installed (`pip install -r backend/requirements.txt`)
-- [ ] **REQUIRED**: Verify pytest can discover tests (`pytest backend/tests/ --collect-only`)
-- [ ] **REQUIRED**: Document venv activation command for all subsequent phases
-- [ ] **REQUIRED**: All testing in Phases 1-5 MUST use the same venv (`backend/venv/`)
-- [ ] Block: Implementation cannot proceed until Phase 0 complete
+- [x] **REQUIRED**: Set up and activate backend virtual environment (`backend/venv/`)
+- [x] **REQUIRED**: Verify pytest is installed in venv (`pip install pytest pytest-cov`)
+- [x] **REQUIRED**: Verify all backend dependencies are installed (`pip install -r backend/requirements.txt`)
+- [x] **REQUIRED**: Verify pytest can discover tests (`pytest backend/tests/ --collect-only`)
+- [x] **REQUIRED**: Document venv activation command for all subsequent phases
+- [x] **REQUIRED**: All testing in Phases 1-5 MUST use the same venv (`backend/venv/`)
+- [x] Block: Implementation cannot proceed until Phase 0 complete
 
 ### Phase 0 Deliverables
-- [ ] Created `fracas.md` for failure tracking
-- [ ] Created `phase_0_testing.md` documenting testing setup validation
-- [ ] Created `phase_0_decisions.md` documenting Phase 0 decisions
-- [ ] Created `phase_0_handoff.md` summarizing Phase 1 entry point
+- [x] Created `fracas.md` for failure tracking
+- [x] Created `phase_0_testing.md` documenting testing setup validation
+- [x] Created `phase_0_decisions.md` documenting Phase 0 decisions
+- [x] Created `phase_0_handoff.md` summarizing Phase 1 entry point
 
 ---
 
