@@ -23,7 +23,7 @@ from rag_eval.db.models import Document
 def sample_document():
     """Sample document for testing"""
     return Document(
-        document_id="test-doc-123",
+        id="test-doc-123",
         filename="test.pdf",
         file_size=1024,
         mime_type="application/pdf",
@@ -153,7 +153,7 @@ class TestDocumentEndpoints:
         """Test getting preview when not available"""
         from fastapi import HTTPException
         doc = Document(
-            document_id="test-doc-123",
+            id="test-doc-123",
             filename="test.pdf",
             file_size=1024,
             status="uploaded",

@@ -23,12 +23,12 @@ class DocumentService:
         """Insert a new document record"""
         query = """
             INSERT INTO documents (
-                document_id, filename, file_size, mime_type, upload_timestamp,
+                id, filename, file_size, mime_type, upload_timestamp,
                 status, chunks_created, storage_path, preview_image_path, metadata
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         params = (
-            document.document_id,
+            document.id,
             document.filename,
             document.file_size,
             document.mime_type,
@@ -42,14 +42,14 @@ class DocumentService:
         
         try:
             self.executor.execute_insert(query, params)
-            logger.info(f"Inserted document record: {document.document_id}")
+            logger.info(f"Inserted document record: {document.id}")
         except Exception as e:
             logger.error(f"Failed to insert document: {e}")
             raise DatabaseError(f"Failed to insert document: {e}") from e
     
     def update_document_status(self, document_id: str, status: str) -> None:
         """Update document status"""
-        query = "UPDATE documents SET status = %s WHERE document_id = %s"
+        query = "UPDATE documents SET status = %s WHERE id = %s"
         params = (status, document_id)
         
         try:
@@ -61,7 +61,7 @@ class DocumentService:
     
     def update_document_chunks(self, document_id: str, chunks_created: int) -> None:
         """Update document chunks count"""
-        query = "UPDATE documents SET chunks_created = %s WHERE document_id = %s"
+        query = "UPDATE documents SET chunks_created = %s WHERE id = %s"
         params = (chunks_created, document_id)
         
         try:
@@ -73,7 +73,7 @@ class DocumentService:
     
     def update_preview_path(self, document_id: str, preview_path: str) -> None:
         """Update document preview image path"""
-        query = "UPDATE documents SET preview_image_path = %s WHERE document_id = %s"
+        query = "UPDATE documents SET preview_image_path = %s WHERE id = %s"
         params = (preview_path, document_id)
         
         try:
@@ -85,7 +85,7 @@ class DocumentService:
     
     def get_document(self, document_id: str) -> Optional[Document]:
         """Get a document by ID"""
-        query = "SELECT * FROM documents WHERE document_id = %s"
+        query = "SELECT * FROM documents WHERE id = %s"
         params = (document_id,)
         
         try:
@@ -229,7 +229,7 @@ class DocumentService:
     
     def delete_document(self, document_id: str) -> None:
         """Delete a document record"""
-        query = "DELETE FROM documents WHERE document_id = %s"
+        query = "DELETE FROM documents WHERE id = %s"
         params = (document_id,)
         
         try:
@@ -249,7 +249,7 @@ class DocumentService:
                 metadata = None
         
         return Document(
-            document_id=row["document_id"],
+            id=row["id"],
             filename=row["filename"],
             file_size=row["file_size"],
             mime_type=row.get("mime_type"),

@@ -1,7 +1,12 @@
 # Overmind process configuration (Procfile format)
 # Manages local development services
 
-supabase: cd infra/supabase && (supabase status > /dev/null 2>&1 && echo "Supabase already running, keeping process alive..." && while true; do sleep 60; done) || supabase start
-backend: cd backend && source venv/bin/activate && PYTHONPATH=backend uvicorn rag_eval.api.main:app --reload --port 8000
+# Start Supabase, wait for it to be ready, then keep process alive
+supabase: bash -c 'cd infra/supabase && if supabase status >/dev/null 2>&1; then echo "Supabase already running, verifying database is ready..."; else echo "Starting Supabase..."; supabase start; fi && echo "Waiting for database to be ready..." && max_attempts=60 && attempt=0 && while [ $attempt -lt $max_attempts ]; do if command -v pg_isready >/dev/null 2>&1; then if pg_isready -h 127.0.0.1 -p 54322 -U postgres >/dev/null 2>&1; then echo "Supabase database is ready!"; break; fi; elif command -v nc >/dev/null 2>&1; then if nc -z 127.0.0.1 54322 >/dev/null 2>&1; then echo "Supabase database port is open!"; break; fi; else sleep 2; attempt=$((attempt+1)); continue; fi; attempt=$((attempt+1)); echo "Waiting for database... ($attempt/$max_attempts)"; sleep 1; done && if [ $attempt -ge $max_attempts ]; then echo "ERROR: Database did not become ready in time"; exit 1; fi && echo "Supabase is running and ready. Keeping process alive..." && while true; do sleep 60; done'
+
+# Wait for Supabase, then start backend
+backend: bash -c 'echo "Waiting for Supabase database before starting backend..."; max_attempts=60; attempt=0; while [ $attempt -lt $max_attempts ]; do if command -v pg_isready >/dev/null 2>&1; then if pg_isready -h 127.0.0.1 -p 54322 -U postgres >/dev/null 2>&1; then echo "Database is ready, starting backend..."; break; fi; elif command -v nc >/dev/null 2>&1; then if nc -z 127.0.0.1 54322 >/dev/null 2>&1; then echo "Database port is open, starting backend..."; break; fi; else sleep 2; attempt=$((attempt+1)); continue; fi; attempt=$((attempt+1)); if [ $((attempt % 5)) -eq 0 ]; then echo "Still waiting for database... ($attempt/$max_attempts)"; fi; sleep 1; done && if [ $attempt -ge $max_attempts ]; then echo "ERROR: Backend startup timeout - database not ready after $max_attempts attempts"; exit 1; fi && cd backend && source venv/bin/activate && PYTHONPATH=backend uvicorn rag_eval.api.main:app --reload --port 8000'
+
+# Frontend can start independently
 frontend: cd frontend && npm run dev
 

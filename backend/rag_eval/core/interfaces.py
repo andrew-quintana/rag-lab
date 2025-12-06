@@ -116,6 +116,21 @@ class EvaluationExample:
 
 
 @dataclass
+class BiasCorrectedAccuracy:
+    """Bias-corrected accuracy estimate with confidence interval."""
+    raw_accuracy: float
+    corrected_accuracy: float
+    confidence_interval_lower: float
+    confidence_interval_upper: float
+    confidence_level: float
+    q0: float  # Judge specificity
+    q1: float  # Judge sensitivity
+    n: int  # Number of test examples
+    m0: int  # Number of calibration examples (ground truth False)
+    m1: int  # Number of calibration examples (ground truth True)
+
+
+@dataclass
 class EvaluationResult:
     """Complete evaluation result for a single example."""
     example_id: str

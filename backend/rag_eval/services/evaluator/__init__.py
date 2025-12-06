@@ -12,7 +12,11 @@ from rag_eval.services.evaluator.risk_impact import calculate_risk_impact
 from rag_eval.services.evaluator.judge import evaluate_answer_with_judge
 from rag_eval.services.evaluator.meta_eval import (
     meta_evaluate_judge,
-    calculate_judge_metrics
+    calculate_judge_metrics,
+    compute_bias_corrected_accuracy_from_results,
+    compute_calibration_parameters,
+    compute_bias_corrected_accuracy,
+    compute_accuracy_confidence_interval
 )
 from rag_eval.services.evaluator.beir_metrics import compute_beir_metrics
 from rag_eval.services.evaluator.orchestrator import evaluate_rag_system
@@ -37,6 +41,10 @@ __all__ = [
     "evaluate_answer_with_judge",
     "meta_evaluate_judge",
     "calculate_judge_metrics",
+    "compute_bias_corrected_accuracy_from_results",
+    "compute_calibration_parameters",
+    "compute_bias_corrected_accuracy",
+    "compute_accuracy_confidence_interval",
     "compute_beir_metrics",
     "evaluate_rag_system",
     "log_evaluation_result",

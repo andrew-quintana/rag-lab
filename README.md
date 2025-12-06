@@ -22,6 +22,26 @@ Perfect for AI engineers experimenting with RAG systems, testing different retri
 - Vector embeddings generated and indexed in Azure AI Search
 - Documents ready for querying in seconds
 
+**Upload Performance**
+
+Typical processing times for a 2.5MB PDF document:
+
+| Step | Duration |
+|------|----------|
+| File Read | 2ms |
+| Upload to Supabase Storage | 265ms |
+| Generate Preview Image | 198ms |
+| Save Metadata to Database | 5ms |
+| Extract Text (Azure Document Intelligence) | ~3.6 seconds |
+| Chunk Text | <1ms |
+| Generate Embeddings | 645ms |
+| Index to Azure AI Search | 588ms |
+| Update Status | 7ms |
+
+**Total Processing Time: ~5.3 seconds**
+
+Note: Text extraction time varies based on document complexity and Azure Document Intelligence service load. The example above extracted 118 characters from a 2.5MB PDF, resulting in 1 chunk.
+
 **Ask Questions**
 - Submit natural language queries
 - System retrieves relevant document chunks
@@ -61,6 +81,8 @@ Perfect for AI engineers experimenting with RAG systems, testing different retri
 - Meta-evaluator validates judge accuracy
 - Understand when evaluation judgments are trustworthy
 - Catch judge errors and inconsistencies
+- **Bias-corrected accuracy estimates**: Corrects for imperfect judge specificity and sensitivity using the Rogan-Gladen adjustment method (inspired by [Lee et al., 2024](https://arxiv.org/pdf/2511.21140))
+- **Confidence intervals**: Accounts for uncertainty from both test and calibration datasets
 
 ## How to Use It
 
@@ -238,6 +260,7 @@ All systems are modular and can be used independently or together.
 - 97%+ code coverage
 - Full LLM-as-judge implementation
 - Meta-evaluation and BEIR metrics
+- Bias-corrected accuracy estimates with confidence intervals
 
 ## Testing
 
@@ -270,6 +293,17 @@ Comprehensive documentation is available in `docs/initiatives/`:
 3. **Traceability** - Every operation is logged for analysis
 4. **Reproducibility** - Deterministic behavior for reliable experimentation
 5. **Correctness First** - All components validated with extensive testing
+
+## References
+
+**Bias Correction for LLM-as-a-Judge Evaluations**
+
+The meta-evaluation system includes bias correction for LLM-as-a-Judge evaluations, implementing the method described in:
+
+> Lee, C., Zeng, T., Jeong, J., Sohn, J., & Lee, K. (2024). How to Correctly Report LLM-as-a-Judge Evaluations. *arXiv preprint arXiv:2511.21140*.  
+> https://arxiv.org/pdf/2511.21140
+
+This approach uses the Rogan-Gladen adjustment to correct for imperfect judge specificity (q₀) and sensitivity (q₁), providing unbiased accuracy estimates and confidence intervals that account for uncertainty from both test and calibration datasets. The implementation is integrated into the meta-evaluation process and automatically computes bias-corrected accuracy estimates as part of the evaluation pipeline.
 
 ## License
 

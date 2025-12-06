@@ -1,7 +1,20 @@
-"""Meta-Evaluator: Deterministic validation of judge verdicts"""
+"""Meta-Evaluator: Deterministic validation of judge verdicts
+
+This module includes bias correction for LLM-as-a-Judge evaluations, inspired by:
+Lee, C., Zeng, T., Jeong, J., Sohn, J., & Lee, K. (2024). 
+How to Correctly Report LLM-as-a-Judge Evaluations. arXiv preprint arXiv:2511.21140.
+https://arxiv.org/pdf/2511.21140
+
+The bias correction uses the Rogan-Gladen adjustment to correct for imperfect
+judge specificity (q₀) and sensitivity (q₁), providing unbiased accuracy estimates
+and confidence intervals that account for uncertainty from both test and calibration datasets.
+"""
 
 from typing import List, Dict, Any, Optional, Tuple
 import re
+from math import sqrt
+
+from scipy.stats import norm
 
 from rag_eval.core.interfaces import (
     JudgeEvaluationResult,
@@ -829,4 +842,252 @@ def _calculate_multiclass_metrics(
         false_negatives=total_fn,
         total_samples=len(pairs)
     )
+
+
+# Bias correction functions for LLM-as-a-Judge evaluations
+# Based on: Lee et al. (2024) "How to Correctly Report LLM-as-a-Judge Evaluations"
+# Paper: https://arxiv.org/pdf/2511.21140
+
+def clip(x: float, low: float = 0.0, high: float = 1.0) -> float:
+    """Clip value to [low, high] range."""
+    return max(low, min(high, x))
+
+
+def compute_calibration_parameters(
+    evaluation_results: List[Tuple[JudgeEvaluationResult, MetaEvaluationResult]]
+) -> Tuple[float, float, int, int]:
+    """
+    Compute judge calibration parameters (q0, q1) from meta-evaluation results.
+    
+    q0 (specificity): Probability judge correctly identifies incorrect answers
+    q1 (sensitivity): Probability judge correctly identifies correct answers
+    
+    These are estimated from the meta-evaluation results by comparing judge
+    verdicts against ground truth.
+    
+    Args:
+        evaluation_results: List of (judge_output, meta_eval_result) pairs
+        
+    Returns:
+        Tuple of (q0, q1, m0, m1) where:
+        - q0: Estimated specificity (probability of correct rejection)
+        - q1: Estimated sensitivity (probability of correct detection)
+        - m0: Number of examples where ground truth is False (incorrect)
+        - m1: Number of examples where ground truth is True (correct)
+    """
+    if not evaluation_results:
+        raise ValueError("evaluation_results cannot be empty")
+    
+    # Count true negatives and false positives (for q0)
+    # When ground truth is False (incorrect), judge should say False
+    tn_count = 0  # True negatives: judge says False, ground truth is False
+    fp_count = 0  # False positives: judge says True, ground truth is False
+    
+    # Count true positives and false negatives (for q1)
+    # When ground truth is True (correct), judge should say True
+    tp_count = 0  # True positives: judge says True, ground truth is True
+    fn_count = 0  # False negatives: judge says False, ground truth is True
+    
+    for judge_output, meta_eval in evaluation_results:
+        if meta_eval.ground_truth_correctness is None:
+            continue
+        
+        judge_verdict = judge_output.correctness_binary
+        ground_truth = meta_eval.ground_truth_correctness
+        
+        if not ground_truth:  # Ground truth is False (incorrect answer)
+            if not judge_verdict:  # Judge correctly says False
+                tn_count += 1
+            else:  # Judge incorrectly says True
+                fp_count += 1
+        else:  # Ground truth is True (correct answer)
+            if judge_verdict:  # Judge correctly says True
+                tp_count += 1
+            else:  # Judge incorrectly says False
+                fn_count += 1
+    
+    m0 = tn_count + fp_count  # Total examples where ground truth is False
+    m1 = tp_count + fn_count  # Total examples where ground truth is True
+    
+    # Estimate q0 (specificity): P(judge says False | ground truth is False)
+    # Use Laplace smoothing to avoid division by zero
+    q0 = (tn_count + 1) / (m0 + 2) if m0 > 0 else 0.5
+    
+    # Estimate q1 (sensitivity): P(judge says True | ground truth is True)
+    # Use Laplace smoothing to avoid division by zero
+    q1 = (tp_count + 1) / (m1 + 2) if m1 > 0 else 0.5
+    
+    return (q0, q1, m0, m1)
+
+
+def compute_bias_corrected_accuracy(
+    raw_accuracy: float,
+    q0: float,
+    q1: float
+) -> float:
+    """
+    Compute bias-corrected accuracy estimate using Rogan-Gladen adjustment.
+    
+    Formula: θ = (p + q0 - 1) / (q0 + q1 - 1)
+    where p is the raw accuracy estimate (proportion of "correct" judgments).
+    
+    This corrects for bias introduced by imperfect judge specificity and sensitivity.
+    
+    Args:
+        raw_accuracy: Raw proportion of "correct" judgments (p)
+        q0: Judge specificity (probability of correct rejection)
+        q1: Judge sensitivity (probability of correct detection)
+        
+    Returns:
+        Bias-corrected accuracy estimate (θ), clipped to [0, 1]
+    """
+    if q0 + q1 - 1 == 0:
+        # Degenerate case: judge is completely unreliable
+        # Return raw estimate as fallback
+        return clip(raw_accuracy)
+    
+    # Rogan-Gladen adjustment
+    corrected = (raw_accuracy + q0 - 1) / (q0 + q1 - 1)
+    return clip(corrected)
+
+
+def compute_accuracy_confidence_interval(
+    raw_accuracy: float,
+    q0: float,
+    q1: float,
+    n: int,
+    m0: int,
+    m1: int,
+    alpha: float = 0.05
+) -> Tuple[float, float]:
+    """
+    Compute confidence interval for bias-corrected accuracy estimate.
+    
+    Accounts for uncertainty from both:
+    - Test dataset (affects raw accuracy estimate p)
+    - Calibration dataset (affects q0 and q1 estimates)
+    
+    Based on the method from Lee et al. (2024), which extends the standard
+    confidence interval to account for calibration uncertainty.
+    
+    Args:
+        raw_accuracy: Raw proportion of "correct" judgments (p)
+        q0: Judge specificity estimate
+        q1: Judge sensitivity estimate
+        n: Number of test examples
+        m0: Number of calibration examples where ground truth is False
+        m1: Number of calibration examples where ground truth is True
+        alpha: Significance level (default 0.05 for 95% CI)
+        
+    Returns:
+        Tuple of (lower_bound, upper_bound) for the confidence interval
+    """
+    if q0 + q1 - 1 == 0:
+        # Degenerate case: return raw estimate ± standard error
+        z = norm.ppf(1 - alpha / 2)
+        se = sqrt(raw_accuracy * (1 - raw_accuracy) / n) if n > 0 else 0.0
+        return (clip(raw_accuracy - z * se), clip(raw_accuracy + z * se))
+    
+    z = norm.ppf(1 - alpha / 2)
+    
+    # Apply Laplace smoothing to estimates (as in paper's implementation)
+    p_smooth = (n * raw_accuracy + z**2 / 2) / (n + z**2)
+    q0_smooth = (m0 * q0 + 1) / (m0 + 2)
+    q1_smooth = (m1 * q1 + 1) / (m1 + 2)
+    n_smooth = n + z**2
+    m0_smooth = m0 + 2
+    m1_smooth = m1 + 2
+    
+    # Compute bias-corrected estimate
+    theta = (p_smooth + q0_smooth - 1) / (q0_smooth + q1_smooth - 1)
+    
+    # Compute standard error accounting for both sources of uncertainty
+    # Variance from test dataset
+    var_p = p_smooth * (1 - p_smooth) / n_smooth
+    
+    # Variance from calibration dataset (for q0)
+    var_q0 = q0_smooth * (1 - q0_smooth) / m0_smooth
+    
+    # Variance from calibration dataset (for q1)
+    var_q1 = q1_smooth * (1 - q1_smooth) / m1_smooth
+    
+    # Combined variance using delta method
+    # dθ/dp = 1/(q0+q1-1)
+    # dθ/dq0 = (1-θ)/(q0+q1-1)
+    # dθ/dq1 = -θ/(q0+q1-1)
+    denominator = (q0_smooth + q1_smooth - 1)
+    se_squared = (
+        var_p / (denominator**2) +
+        ((1 - theta)**2) * var_q0 / (denominator**2) +
+        (theta**2) * var_q1 / (denominator**2)
+    )
+    
+    se = sqrt(se_squared)
+    
+    # Compute confidence interval
+    lower = clip(theta - z * se)
+    upper = clip(theta + z * se)
+    
+    return (lower, upper)
+
+
+def compute_bias_corrected_accuracy_from_results(
+    evaluation_results: List[Tuple[JudgeEvaluationResult, MetaEvaluationResult]],
+    alpha: float = 0.05
+) -> Dict[str, Any]:
+    """
+    Compute bias-corrected accuracy estimate and confidence interval from evaluation results.
+    
+    This function:
+    1. Computes raw accuracy (proportion of "correct" judgments)
+    2. Estimates calibration parameters (q0, q1) from meta-evaluation
+    3. Applies bias correction using Rogan-Gladen formula
+    4. Computes confidence interval accounting for both test and calibration uncertainty
+    
+    Args:
+        evaluation_results: List of (judge_output, meta_eval_result) pairs
+        alpha: Significance level for confidence interval (default 0.05 for 95% CI)
+        
+    Returns:
+        Dictionary containing:
+        - raw_accuracy: Raw proportion of "correct" judgments
+        - corrected_accuracy: Bias-corrected accuracy estimate
+        - confidence_interval: Tuple of (lower, upper) bounds
+        - q0: Estimated judge specificity
+        - q1: Estimated judge sensitivity
+        - n: Number of test examples
+        - m0: Number of calibration examples (ground truth False)
+        - m1: Number of calibration examples (ground truth True)
+    """
+    if not evaluation_results:
+        raise ValueError("evaluation_results cannot be empty")
+    
+    # Compute raw accuracy (proportion of "correct" judgments)
+    n = len(evaluation_results)
+    correct_count = sum(1 for judge_output, _ in evaluation_results 
+                       if judge_output.correctness_binary)
+    raw_accuracy = correct_count / n if n > 0 else 0.0
+    
+    # Compute calibration parameters from meta-evaluation results
+    q0, q1, m0, m1 = compute_calibration_parameters(evaluation_results)
+    
+    # Compute bias-corrected accuracy
+    corrected_accuracy = compute_bias_corrected_accuracy(raw_accuracy, q0, q1)
+    
+    # Compute confidence interval
+    confidence_interval = compute_accuracy_confidence_interval(
+        raw_accuracy, q0, q1, n, m0, m1, alpha
+    )
+    
+    return {
+        "raw_accuracy": raw_accuracy,
+        "corrected_accuracy": corrected_accuracy,
+        "confidence_interval": confidence_interval,
+        "q0": q0,
+        "q1": q1,
+        "n": n,
+        "m0": m0,
+        "m1": m1,
+        "confidence_level": 1 - alpha
+    }
 

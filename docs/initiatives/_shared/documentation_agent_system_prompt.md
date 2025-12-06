@@ -33,8 +33,8 @@ Generate these documents **sequentially**, using each as foundational context fo
 - **Core Implementation**: Granular development tasks in logical order
 - **Testing Tasks**: Unit, integration, e2e testing requirements
 - **Documentation Tasks**: Code comments, user docs, deployment guides
-    - **summary.md**: require a document to summarize the implementation and allow for ease of understanding the initiative
-    - **technical_debt.md**: require a document to capture testing gaps and the technical debt that is left after the initiative
+    - **summary.md**: require a document in the root initiative directory to summarize the implementation and allow for ease of understanding the initiative
+    - **technical_debt.md**: require a document in the root initiative directory to capture testing gaps and the technical debt that is left after the initiative
 - **Validation Tasks**: Performance testing, security review, stakeholder approval
 
 ### 4.  prompt_phase_X_{serial}.md (Prompts for Executing Phases of TODO.md)
@@ -51,6 +51,80 @@ Generate these documents **sequentially**, using each as foundational context fo
     - **phase_X_handoff.md**: what is necessary for the subsequent phase (if another after)
 
 Note: You can deviate from the 4 phase structure if more or less is more ideal for breaking up the effort.
+
+## Documentation Organization Methodology
+
+All documentation for an initiative must be organized into a structured directory layout:
+
+### Directory Structure
+
+```
+docs/initiatives/{initiative_name}/
+  scoping/
+    PRD{serial}.md
+    RFC{serial}.md
+    TODO{serial}.md
+    context.md
+  prompts/
+    prompt_phase_0_{serial}.md
+    prompt_phase_1_{serial}.md
+    prompt_phase_2_{serial}.md
+    ... (one prompt per phase)
+  intermediate/
+    phase_0_decisions.md
+    phase_0_testing.md
+    phase_0_handoff.md
+    phase_1_decisions.md
+    phase_1_testing.md
+    phase_1_handoff.md
+    ... (phase-specific documents created during implementation)
+  summary.md
+  fracas.md
+  technical_debt.md (optional)
+```
+
+### Directory Purposes
+
+1. **scoping/**: Contains initial scoping documents
+   - **PRD{serial}.md**: Product Requirements Document
+   - **RFC{serial}.md**: Technical architecture and design
+   - **TODO{serial}.md**: Implementation breakdown with phases
+   - **context.md**: Project context and scope definition
+
+2. **prompts/**: Contains phase execution prompts
+   - **prompt_phase_X_{serial}.md**: One prompt file per phase from TODO.md
+   - All phase prompts reference documents in scoping/ using '@' notation
+   - Phase prompts guide implementation of each phase
+
+3. **intermediate/**: Contains documentation created during implementation
+   - **phase_X_decisions.md**: Decisions made during each phase that weren't in PRD/RFC
+   - **phase_X_testing.md**: Testing documentation for each phase
+   - **phase_X_handoff.md**: Handoff documentation between phases
+   - Other phase-specific or intermediate documentation created during implementation
+
+4. **Root directory**: Contains final summary documents
+   - **summary.md**: Final summary of the initiative (required)
+   - **technical_debt.md**: Technical debt and testing gaps (optional, from TODO.md)
+   - **fracas.md**: Failure tracking document (created in Phase 0, part of summary documents)
+
+### File References
+
+When creating phase prompts and intermediate documents:
+- Reference scoping documents using: `@docs/initiatives/{initiative_name}/scoping/{filename}.md`
+- Reference intermediate documents using: `@docs/initiatives/{initiative_name}/intermediate/{filename}.md`
+- Reference prompts using: `@docs/initiatives/{initiative_name}/prompts/{filename}.md`
+
+### Implementation Workflow
+
+1. **Scoping Phase**: Create PRD, RFC, TODO, and context.md in `scoping/` directory
+2. **Prompt Creation**: Create phase prompts in `prompts/` directory (one per phase from TODO.md)
+3. **Implementation**: During each phase:
+   - Create intermediate documents in `intermediate/` directory
+   - Update TODO.md checkboxes
+   - Reference scoping documents in phase prompts
+4. **Phase 0**: Create `fracas.md` in root directory (summary document, not intermediate)
+5. **Completion**: Create `summary.md` in root directory summarizing the initiative
+   - Optionally create `technical_debt.md` in root directory if needed
 
 ## Document Serial Number System
 

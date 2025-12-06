@@ -41,7 +41,7 @@ def document_service(mock_db_conn, mock_query_executor):
 def sample_document():
     """Sample document for testing"""
     return Document(
-        document_id="test-doc-123",
+        id="test-doc-123",
         filename="test.pdf",
         file_size=1024,
         mime_type="application/pdf",
@@ -92,7 +92,7 @@ class TestDocumentService:
     def test_get_document(self, document_service, mock_query_executor, sample_document):
         """Test getting a document by ID"""
         mock_query_executor.execute_query.return_value = [{
-            "document_id": sample_document.document_id,
+            "id": sample_document.id,
             "filename": sample_document.filename,
             "file_size": sample_document.file_size,
             "mime_type": sample_document.mime_type,
@@ -107,7 +107,7 @@ class TestDocumentService:
         result = document_service.get_document("test-doc-123")
         
         assert result is not None
-        assert result.document_id == sample_document.document_id
+        assert result.id == sample_document.id
         assert result.filename == sample_document.filename
     
     def test_get_document_not_found(self, document_service, mock_query_executor):
@@ -121,7 +121,7 @@ class TestDocumentService:
     def test_list_documents(self, document_service, mock_query_executor, sample_document):
         """Test listing documents with filters"""
         mock_query_executor.execute_query.return_value = [{
-            "document_id": sample_document.document_id,
+            "id": sample_document.id,
             "filename": sample_document.filename,
             "file_size": sample_document.file_size,
             "mime_type": sample_document.mime_type,
@@ -142,7 +142,7 @@ class TestDocumentService:
         )
         
         assert len(results) == 1
-        assert results[0].document_id == sample_document.document_id
+        assert results[0].id == sample_document.id
         mock_query_executor.execute_query.assert_called_once()
     
     def test_count_documents(self, document_service, mock_query_executor):

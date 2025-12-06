@@ -95,7 +95,7 @@ async def handle_upload(file: UploadFile = File(...)):
         # Step 3: Save document metadata to database
         logger.info("Step 3: Saving document metadata to database")
         document = Document(
-            document_id=document_id,
+            id=document_id,
             filename=file.filename or document_id,
             file_size=file_size,
             mime_type=mime_type,

@@ -52,7 +52,7 @@ class DocumentListResponse(BaseModel):
 def _document_to_response(doc: Document) -> DocumentResponse:
     """Convert Document model to response"""
     return DocumentResponse(
-        document_id=doc.document_id,
+        document_id=doc.id,
         filename=doc.filename,
         file_size=doc.file_size,
         mime_type=doc.mime_type,

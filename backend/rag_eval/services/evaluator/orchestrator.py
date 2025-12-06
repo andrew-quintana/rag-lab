@@ -21,7 +21,11 @@ from rag_eval.core.interfaces import (
     BEIRMetricsResult
 )
 from rag_eval.services.evaluator.judge import evaluate_answer_with_judge
-from rag_eval.services.evaluator.meta_eval import meta_evaluate_judge, calculate_judge_metrics
+from rag_eval.services.evaluator.meta_eval import (
+    meta_evaluate_judge, 
+    calculate_judge_metrics,
+    compute_bias_corrected_accuracy_from_results
+)
 from rag_eval.services.evaluator.beir_metrics import compute_beir_metrics
 from rag_eval.services.evaluator.cost_extraction import extract_costs
 
@@ -41,7 +45,7 @@ def evaluate_rag_system(
     1. Retrieval: Retrieve chunks for each question
     2. RAG Generation: Generate answers using retrieved chunks
     3. Judge Evaluation: Evaluate answers with LLM-as-Judge
-    4. Meta-Evaluation: Validate judge verdicts
+    4. Meta-Evaluation: Validate judge verdicts and compute bias-corrected accuracy
     5. BEIR Metrics: Compute retrieval metrics
     
     Args:
@@ -120,6 +124,32 @@ def evaluate_rag_system(
         raise EvaluationError(
             f"All {len(evaluation_dataset)} examples failed evaluation. "
             f"Failed examples: {failed_examples}"
+        )
+    
+    # Compute bias-corrected accuracy as part of meta-evaluation
+    # This uses the meta-evaluation results to estimate judge calibration parameters
+    # and correct the raw accuracy estimate for bias
+    try:
+        evaluation_pairs = [
+            (result.judge_output, result.meta_eval_output) 
+            for result in results
+        ]
+        bias_corrected = compute_bias_corrected_accuracy_from_results(evaluation_pairs)
+        logger.info(
+            f"Bias-corrected accuracy: {bias_corrected['corrected_accuracy']:.3f} "
+            f"(raw: {bias_corrected['raw_accuracy']:.3f}, "
+            f"95% CI: [{bias_corrected['confidence_interval'][0]:.3f}, "
+            f"{bias_corrected['confidence_interval'][1]:.3f}])"
+        )
+        logger.debug(
+            f"Judge calibration: q0={bias_corrected['q0']:.3f}, "
+            f"q1={bias_corrected['q1']:.3f}"
+        )
+    except Exception as e:
+        logger.warning(
+            f"Failed to compute bias-corrected accuracy: {e}. "
+            f"This is non-fatal and evaluation results are still valid.",
+            exc_info=True
         )
     
     return results
