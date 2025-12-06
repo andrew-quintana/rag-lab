@@ -136,69 +136,69 @@ This TODO document provides the implementation breakdown for converting the sync
 
 ## Phase 2 — Queue Infrastructure
 
-**Status**: ⏳ Pending
+**Status**: ✅ Complete
 
 ### Setup Tasks
-- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
-- [ ] Review Azure Storage Account configuration
-- [ ] Create Azure Storage Queues (via Azure Portal or Infrastructure as Code)
-  - [ ] `ingestion-uploads`
-  - [ ] `ingestion-chunking`
-  - [ ] `ingestion-embeddings`
-  - [ ] `ingestion-indexing`
-  - [ ] `ingestion-dead-letter` (optional but recommended)
-- [ ] Install Azure Storage Queue SDK: `pip install azure-storage-queue`
-- [ ] Create queue client utilities module: `rag_eval/services/workers/queue_client.py`
-- [ ] Set up test fixtures for queue operations (mocked)
-- [ ] Create test file: `backend/tests/components/workers/test_queue_client.py`
+- [x] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [x] Review Azure Storage Account configuration
+- [x] Create Azure Storage Queues (via Azure Portal or Infrastructure as Code)
+  - [x] `ingestion-uploads`
+  - [x] `ingestion-chunking`
+  - [x] `ingestion-embeddings`
+  - [x] `ingestion-indexing`
+  - [x] `ingestion-dead-letter` (optional but recommended)
+- [x] Install Azure Storage Queue SDK: `pip install azure-storage-queue`
+- [x] Create queue client utilities module: `rag_eval/services/workers/queue_client.py`
+- [x] Set up test fixtures for queue operations (mocked)
+- [x] Create test file: `backend/tests/components/workers/test_queue_client.py`
 
 ### Core Implementation
-- [ ] Implement message schema validation
-  - [ ] Define `QueueMessage` dataclass with fields:
-    - [ ] `document_id: str`
-    - [ ] `source_storage: str` (enum: "azure_blob" | "supabase")
-    - [ ] `filename: str`
-    - [ ] `attempt: int`
-    - [ ] `stage: str` (enum: "uploaded" | "parsed" | "chunked" | "embedded" | "indexed")
-    - [ ] `metadata: Dict[str, Any]` (optional)
-  - [ ] Implement `validate_message(message: dict) -> QueueMessage`
-  - [ ] Implement `serialize_message(message: QueueMessage) -> str`
-  - [ ] Implement `deserialize_message(message_str: str) -> QueueMessage`
-- [ ] Implement queue client utilities
-  - [ ] `enqueue_message(queue_name: str, message: QueueMessage, config) -> None`
-  - [ ] `dequeue_message(queue_name: str, config) -> Optional[QueueMessage]`
-  - [ ] `peek_message(queue_name: str, config) -> Optional[QueueMessage]`
-  - [ ] `delete_message(queue_name: str, message_id: str, pop_receipt: str, config) -> None`
-  - [ ] `send_to_dead_letter(queue_name: str, message: QueueMessage, reason: str, config) -> None`
-  - [ ] `get_queue_length(queue_name: str, config) -> int`
+- [x] Implement message schema validation
+  - [x] Define `QueueMessage` dataclass with fields:
+    - [x] `document_id: str`
+    - [x] `source_storage: str` (enum: "azure_blob" | "supabase")
+    - [x] `filename: str`
+    - [x] `attempt: int`
+    - [x] `stage: str` (enum: "uploaded" | "parsed" | "chunked" | "embedded" | "indexed")
+    - [x] `metadata: Dict[str, Any]` (optional)
+  - [x] Implement `validate_message(message: dict) -> QueueMessage`
+  - [x] Implement `serialize_message(message: QueueMessage) -> str`
+  - [x] Implement `deserialize_message(message_str: str) -> QueueMessage`
+- [x] Implement queue client utilities
+  - [x] `enqueue_message(queue_name: str, message: QueueMessage, config) -> None`
+  - [x] `dequeue_message(queue_name: str, config) -> Optional[QueueMessage]`
+  - [x] `peek_message(queue_name: str, config) -> Optional[QueueMessage]`
+  - [x] `delete_message(queue_name: str, message_id: str, pop_receipt: str, config) -> None`
+  - [x] `send_to_dead_letter(queue_name: str, message: QueueMessage, reason: str, config) -> None`
+  - [x] `get_queue_length(queue_name: str, config) -> int`
 
 ### Testing Tasks
-- [ ] **Robust Unit Tests:**
-  - [ ] Test message schema validation (valid/invalid schemas)
-  - [ ] Test queue client operations (enqueue, dequeue, peek, delete)
-  - [ ] Test error handling (queue not found, connection failures)
-  - [ ] Test message serialization/deserialization
-  - [ ] Test dead-letter queue handling
-  - [ ] Test retry logic for transient failures
-  - [ ] Test message visibility timeout handling
-  - [ ] Test queue length monitoring
-- [ ] **Document any failures** in fracas.md immediately when encountered
+- [x] **Robust Unit Tests:**
+  - [x] Test message schema validation (valid/invalid schemas)
+  - [x] Test queue client operations (enqueue, dequeue, peek, delete)
+  - [x] Test error handling (queue not found, connection failures)
+  - [x] Test message serialization/deserialization
+  - [x] Test dead-letter queue handling
+  - [x] Test retry logic for transient failures
+  - [x] Test message visibility timeout handling
+  - [x] Test queue length monitoring
+- [x] **Document any failures** in fracas.md immediately when encountered
 
 ### Documentation Tasks
-- [ ] Add docstrings to all functions
-- [ ] Document message schema and field descriptions
-- [ ] Document queue configuration and setup
-- [ ] Document error handling and retry strategies
-- [ ] **Phase 2 Testing Summary** for handoff to Phase 3
+- [x] Add docstrings to all functions
+- [x] Document message schema and field descriptions
+- [x] Document queue configuration and setup
+- [x] Document error handling and retry strategies
+- [x] **Phase 2 Testing Summary** for handoff to Phase 3
 
 ### Validation Requirements (Phase 2 Complete)
-- [ ] **REQUIRED**: All unit tests for Phase 2 must pass before proceeding to Phase 3
-- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/workers/test_queue_client.py -v`
-- [ ] **REQUIRED**: Test coverage must meet minimum 80% for queue_client.py module
-- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
-- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
-- [ ] **REQUIRED**: Document any test failures in fracas.md
-- [ ] **REQUIRED**: Phase 2 is NOT complete until all tests pass
+- [x] **REQUIRED**: All unit tests for Phase 2 must pass before proceeding to Phase 3
+- [x] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/workers/test_queue_client.py -v`
+- [x] **REQUIRED**: Test coverage must meet minimum 80% for queue_client.py module (Achieved: 93%)
+- [x] **REQUIRED**: All test assertions must pass (no failures, no errors) (51 tests passed)
+- [x] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [x] **REQUIRED**: Document any test failures in fracas.md
+- [x] **REQUIRED**: Phase 2 is NOT complete until all tests pass
 
 ---
 
