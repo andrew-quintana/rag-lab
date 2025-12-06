@@ -89,6 +89,12 @@ This TODO document provides the implementation breakdown for converting the sync
 - [ ] Implement idempotency checks
   - [ ] `check_document_status(document_id: str, config) -> str`
   - [ ] `should_process_document(document_id: str, target_status: str, config) -> bool`
+- [ ] Implement deletion functions
+  - [ ] `delete_chunks_by_document_id(document_id: str, config) -> int`
+    - [ ] Delete all chunks (and embeddings) for a document from chunks table
+    - [ ] Return count of deleted chunks
+    - [ ] Handle database errors gracefully
+    - [ ] Validate document_id is not empty
 
 ### Testing Tasks
 - [ ] **Robust Unit Tests:**
@@ -102,6 +108,9 @@ This TODO document provides the implementation breakdown for converting the sync
   - [ ] Test embedding loading and persistence
   - [ ] Test status update operations
   - [ ] Test idempotency checks (status-based)
+  - [ ] Test deletion of chunks from chunks table
+  - [ ] Test deletion error handling (missing document_id, database errors)
+  - [ ] Test deletion returns correct count of deleted chunks
 - [ ] **Document any failures** in fracas.md immediately when encountered
 
 ### Documentation Tasks
@@ -339,15 +348,30 @@ This TODO document provides the implementation breakdown for converting the sync
   - [ ] `GET /documents/{document_id}/status`
   - [ ] Return current status, timestamps, and error details if failed
   - [ ] Implement `DocumentStatusResponse` model
+- [ ] Update delete endpoint (`api/routes/documents.py` or equivalent)
+  - [ ] Add deletion of chunks from chunks table (call `delete_chunks_by_document_id` from persistence module)
+  - [ ] Keep existing deletion of chunks from Azure AI Search
+  - [ ] Keep existing deletion of file from storage
+  - [ ] Keep existing deletion of document record from database
+  - [ ] Implement graceful degradation: continue with other deletions if one fails
+  - [ ] Return counts of deleted chunks from both chunks table and Azure AI Search
+  - [ ] Update response model to include `chunks_deleted_db` and `chunks_deleted_ai_search`
 - [ ] Update response models
   - [ ] `UploadResponse` with `document_id` and `status`
   - [ ] `DocumentStatusResponse` with status, timestamps, error details
+  - [ ] `DeleteDocumentResponse` with `chunks_deleted_db` and `chunks_deleted_ai_search`
 
 ### Testing Tasks
 - [ ] **Robust Unit Tests:**
   - [ ] Test upload endpoint enqueues message correctly
   - [ ] Test upload endpoint returns immediately with document_id
   - [ ] Test status query endpoint returns correct status
+  - [ ] Test delete endpoint removes chunks from chunks table
+  - [ ] Test delete endpoint removes chunks from Azure AI Search
+  - [ ] Test delete endpoint removes file from storage
+  - [ ] Test delete endpoint removes document record from database
+  - [ ] Test delete endpoint graceful degradation (continues if one deletion fails)
+  - [ ] Test delete endpoint returns correct counts from both systems
   - [ ] Test error handling for invalid requests
   - [ ] Test backward compatibility flag (synchronous path) if implemented
   - [ ] Test response model validation
