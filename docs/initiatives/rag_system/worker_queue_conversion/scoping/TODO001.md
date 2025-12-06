@@ -48,86 +48,89 @@ This TODO document provides the implementation breakdown for converting the sync
 
 ## Phase 1 — Persistence Infrastructure
 
-**Status**: ⏳ Pending
+**Status**: ✅ Complete
 
 ### Setup Tasks
-- [ ] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
-- [ ] Review existing database schema and migrations
-- [ ] Create database migration files for schema changes
-- [ ] Set up test fixtures for database operations
-- [ ] Create test file: `backend/tests/components/workers/test_persistence.py`
+- [x] **REQUIRED**: Activate backend venv: `cd backend && source venv/bin/activate`
+- [x] Review existing database schema and migrations
+- [x] Create database migration files for schema changes
+- [x] Set up test fixtures for database operations
+- [x] Create test file: `backend/tests/components/workers/test_persistence.py`
 
 ### Database Schema Changes
-- [ ] Add status column to `documents` table (if not exists)
-  - [ ] `status VARCHAR(50) DEFAULT 'uploaded'`
-  - [ ] Create index on `status` column
-- [ ] Add timestamp columns to `documents` table
-  - [ ] `parsed_at TIMESTAMP`
-  - [ ] `chunked_at TIMESTAMP`
-  - [ ] `embedded_at TIMESTAMP`
-  - [ ] `indexed_at TIMESTAMP`
-- [ ] Create `chunks` table
-  - [ ] `chunk_id VARCHAR(255) PRIMARY KEY`
-  - [ ] `document_id UUID NOT NULL REFERENCES documents(id)`
-  - [ ] `text TEXT NOT NULL`
-  - [ ] `metadata JSONB`
-  - [ ] `embedding JSONB` (for storing embeddings)
-  - [ ] `created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
-  - [ ] Create index on `document_id`
-- [ ] Add `extracted_text TEXT` column to `documents` table (or implement storage-based approach)
-- [ ] Test migration files execute successfully
+- [x] Add status column to `documents` table (if not exists)
+  - [x] `status VARCHAR(50) DEFAULT 'uploaded'`
+  - [x] Create index on `status` column
+- [x] Add timestamp columns to `documents` table
+  - [x] `parsed_at TIMESTAMP`
+  - [x] `chunked_at TIMESTAMP`
+  - [x] `embedded_at TIMESTAMP`
+  - [x] `indexed_at TIMESTAMP`
+- [x] Create `chunks` table
+  - [x] `chunk_id VARCHAR(255) PRIMARY KEY`
+  - [x] `document_id UUID NOT NULL REFERENCES documents(id)`
+  - [x] `text TEXT NOT NULL`
+  - [x] `metadata JSONB`
+  - [x] `embedding JSONB` (for storing embeddings)
+  - [x] `created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
+  - [x] Create index on `document_id`
+- [x] Add `extracted_text TEXT` column to `documents` table (or implement storage-based approach)
+- [x] Test migration files execute successfully
 
 ### Core Implementation
-- [ ] Implement load/persist helper functions in `rag_eval/services/workers/persistence.py`
-  - [ ] `load_extracted_text(document_id: str, config) -> str`
-  - [ ] `persist_extracted_text(document_id: str, text: str, config) -> None`
-  - [ ] `load_chunks(document_id: str, config) -> List[Chunk]`
-  - [ ] `persist_chunks(document_id: str, chunks: List[Chunk], config) -> None`
-  - [ ] `load_embeddings(document_id: str, config) -> List[List[float]]`
-  - [ ] `persist_embeddings(document_id: str, chunks: List[Chunk], embeddings: List[List[float]], config) -> None`
-  - [ ] `update_document_status(document_id: str, status: str, timestamp_field: Optional[str] = None, config) -> None`
-- [ ] Implement idempotency checks
-  - [ ] `check_document_status(document_id: str, config) -> str`
-  - [ ] `should_process_document(document_id: str, target_status: str, config) -> bool`
-- [ ] Implement deletion functions
-  - [ ] `delete_chunks_by_document_id(document_id: str, config) -> int`
-    - [ ] Delete all chunks (and embeddings) for a document from chunks table
-    - [ ] Return count of deleted chunks
-    - [ ] Handle database errors gracefully
-    - [ ] Validate document_id is not empty
+- [x] Implement load/persist helper functions in `rag_eval/services/workers/persistence.py`
+  - [x] `load_extracted_text(document_id: str, config) -> str`
+  - [x] `persist_extracted_text(document_id: str, text: str, config) -> None`
+  - [x] `load_chunks(document_id: str, config) -> List[Chunk]`
+  - [x] `persist_chunks(document_id: str, chunks: List[Chunk], config) -> None`
+  - [x] `load_embeddings(document_id: str, config) -> List[List[float]]`
+  - [x] `persist_embeddings(document_id: str, chunks: List[Chunk], embeddings: List[List[float]], config) -> None`
+  - [x] `update_document_status(document_id: str, status: str, timestamp_field: Optional[str] = None, config) -> None`
+- [x] Implement idempotency checks
+  - [x] `check_document_status(document_id: str, config) -> str`
+  - [x] `should_process_document(document_id: str, target_status: str, config) -> bool`
+- [x] Implement deletion functions
+  - [x] `delete_chunks_by_document_id(document_id: str, config) -> int`
+    - [x] Delete all chunks (and embeddings) for a document from chunks table
+    - [x] Return count of deleted chunks
+    - [x] Handle database errors gracefully
+    - [x] Validate document_id is not empty
 
 ### Testing Tasks
-- [ ] **Robust Unit Tests:**
-  - [ ] Test load operations for extracted text (database and storage approaches)
-  - [ ] Test persist operations with various data sizes
-  - [ ] Test error handling (missing data, invalid IDs)
-  - [ ] Test idempotency of load/persist operations
-  - [ ] Test database transaction handling
-  - [ ] Test edge cases (empty data, null values, large payloads)
-  - [ ] Test chunk loading and persistence
-  - [ ] Test embedding loading and persistence
-  - [ ] Test status update operations
-  - [ ] Test idempotency checks (status-based)
-  - [ ] Test deletion of chunks from chunks table
-  - [ ] Test deletion error handling (missing document_id, database errors)
-  - [ ] Test deletion returns correct count of deleted chunks
-- [ ] **Document any failures** in fracas.md immediately when encountered
+- [x] **Robust Unit Tests (using actual files):**
+  - [x] Test load operations for extracted text (database and storage approaches) - **using actual extracted text from PDF files**
+  - [x] Test persist operations with various data sizes - **using actual extracted text from PDF files**
+  - [x] Test error handling (missing data, invalid IDs)
+  - [x] Test idempotency of load/persist operations
+  - [x] Test database transaction handling
+  - [x] Test edge cases (empty data, null values, large payloads) - **using actual extracted text**
+  - [x] Test chunk loading and persistence - **using actual chunks generated from real extracted text**
+  - [x] Test embedding loading and persistence - **using realistic embedding vectors (1536 dimensions)**
+  - [x] Test status update operations
+  - [x] Test idempotency checks (status-based)
+  - [x] Test deletion of chunks from chunks table - **using actual chunks**
+  - [x] Test deletion error handling (missing document_id, database errors)
+  - [x] Test deletion returns correct count of deleted chunks
+  - [x] **REQUIRED**: Use actual PDF files from `backend/tests/fixtures/sample_documents/` for test data
+  - [x] **REQUIRED**: Use actual chunking functions to generate real chunks from extracted text
+  - [x] **REQUIRED**: Use realistic embedding vectors that represent actual embeddings
+- [x] **Document any failures** in fracas.md immediately when encountered
 
 ### Documentation Tasks
-- [ ] Add docstrings to all functions
-- [ ] Document persistence layer design decisions
-- [ ] Document database schema changes
-- [ ] Document storage approach for extracted text (database vs. storage)
-- [ ] **Phase 1 Testing Summary** for handoff to Phase 2
+- [x] Add docstrings to all functions
+- [x] Document persistence layer design decisions
+- [x] Document database schema changes
+- [x] Document storage approach for extracted text (database vs. storage)
+- [x] **Phase 1 Testing Summary** for handoff to Phase 2
 
 ### Validation Requirements (Phase 1 Complete)
-- [ ] **REQUIRED**: All unit tests for Phase 1 must pass before proceeding to Phase 2
-- [ ] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/workers/test_persistence.py -v`
-- [ ] **REQUIRED**: Test coverage must meet minimum 80% for persistence.py module
-- [ ] **REQUIRED**: All test assertions must pass (no failures, no errors)
-- [ ] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
-- [ ] **REQUIRED**: Document any test failures in fracas.md
-- [ ] **REQUIRED**: Phase 1 is NOT complete until all tests pass
+- [x] **REQUIRED**: All unit tests for Phase 1 must pass before proceeding to Phase 2
+- [x] **REQUIRED**: Run tests using venv: `cd backend && source venv/bin/activate && pytest tests/components/workers/test_persistence.py -v`
+- [x] **REQUIRED**: Test coverage must meet minimum 80% for persistence.py module (Achieved: 91%)
+- [x] **REQUIRED**: All test assertions must pass (no failures, no errors) (42 tests passed)
+- [x] **REQUIRED**: If tests fail, iterate on implementation until all tests pass
+- [x] **REQUIRED**: Document any test failures in fracas.md
+- [x] **REQUIRED**: Phase 1 is NOT complete until all tests pass
 
 ---
 
@@ -265,12 +268,17 @@ This TODO document provides the implementation breakdown for converting the sync
   - [ ] Implement idempotency check (Azure Search operations are idempotent)
 
 ### Testing Tasks
-- [ ] **Robust Unit Tests for Each Worker:**
+- [ ] **Robust Unit Tests for Each Worker (using actual files):**
   - [ ] **Note**: Unit tests for underlying service modules (`extract_text_from_document`, `chunk_text`, `generate_embeddings`, `index_chunks`) already exist from `initial_setup` initiative and can be reused. Focus new tests on worker-specific functionality.
+  - [ ] **REQUIRED**: All worker tests must use actual files and realistic data:
+    - [ ] Use actual PDF files from `backend/tests/fixtures/sample_documents/` for file operations
+    - [ ] Use actual extracted text from real documents (via mocked extraction)
+    - [ ] Use actual chunks generated from real extracted text
+    - [ ] Use realistic embedding vectors (1536 dimensions) that represent actual embeddings
   - [ ] **Ingestion Worker:**
     - [ ] Test queue message parsing and validation
-    - [ ] Test file download from Supabase/Azure Blob
-    - [ ] Test extracted text persistence (load/persist operations)
+    - [ ] Test file download from Supabase/Azure Blob - **using actual PDF files**
+    - [ ] Test extracted text persistence (load/persist operations) - **using actual extracted text**
     - [ ] Test status update to 'parsed' in database
     - [ ] Test message enqueue to next queue
     - [ ] Test retry logic with exponential backoff
@@ -280,8 +288,8 @@ This TODO document provides the implementation breakdown for converting the sync
     - [ ] **Reuse from initial_setup**: Tests for `extract_text_from_document` function (already tested with mocked Azure Document Intelligence)
   - [ ] **Chunking Worker:**
     - [ ] Test queue message parsing and validation
-    - [ ] Test extracted text loading from persistence layer
-    - [ ] Test chunk persistence to database/storage
+    - [ ] Test extracted text loading from persistence layer - **using actual extracted text**
+    - [ ] Test chunk persistence to database/storage - **using actual chunks from real text**
     - [ ] Test status update to 'chunked' in database
     - [ ] Test message enqueue to next queue
     - [ ] Test idempotency (handle duplicate messages safely - status check)
@@ -289,8 +297,8 @@ This TODO document provides the implementation breakdown for converting the sync
     - [ ] **Reuse from initial_setup**: Tests for `chunk_text` function (already tested with deterministic behavior validation)
   - [ ] **Embedding Worker:**
     - [ ] Test queue message parsing and validation
-    - [ ] Test chunk loading from persistence layer
-    - [ ] Test embedding persistence to database/storage
+    - [ ] Test chunk loading from persistence layer - **using actual chunks**
+    - [ ] Test embedding persistence to database/storage - **using realistic embedding vectors**
     - [ ] Test status update to 'embedded' in database
     - [ ] Test message enqueue to next queue
     - [ ] Test retry logic for transient failures
@@ -299,7 +307,7 @@ This TODO document provides the implementation breakdown for converting the sync
     - [ ] **Reuse from initial_setup**: Tests for `generate_embeddings` function (already tested with mocked Azure AI Foundry)
   - [ ] **Indexing Worker:**
     - [ ] Test queue message parsing and validation
-    - [ ] Test chunk + embedding loading from persistence layer
+    - [ ] Test chunk + embedding loading from persistence layer - **using actual chunks and realistic embeddings**
     - [ ] Test status update to 'indexed' in database
     - [ ] Test partial failure handling
     - [ ] Test retry logic for transient failures
@@ -362,11 +370,11 @@ This TODO document provides the implementation breakdown for converting the sync
   - [ ] `DeleteDocumentResponse` with `chunks_deleted_db` and `chunks_deleted_ai_search`
 
 ### Testing Tasks
-- [ ] **Robust Unit Tests:**
-  - [ ] Test upload endpoint enqueues message correctly
+- [ ] **Robust Unit Tests (using actual files):**
+  - [ ] Test upload endpoint enqueues message correctly - **using actual PDF files**
   - [ ] Test upload endpoint returns immediately with document_id
   - [ ] Test status query endpoint returns correct status
-  - [ ] Test delete endpoint removes chunks from chunks table
+  - [ ] Test delete endpoint removes chunks from chunks table - **using actual chunks**
   - [ ] Test delete endpoint removes chunks from Azure AI Search
   - [ ] Test delete endpoint removes file from storage
   - [ ] Test delete endpoint removes document record from database
@@ -377,6 +385,8 @@ This TODO document provides the implementation breakdown for converting the sync
   - [ ] Test response model validation
   - [ ] Test API error responses
   - [ ] Test status transitions (uploaded → parsed → chunked → embedded → indexed)
+  - [ ] **REQUIRED**: Use actual PDF files from `backend/tests/fixtures/sample_documents/` for upload tests
+  - [ ] **REQUIRED**: Use actual chunks and embeddings for deletion tests
 - [ ] **Document any failures** in fracas.md immediately when encountered
 
 ### Documentation Tasks
