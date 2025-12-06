@@ -34,8 +34,8 @@ Priority: Config value takes precedence, falls back to environment variable.
 
 ### Test Execution
 
-**Command**: `python scripts/test_azure_queues.py`  
-**Result**: ✅ All tests passed
+**Command**: `pytest tests/components/workers/test_queue_client_integration.py -v -m integration`  
+**Result**: ✅ All 7 tests passed
 
 ### Test Coverage
 
@@ -102,21 +102,13 @@ Priority: Config value takes precedence, falls back to environment variable.
 - Improved `_ensure_queue_exists()` to handle "QueueAlreadyExists" errors gracefully
 - Enhanced error detection for queue existence checks
 
-### 2. Setup Script
+### 2. Integration Test Suite
 
-**File**: `backend/scripts/setup_azure_queues.py`
+**File**: `backend/tests/components/workers/test_queue_client_integration.py`
 
-- Updated to support both connection string sources
-- Improved error handling for existing queues
-- Better error code detection
-
-### 3. Test Script
-
-**File**: `backend/scripts/test_azure_queues.py`
-
-- Updated to support both connection string sources
-- Comprehensive integration test suite
-- Clear test output with emoji indicators
+- Comprehensive pytest integration test suite
+- Tests all queue operations with real Azure Storage
+- Marked with `@pytest.mark.integration` for optional execution
 
 ## Unit Tests Status
 
@@ -127,10 +119,8 @@ All existing unit tests continue to pass after code changes.
 
 ## Scripts Created
 
-1. **`backend/scripts/setup_azure_queues.py`** - Creates all required queues
-2. **`backend/scripts/test_azure_queues.py`** - Integration tests for queue operations
-3. **`backend/scripts/get_azure_storage_connection.py`** - Helper to get connection string from Azure CLI
-4. **`backend/scripts/AZURE_QUEUE_SETUP.md`** - Setup documentation
+1. **`backend/scripts/get_azure_storage_connection.py`** - Helper to get connection string from Azure CLI
+2. **`backend/tests/components/workers/test_queue_client_integration.py`** - Integration tests for queue operations (pytest)
 
 ## Next Steps
 
@@ -142,18 +132,15 @@ Phase 2 Azure integration is complete. The queue infrastructure is ready for:
 
 ## Usage
 
-### Setup Queues (if needed)
-```bash
-cd backend
-source venv/bin/activate
-python scripts/setup_azure_queues.py
-```
+### Queues Auto-Create
+
+Queues are automatically created when you first enqueue a message. No manual setup required.
 
 ### Run Integration Tests
 ```bash
 cd backend
 source venv/bin/activate
-python scripts/test_azure_queues.py
+pytest tests/components/workers/test_queue_client_integration.py -v -m integration
 ```
 
 ### Use in Code

@@ -43,42 +43,50 @@ AZURE_STORAGE_QUEUES_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountNam
 - No quotes needed around the connection string
 - The connection string works for both Blob Storage and Queue Storage
 
-## Step 3: Create Queues
+## Step 3: Queues Auto-Create
 
-Run the setup script to create all required queues:
+Queues are automatically created when you first enqueue a message. The queue client includes auto-creation logic that will create the following queues on first use:
 
-```bash
-cd backend
-source venv/bin/activate
-python scripts/setup_azure_queues.py
-```
-
-This will create:
 - `ingestion-uploads`
 - `ingestion-chunking`
 - `ingestion-embeddings`
 - `ingestion-indexing`
 - `ingestion-dead-letter`
 
-**Note**: The script is idempotent - safe to run multiple times. If queues already exist, it will report them as already existing.
+**Note**: Queues are created idempotently - if they already exist, creation is skipped gracefully.
+
+### Manual Queue Creation (Optional)
+
+If you prefer to create queues manually before use, you can do so in Azure Portal:
+
+1. Go to Azure Portal → Your Storage Account
+2. Navigate to **Data storage** → **Queues**
+3. Click **+ Queue** and create each queue:
+   - `ingestion-uploads`
+   - `ingestion-chunking`
+   - `ingestion-embeddings`
+   - `ingestion-indexing`
+   - `ingestion-dead-letter`
 
 ## Step 4: Test Queues
 
-Run the integration test script:
+Run the integration tests using pytest:
 
 ```bash
 cd backend
 source venv/bin/activate
-python scripts/test_azure_queues.py
+pytest tests/components/workers/test_queue_client_integration.py -v -m integration
 ```
 
 This will test:
-- Queue creation
-- Message enqueue
-- Message peek
-- Message dequeue
-- Message delete
 - Queue length queries
+- Message enqueue
+- Message peek (non-destructive)
+- Message dequeue with receipt
+- Message delete
+- Full queue workflow
+
+**Note**: These are integration tests that require real Azure Storage. They are marked with `@pytest.mark.integration` and can be skipped if Azure is not available.
 
 ## Troubleshooting
 
@@ -92,24 +100,11 @@ This will test:
 - Verify your Storage Account has Queue Storage enabled
 - Check that your connection string has proper permissions
 - Ensure network connectivity to Azure
-- If queues already exist, that's fine - the script handles this gracefully
+- Queues auto-create on first use, but if auto-creation fails, create them manually in Azure Portal
 
 ### Authentication Errors
 - Verify the connection string is valid and not expired
 - Check that the Storage Account key hasn't been rotated
-
-## Manual Queue Creation (Alternative)
-
-If the script fails, you can create queues manually in Azure Portal:
-
-1. Go to Azure Portal → Your Storage Account
-2. Navigate to **Data storage** → **Queues**
-3. Click **+ Queue** and create each queue:
-   - `ingestion-uploads`
-   - `ingestion-chunking`
-   - `ingestion-embeddings`
-   - `ingestion-indexing`
-   - `ingestion-dead-letter`
 
 ## Related Documentation
 
