@@ -25,6 +25,9 @@ requests>=2.31.0
 supabase>=2.0.0
 pdf2image>=1.16.0
 
+# PDF processing
+PyPDF2>=3.0.0
+
 # Image processing
 Pillow>=10.0.0
 

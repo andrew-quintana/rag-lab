@@ -12,6 +12,57 @@ from rag_eval.core.logging import get_logger
 logger = get_logger("services.rag.ingestion")
 
 
+def extract_text_from_batch(pdf_bytes: bytes, page_range: str, config) -> str:
+    """
+    Extract text from a specific page range using Azure Document Intelligence.
+    
+    This is a public wrapper around the internal _extract_page_range function
+    that handles client initialization and returns a single merged text string.
+    
+    Args:
+        pdf_bytes: Raw PDF file content (bytes)
+        page_range: Page range string in Azure format (e.g., "1-2", "3-4")
+                   Pages are 1-indexed, inclusive range
+        config: Application configuration with Azure Document Intelligence credentials
+        
+    Returns:
+        Extracted text as a single string (pages joined with double newlines)
+        
+    Raises:
+        AzureServiceError: If extraction fails
+        ValueError: If page_range is invalid
+    """
+    logger.info(f"Extracting text from page range {page_range} (PDF size: {len(pdf_bytes):,} bytes)")
+    
+    try:
+        # Initialize Document Intelligence client
+        client = DocumentIntelligenceClient(
+            endpoint=config.azure_document_intelligence_endpoint,
+            credential=AzureKeyCredential(config.azure_document_intelligence_api_key)
+        )
+        
+        # Extract page range
+        page_texts, pages_detected = _extract_page_range(client, pdf_bytes, page_range)
+        
+        if not page_texts:
+            logger.warning(f"No text extracted from page range {page_range}")
+            return ""
+        
+        # Merge page texts with double newlines
+        merged_text = "\n\n".join(page_texts)
+        
+        logger.info(
+            f"Extracted {len(merged_text)} characters from page range {page_range} "
+            f"({pages_detected} pages detected)"
+        )
+        
+        return merged_text
+        
+    except Exception as e:
+        logger.error(f"Failed to extract text from batch {page_range}: {e}")
+        raise AzureServiceError(f"Failed to extract text from batch: {str(e)}") from e
+
+
 def _extract_page_range(client: DocumentIntelligenceClient, file_content: bytes, page_range: str) -> tuple[list[str], int]:
     """
     Extract text from a specific page range.

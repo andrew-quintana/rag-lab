@@ -4,7 +4,7 @@ This module provides load/persist functions for intermediate data (extracted tex
 chunks, embeddings) between pipeline stages, enabling worker independence.
 """
 
-from typing import List, Optional
+from typing import List, Optional, Set
 import json
 from rag_eval.core.interfaces import Chunk
 from rag_eval.db.connection import DatabaseConnection
@@ -473,4 +473,305 @@ def delete_chunks_by_document_id(document_id: str, config) -> int:
     except Exception as e:
         logger.error(f"Failed to delete chunks for document {document_id}: {e}")
         raise DatabaseError(f"Failed to delete chunks: {e}") from e
+
+
+def persist_batch_result(
+    document_id: str,
+    batch_index: int,
+    batch_text: str,
+    start_page: int,
+    end_page: int,
+    config
+) -> None:
+    """Persist a batch extraction result to the chunks table.
+    
+    Stores batch results temporarily in the chunks table with chunk_id = "batch_XXX"
+    for resumability and crash recovery. These are cleaned up after merging.
+    
+    Args:
+        document_id: Document identifier (UUID string)
+        batch_index: Batch index (0-based, used in chunk_id)
+        batch_text: Extracted text from this batch
+        start_page: First page in batch (1-indexed, inclusive)
+        end_page: Last page in batch (1-indexed, exclusive)
+        config: Application configuration with database credentials
+        
+    Raises:
+        DatabaseError: If persistence fails
+        ValueError: If document_id is empty or batch_index < 0
+    """
+    if not document_id:
+        raise ValueError("document_id cannot be empty")
+    
+    if batch_index < 0:
+        raise ValueError(f"batch_index must be >= 0, got {batch_index}")
+    
+    db_conn = DatabaseConnection(config)
+    executor = QueryExecutor(db_conn)
+    
+    try:
+        chunk_id = f"batch_{batch_index:03d}"  # e.g., "batch_000", "batch_001"
+        batch_metadata = {
+            "batch_index": batch_index,
+            "start_page": start_page,
+            "end_page": end_page,
+            "type": "ingestion_batch"
+        }
+        metadata_json = json.dumps(batch_metadata)
+        
+        # Use ON CONFLICT for idempotency
+        insert_query = """
+            INSERT INTO chunks (chunk_id, document_id, text, metadata)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (chunk_id) DO UPDATE
+            SET document_id = EXCLUDED.document_id,
+                text = EXCLUDED.text,
+                metadata = EXCLUDED.metadata
+        """
+        executor.execute_insert(
+            insert_query,
+            (chunk_id, document_id, batch_text, metadata_json)
+        )
+        
+        logger.debug(
+            f"Persisted batch {batch_index} for document {document_id} "
+            f"(pages {start_page}-{end_page}, {len(batch_text)} chars)"
+        )
+    except Exception as e:
+        logger.error(f"Failed to persist batch result for document {document_id}: {e}")
+        raise DatabaseError(f"Failed to persist batch result: {e}") from e
+
+
+def get_completed_batches(document_id: str, config) -> set[int]:
+    """Get set of completed batch indices for a document.
+    
+    Queries the chunks table for all batch chunks (chunk_id LIKE 'batch_%')
+    and extracts the batch_index from the chunk_id.
+    
+    Args:
+        document_id: Document identifier (UUID string)
+        config: Application configuration with database credentials
+        
+    Returns:
+        Set of completed batch indices (0-based)
+        
+    Raises:
+        DatabaseError: If query fails
+        ValueError: If document_id is empty
+    """
+    if not document_id:
+        raise ValueError("document_id cannot be empty")
+    
+    db_conn = DatabaseConnection(config)
+    executor = QueryExecutor(db_conn)
+    
+    try:
+        query = """
+            SELECT chunk_id
+            FROM chunks
+            WHERE document_id = %s AND chunk_id LIKE 'batch_%'
+            ORDER BY chunk_id ASC
+        """
+        results = executor.execute_query(query, (document_id,))
+        
+        completed_batches = set()
+        for row in results:
+            chunk_id = row.get("chunk_id", "")
+            # Extract batch_index from "batch_XXX" format
+            if chunk_id.startswith("batch_"):
+                try:
+                    batch_index = int(chunk_id[6:])  # Skip "batch_" prefix
+                    completed_batches.add(batch_index)
+                except ValueError:
+                    logger.warning(f"Invalid batch chunk_id format: {chunk_id}")
+        
+        logger.debug(
+            f"Found {len(completed_batches)} completed batches for document {document_id}"
+        )
+        return completed_batches
+    except Exception as e:
+        logger.error(f"Failed to get completed batches for document {document_id}: {e}")
+        raise DatabaseError(f"Failed to get completed batches: {e}") from e
+
+
+def load_batch_result(document_id: str, batch_index: int, config) -> Optional[str]:
+    """Load a specific batch result from the chunks table.
+    
+    Args:
+        document_id: Document identifier (UUID string)
+        batch_index: Batch index (0-based)
+        config: Application configuration with database credentials
+        
+    Returns:
+        Batch text if found, None otherwise
+        
+    Raises:
+        DatabaseError: If query fails
+        ValueError: If document_id is empty
+    """
+    if not document_id:
+        raise ValueError("document_id cannot be empty")
+    
+    if batch_index < 0:
+        raise ValueError(f"batch_index must be >= 0, got {batch_index}")
+    
+    db_conn = DatabaseConnection(config)
+    executor = QueryExecutor(db_conn)
+    
+    try:
+        chunk_id = f"batch_{batch_index:03d}"
+        query = "SELECT text FROM chunks WHERE chunk_id = %s AND document_id = %s"
+        results = executor.execute_query(query, (chunk_id, document_id))
+        
+        if not results:
+            return None
+        
+        return results[0].get("text")
+    except Exception as e:
+        logger.error(f"Failed to load batch result for document {document_id}: {e}")
+        raise DatabaseError(f"Failed to load batch result: {e}") from e
+
+
+def delete_batch_chunk(document_id: str, batch_index: int, config) -> None:
+    """Delete a specific batch chunk from the chunks table.
+    
+    Used to clean up batch chunks after they've been merged into the final text.
+    
+    Args:
+        document_id: Document identifier (UUID string)
+        batch_index: Batch index (0-based)
+        config: Application configuration with database credentials
+        
+    Raises:
+        DatabaseError: If deletion fails
+        ValueError: If document_id is empty
+    """
+    if not document_id:
+        raise ValueError("document_id cannot be empty")
+    
+    if batch_index < 0:
+        raise ValueError(f"batch_index must be >= 0, got {batch_index}")
+    
+    db_conn = DatabaseConnection(config)
+    executor = QueryExecutor(db_conn)
+    
+    try:
+        chunk_id = f"batch_{batch_index:03d}"
+        delete_query = "DELETE FROM chunks WHERE chunk_id = %s AND document_id = %s"
+        executor.execute_insert(delete_query, (chunk_id, document_id))
+        
+        logger.debug(f"Deleted batch chunk {batch_index} for document {document_id}")
+    except Exception as e:
+        logger.error(f"Failed to delete batch chunk for document {document_id}: {e}")
+        raise DatabaseError(f"Failed to delete batch chunk: {e}") from e
+
+
+def update_ingestion_metadata(document_id: str, updates: dict, config) -> None:
+    """Update ingestion metadata in documents.metadata->'ingestion' JSONB field.
+    
+    Merges the provided updates with existing ingestion metadata without overwriting
+    the entire metadata structure.
+    
+    Args:
+        document_id: Document identifier (UUID string)
+        updates: Dictionary of updates to merge into metadata->ingestion
+        config: Application configuration with database credentials
+        
+    Raises:
+        DatabaseError: If update fails
+        ValueError: If document_id is empty
+    """
+    if not document_id:
+        raise ValueError("document_id cannot be empty")
+    
+    if not updates:
+        logger.warning(f"No updates provided for document {document_id}")
+        return
+    
+    db_conn = DatabaseConnection(config)
+    executor = QueryExecutor(db_conn)
+    
+    try:
+        # Get current metadata
+        current_metadata = get_ingestion_metadata(document_id, config)
+        
+        # Merge updates
+        merged_metadata = {**current_metadata, **updates}
+        
+        # Update using PostgreSQL JSONB merge
+        # Use jsonb_set to update nested JSONB field
+        updates_json = json.dumps(merged_metadata)
+        query = """
+            UPDATE documents
+            SET metadata = jsonb_set(
+                COALESCE(metadata, '{}'::jsonb),
+                '{ingestion}',
+                %s::jsonb,
+                true
+            )
+            WHERE id = %s
+        """
+        executor.execute_insert(query, (updates_json, document_id))
+        
+        logger.debug(f"Updated ingestion metadata for document {document_id}")
+    except Exception as e:
+        logger.error(f"Failed to update ingestion metadata for document {document_id}: {e}")
+        raise DatabaseError(f"Failed to update ingestion metadata: {e}") from e
+
+
+def get_ingestion_metadata(document_id: str, config) -> dict:
+    """Get ingestion metadata from documents.metadata->'ingestion' JSONB field.
+    
+    Returns the ingestion metadata structure, or default structure if not exists.
+    
+    Args:
+        document_id: Document identifier (UUID string)
+        config: Application configuration with database credentials
+        
+    Returns:
+        Dictionary with ingestion metadata, or default structure if not found
+        
+    Raises:
+        DatabaseError: If query fails
+        ValueError: If document_id is empty or document not found
+    """
+    if not document_id:
+        raise ValueError("document_id cannot be empty")
+    
+    db_conn = DatabaseConnection(config)
+    executor = QueryExecutor(db_conn)
+    
+    try:
+        query = "SELECT metadata FROM documents WHERE id = %s"
+        results = executor.execute_query(query, (document_id,))
+        
+        if not results:
+            raise ValueError(f"Document {document_id} not found")
+        
+        metadata = results[0].get("metadata")
+        
+        # Extract ingestion metadata
+        if metadata and isinstance(metadata, dict):
+            ingestion_meta = metadata.get("ingestion", {})
+            if ingestion_meta:
+                return ingestion_meta
+        
+        # Return default structure
+        return {
+            "num_pages": 0,
+            "num_batches_total": 0,
+            "last_successful_page": 0,
+            "next_unparsed_batch_index": 0,
+            "parsing_status": "pending",
+            "batch_size": 2,
+            "batches_completed": {},
+            "parsing_started_at": None,
+            "parsing_completed_at": None,
+            "errors": []
+        }
+    except ValueError:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get ingestion metadata for document {document_id}: {e}")
+        raise DatabaseError(f"Failed to get ingestion metadata: {e}") from e
 

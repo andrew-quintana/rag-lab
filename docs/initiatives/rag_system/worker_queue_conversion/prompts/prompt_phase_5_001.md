@@ -53,6 +53,25 @@ This prompt guides the implementation of **Phase 5: Integration Testing & Migrat
 
 ## Phase 5 Tasks
 
+### Database Migration (Prerequisite)
+1. **REQUIRED**: Apply database migrations to production Supabase
+   - Apply `0019_add_worker_queue_persistence.sql` migration
+     - Adds `status` column to `documents` table
+     - Adds timestamp columns (`parsed_at`, `chunked_at`, `embedded_at`, `indexed_at`)
+     - Creates `chunks` table
+     - Adds `extracted_text TEXT` column to `documents` table
+   - Apply `0020_add_ingestion_batch_metadata.sql` migration (documentation only, no schema changes)
+   - Verify migrations applied successfully
+   - Test schema changes with sample queries
+   - Validate indexes are created correctly
+2. **REQUIRED**: Test Supabase integration with real database
+   - Test persistence operations (load/persist extracted text, chunks, embeddings)
+   - Test status updates and idempotency checks
+   - Test batch metadata storage in `documents.metadata->'ingestion'` JSONB
+   - Test document status transitions through pipeline
+   - Test error handling with real database connections
+   - Verify all workers can read/write to Supabase correctly
+
 ### Azure Functions Deployment
 1. Create Azure Function App (Consumption Plan)
 2. Deploy all workers as Azure Functions:
@@ -66,14 +85,20 @@ This prompt guides the implementation of **Phase 5: Integration Testing & Migrat
 6. Test Azure Functions deployment and queue trigger configuration
 
 ### Integration Tests (Post-Deployment)
-1. **REQUIRED**: End-to-end pipeline flow with real Azure Storage Queues:
+1. **REQUIRED**: End-to-end pipeline flow with real Azure Storage Queues and Supabase:
    - Test message passing between stages through actual queues
    - Test failure scenarios and dead-letter handling with real queues
-   - Test status transitions through complete pipeline
+   - Test status transitions through complete pipeline (verified in Supabase)
    - Test concurrent document processing across multiple workers
    - Test queue depth handling under load
    - Test Azure Functions queue trigger behavior
    - Test worker scaling and concurrency
+   - **Supabase Integration Tests**:
+     - Test persistence operations with real Supabase database
+     - Test batch processing metadata storage and retrieval
+     - Test document status updates in real database
+     - Test idempotency with real database state
+     - Test error handling and recovery with real database
    - **Test Data Constraint**: Use only first 6 pages of `docs/inputs/scan_classic_hmo.pdf` for tests that process actual PDFs
 2. **Document any failures** in fracas.md immediately when encountered
 
@@ -104,8 +129,10 @@ This prompt guides the implementation of **Phase 5: Integration Testing & Migrat
 
 ## Success Criteria
 
+- [ ] Database migrations applied to production Supabase
+- [ ] Supabase integration tests pass with real database
 - [ ] Azure Functions deployed and configured
-- [ ] All integration tests pass with real Azure Storage Queues
+- [ ] All integration tests pass with real Azure Storage Queues and Supabase
 - [ ] Performance tests validate throughput requirements
 - [ ] Migration strategy executed successfully
 - [ ] Synchronous path deprecated or removed
@@ -114,14 +141,17 @@ This prompt guides the implementation of **Phase 5: Integration Testing & Migrat
 
 ## Important Notes
 
+- **Database Migrations**: Must be applied to production Supabase before any integration testing
+- **Supabase Integration**: Workers depend on Supabase for persistence - integration tests must validate real database operations
 - **Test Data Constraint**: Critical budget constraint - use only first 6 pages of test PDF for any tests that process actual PDFs
-- **Integration Tests**: Must be run post-deployment with real Azure resources
+- **Integration Tests**: Must be run post-deployment with real Azure resources and Supabase
 - **Performance Tests**: Must be run post-deployment with real Azure Functions
 - **Migration Strategy**: Gradual migration allows validation before full cutover
 - **Monitoring**: Application Insights provides observability for worker behavior
 
 ## Blockers
 
+- **BLOCKER**: Database migrations must be applied to production Supabase before integration testing
 - **BLOCKER**: Azure Functions must be deployed before integration testing
 - **BLOCKER**: All previous phases must be complete before deployment
 
