@@ -12,32 +12,34 @@ This TODO document provides the implementation breakdown for the In-Corpus Evalu
 
 ## Phase 0 — Context Harvest
 
-**Status**: ⏳ Pending
+**Status**: ✅ Complete
 
 ### Setup Tasks
-- [ ] Review adjacent components (RAG system, evaluation system, Supabase prompts)
-- [ ] Review PRD001.md and RFC001.md for complete requirements understanding
-- [ ] Review existing Azure AI Search integration
-- [ ] Review existing Supabase prompt system
-- [ ] Validate Azure AI Search index and credentials
-- [ ] Validate Supabase database schema and connection
-- [ ] Review evaluation system components for integration points
-- [ ] **Create fracas.md** for failure tracking using FRACAS methodology
+- [x] Review adjacent components (RAG system, evaluation system, Supabase prompts)
+- [x] Review PRD001.md and RFC001.md for complete requirements understanding
+- [x] Review existing Azure AI Search integration
+- [x] Review existing Supabase prompt system
+- [x] Validate Azure AI Search index and credentials (basic validation complete, full validation deferred to Phase 1)
+- [x] Validate Supabase database schema and connection (schema reviewed, connection validation deferred to Phase 1)
+- [x] Review evaluation system components for integration points
+- [x] **Create fracas.md** for failure tracking using FRACAS methodology
 
 ### Testing Environment Setup
-- [ ] **REQUIRED**: Set up and activate backend virtual environment (`backend/venv/`)
-- [ ] **REQUIRED**: Verify pytest is installed in venv (`pip install pytest pytest-cov`)
-- [ ] **REQUIRED**: Verify all backend dependencies are installed (`pip install -r backend/requirements.txt`)
-- [ ] **REQUIRED**: Verify pytest can discover tests (`pytest backend/tests/ --collect-only`)
-- [ ] **REQUIRED**: Document venv activation command for all subsequent phases
-- [ ] **REQUIRED**: All testing in subsequent phases MUST use the same venv (`backend/venv/`)
-- [ ] Block: Implementation cannot proceed until Phase 0 complete
+- [x] **REQUIRED**: Set up and activate backend virtual environment (`backend/venv/`)
+- [x] **REQUIRED**: Verify pytest is installed in venv (`pip install pytest pytest-cov`)
+- [x] **REQUIRED**: Verify all backend dependencies are installed (`pip install -r backend/requirements.txt`)
+- [x] **REQUIRED**: Verify pytest can discover tests (`pytest backend/tests/ --collect-only`)
+- [x] **REQUIRED**: Document venv activation command for all subsequent phases
+- [x] **REQUIRED**: All testing in subsequent phases MUST use the same venv (`backend/venv/`)
+- [x] Block: Implementation cannot proceed until Phase 0 complete
+
+**Venv Activation Command**: `cd backend && source venv/bin/activate`
 
 ### Phase 0 Deliverables
-- [ ] Created `fracas.md` for failure tracking
-- [ ] Created `phase_0_testing.md` documenting testing setup validation
-- [ ] Created `phase_0_decisions.md` documenting Phase 0 decisions
-- [ ] Created `phase_0_handoff.md` summarizing Phase 1 entry point
+- [x] Created `fracas.md` for failure tracking
+- [x] Created `phase_0_testing.md` documenting testing setup validation
+- [x] Created `phase_0_decisions.md` documenting Phase 0 decisions
+- [x] Created `phase_0_handoff.md` summarizing Phase 1 entry point
 
 ---
 
