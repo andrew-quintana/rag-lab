@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Dict, Any
 
 from rag_eval.core.config import Config
-from rag_eval.core.database import DatabaseConnection
+from rag_eval.db.connection import DatabaseConnection
 from rag_eval.services.workers.queue_client import (
     QueueMessage,
     enqueue_message,
@@ -45,7 +45,7 @@ def db_conn(config):
     """Create database connection"""
     if not config.database_url:
         pytest.skip("DATABASE_URL not set - skipping integration tests")
-    return DatabaseConnection(config.database_url)
+    return DatabaseConnection(config)
 
 
 @pytest.fixture
@@ -92,16 +92,16 @@ def test_document_id(db_conn, config, test_pdf_path):
         file_content = f.read()
     
     try:
-        upload_document_to_storage(doc_id, filename, file_content, config)
+        upload_document_to_storage(file_content, doc_id, filename, config)
     except Exception as e:
         pytest.skip(f"Failed to upload test document to storage: {e}")
     
     # Create document record
     cursor.execute("""
-        INSERT INTO documents (id, filename, status, created_at)
-        VALUES (%s, %s, 'uploaded', NOW())
+        INSERT INTO documents (id, filename, status, storage_path, file_size, mime_type, upload_timestamp)
+        VALUES (%s, %s, 'uploaded', %s, %s, 'application/pdf', NOW())
         ON CONFLICT (id) DO NOTHING
-    """, (doc_id, filename))
+    """, (doc_id, filename, doc_id, len(file_content)))
     conn.commit()
     cursor.close()
     
@@ -190,7 +190,6 @@ class TestEndToEndPipeline:
         # Cleanup: Note - in real scenario, these would be processed by workers
         # For test cleanup, we'd need to manually dequeue or wait for processing
     
-    @pytest.mark.skip(reason="Requires Azure Functions to be deployed and running")
     def test_azure_functions_queue_trigger_behavior(self, config, test_document_id):
         """Test Azure Functions queue trigger behavior
         
@@ -221,7 +220,6 @@ class TestEndToEndPipeline:
         else:
             pytest.fail("Azure Function did not process message within timeout")
     
-    @pytest.mark.skip(reason="Requires Azure Functions to be deployed and running")
     def test_concurrent_document_processing(self, config):
         """Test concurrent document processing across multiple workers
         
@@ -238,7 +236,6 @@ class TestEndToEndPipeline:
 class TestFailureScenarios:
     """Test failure scenarios and dead-letter handling"""
     
-    @pytest.mark.skip(reason="Requires Azure Functions to be deployed and running")
     def test_dead_letter_handling(self, config):
         """Test dead-letter queue handling with real queues
         
