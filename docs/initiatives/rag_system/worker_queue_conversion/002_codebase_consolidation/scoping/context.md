@@ -173,8 +173,12 @@ This document defines the context for Initiative 002: Codebase Consolidation and
 - `scripts/start_azurite.sh` / `scripts/stop_azurite.sh` - Azurite management
 
 **Environment Variable Loading Strategy:**
-- **Critical Requirement**: All environment variables except Azurite connection string must be loaded from `.env.local` in project root using `python-dotenv`, NOT hardcoded in `local.settings.json`
-- Function `__init__.py` files load `.env.local` BEFORE importing backend code
+- **Flexible Approach**: Function entry points support multiple environment variable sources
+  - **Azure Functions (Cloud)**: Environment variables from Azure Function App settings (automatically available via `os.environ`)
+  - **Local Development**: Optional `.env.local` in project root loaded via `python-dotenv` (if file exists)
+  - **Unit Tests**: Environment variables set via pytest fixtures or `os.environ` (no file dependency)
+- **Precedence**: Azure Function App settings > `.env.local` (when loaded) > system environment > test fixtures
+- Function `__init__.py` files check for `.env.local` and load it if it exists, but don't require it
 - `local.settings.json` contains ONLY: `AzureWebJobsStorage`, `AZURE_STORAGE_QUEUES_CONNECTION_STRING`, `FUNCTIONS_WORKER_RUNTIME`
 
 ### 4.3 Cloud Testing Environment

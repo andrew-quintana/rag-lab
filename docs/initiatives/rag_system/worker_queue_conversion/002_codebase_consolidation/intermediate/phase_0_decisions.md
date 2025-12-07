@@ -87,13 +87,32 @@ This document records decisions made during Phase 0 of Initiative 002: Codebase 
 
 ## Clarifications Needed
 
-### None Identified
+### Environment Variable Loading Strategy Update
 
-All required information was available from:
-- Initiative 001 documentation
-- Context document (context.md)
-- Current codebase structure
-- Existing cursor rules files
+**Decision**: Updated environment variable loading strategy to be more flexible and context-aware.
+
+**Rationale**: The original approach hardcoded `.env.local` which doesn't work well for:
+- Azure Functions in cloud (use Azure Function App settings via `os.environ`)
+- Unit tests (should set environment variables directly, not depend on files)
+
+**Changes Made**:
+- Updated architecture rules to describe flexible environment variable loading
+- Updated scoping document to include environment variable loading strategy section
+- Updated state of development to reflect flexible approach
+- Updated RFC002 to reflect flexible precedence order
+- Updated context.md to reflect flexible approach
+
+**Implementation Pattern**:
+- Function entry points check for `.env.local` and load it if it exists (for local development)
+- But don't require it - Azure settings and test fixtures take precedence
+- Precedence: Azure Function App settings > `.env.local` (when loaded) > system environment > test fixtures
+
+**Files Modified**:
+- `.cursor/rules/architecture_rules.md`
+- `.cursor/rules/scoping_document.md`
+- `.cursor/rules/state_of_development.md`
+- `scoping/RFC002.md`
+- `scoping/context.md`
 
 ---
 

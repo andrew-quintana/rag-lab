@@ -156,6 +156,29 @@ This document records validation results for Phase 0 of Initiative 002: Codebase
 
 ---
 
+### Issue 4: Hardcoded Environment Variable Loading Strategy
+
+**Status**: ✅ **RESOLVED**
+
+**Description**: Environment variable loading was hardcoded to `.env.local`, which doesn't work well for:
+- Azure Functions in cloud (should use Azure Function App settings via `os.environ`)
+- Unit tests (should set environment variables directly, not depend on files)
+
+**Resolution**: Updated all documentation to reflect flexible environment variable loading strategy:
+- Azure Functions (Cloud): Use Azure Function App settings (via `os.environ`)
+- Local Development: Optional `.env.local` (loaded if file exists)
+- Unit Tests: Set variables via pytest fixtures or `os.environ` (no file dependency)
+- Precedence: Azure settings > `.env.local` (when loaded) > system environment > test fixtures
+
+**Files Updated**:
+- `.cursor/rules/architecture_rules.md`
+- `.cursor/rules/scoping_document.md`
+- `.cursor/rules/state_of_development.md`
+- `scoping/RFC002.md`
+- `scoping/context.md`
+
+---
+
 ## Validation Summary
 
 ### Overall Status: ✅ **ALL VALIDATION CHECKS PASSED**

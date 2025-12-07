@@ -22,9 +22,9 @@ Execute Phase 2 of Initiative 002: Consolidate configuration management by unify
 
 **Before starting, verify**:
 1. Phase 1 is complete (check `intermediate/phase_1_handoff.md`)
-2. Function entry points load `.env.local` via dotenv
+2. Function entry points implement flexible environment variable loading (reference RFC002.md Section 2.1)
 3. `local.settings.json` exists in `infra/azure/azure_functions/`
-4. `.env.local` exists in project root
+4. Configuration files exist as needed (`.env.local` optional for local development)
 5. Azure Function App settings are accessible (for documentation)
 
 **If any prerequisite is missing, document it in `intermediate/phase_2_decisions.md` and stop execution.**
@@ -37,17 +37,14 @@ Execute Phase 2 of Initiative 002: Consolidate configuration management by unify
 
 **Required Documentation**:
 - [ ] Review current configuration loading approach in function entry points
-- [ ] Document environment variable loading precedence:
-  - Azure Function App settings (highest priority)
-  - `.env.local` (loaded via dotenv in function entry points)
-  - `local.settings.json` (only for Azurite/runtime settings)
-- [ ] Document when each configuration source is used
+- [ ] Document environment variable loading precedence (reference RFC002.md Section 2.1)
+- [ ] Document when each configuration source is used (reference context.md Section 4.2)
 - [ ] Create configuration guide for local and cloud environments
 
-**Configuration Precedence** (from RFC002.md):
-1. **Azure Function App Settings** (production/cloud)
-2. **`.env.local`** (local development, loaded via dotenv)
-3. **`local.settings.json`** (only Azurite connection string and runtime settings)
+**Configuration Precedence**: 
+- Reference `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/RFC002.md` - Section 2.1 for complete precedence order
+- Precedence: Azure Function App settings > `.env.local` (when loaded) > system environment > test fixtures
+- `local.settings.json` contains only Azurite connection strings and runtime settings
 
 **Reference**: 
 - `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/RFC002.md` - Section 2.1 for strategy
@@ -68,42 +65,25 @@ Execute Phase 2 of Initiative 002: Consolidate configuration management by unify
 
 ## Task 2.2: Standardize Configuration Files
 
-**Execute**: Review and standardize `.env.local` and `local.settings.json`
+**Execute**: Review and standardize configuration files (reference RFC002.md Section 2.2)
 
 **Required Actions**:
-- [ ] Review `.env.local` template/example
-- [ ] Ensure `.env.local` contains all application configuration (database, Azure AI services, etc.)
-- [ ] Ensure `local.settings.json` contains ONLY:
-  - `AzureWebJobsStorage` (Azurite connection string)
-  - `AZURE_STORAGE_QUEUES_CONNECTION_STRING` (Azurite connection string)
-  - `FUNCTIONS_WORKER_RUNTIME` (python)
-- [ ] Document required Azure Function App settings for production
+- [ ] Review configuration file templates/examples (reference RFC002.md Section 2.2)
+- [ ] Ensure configuration files follow the requirements documented in RFC002.md Section 2.2
+- [ ] Ensure `local.settings.json` contains only Azurite connection strings and runtime settings (reference RFC002.md Section 2.2)
+- [ ] Document required Azure Function App settings for production (reference RFC002.md Section 2.2)
 - [ ] Create configuration validation scripts
 
-**Configuration File Requirements**:
-
-**`.env.local`** (project root):
-- All application configuration
-- Database connection strings
-- Azure AI service endpoints and keys
-- Supabase configuration
-- Any other application settings
-
-**`local.settings.json`** (`infra/azure/azure_functions/`):
-- ONLY Azurite connection strings
-- ONLY runtime settings
-- NO application configuration
-
-**Azure Function App Settings** (production):
-- All application configuration (secrets, endpoints, etc.)
-- Same variables as `.env.local` but as Azure settings
+**Configuration File Requirements**: 
+- Reference `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/RFC002.md` - Section 2.2 for complete configuration file requirements
+- Reference `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/context.md` - Section 4.2 for local development environment details
 
 **Reference**: 
 - `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/RFC002.md` - Section 2.2 for requirements
 - Current configuration files for reference
 
 **Success Criteria**:
-- ✅ `.env.local` template is standardized
+- ✅ Configuration files follow requirements in RFC002.md Section 2.2
 - ✅ `local.settings.json` contains only Azurite/runtime settings
 - ✅ Required Azure settings are documented
 - ✅ Configuration files are properly separated
@@ -119,8 +99,8 @@ Execute Phase 2 of Initiative 002: Consolidate configuration management by unify
 **Execute**: Create scripts to validate configuration
 
 **Required Scripts**:
-- [ ] Create script to validate `.env.local` has all required variables
-- [ ] Create script to validate `local.settings.json` has only allowed variables
+- [ ] Create script to validate configuration files have all required variables (reference RFC002.md Section 2.2 for requirements)
+- [ ] Create script to validate `local.settings.json` has only allowed variables (reference RFC002.md Section 2.2)
 - [ ] Create script to validate Azure Function App settings (if possible)
 - [ ] Document validation script usage
 
@@ -180,14 +160,14 @@ Execute Phase 2 of Initiative 002: Consolidate configuration management by unify
 **Execute**: Test configuration loading in local and cloud environments
 
 **Required Tests**:
-- [ ] Test configuration loading in local environment
-  - [ ] Verify `.env.local` loads correctly
-  - [ ] Verify `local.settings.json` doesn't override `.env.local` for app config
+- [ ] Test configuration loading in local environment (reference RFC002.md Section 2.1 for precedence)
+  - [ ] Verify flexible environment variable loading works (Azure settings > `.env.local` > system environment > test fixtures)
+  - [ ] Verify `local.settings.json` contains only Azurite/runtime settings
   - [ ] Verify Azurite connection string from `local.settings.json` works
 - [ ] Test configuration loading in Azure environment (if staging available)
-  - [ ] Verify Azure Function App settings are used
+  - [ ] Verify Azure Function App settings are used (highest precedence)
   - [ ] Verify environment variables are accessible
-  - [ ] Verify configuration precedence works correctly
+  - [ ] Verify configuration precedence works correctly (reference RFC002.md Section 2.1)
 - [ ] Verify all required variables are accessible in both environments
 
 **Test Approach**:
@@ -269,11 +249,11 @@ Execute Phase 2 of Initiative 002: Consolidate configuration management by unify
 ## Quick Reference
 
 **Key Files**:
-- `.env.local` - Application configuration (project root)
+- Configuration files (reference RFC002.md Section 2.2 for details)
 - `infra/azure/azure_functions/local.settings.json` - Azurite/runtime settings
-- Function entry points - Configuration loading implementation
+- Function entry points - Configuration loading implementation (reference RFC002.md Section 1.2)
 - `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/TODO002.md` - Task tracking
-- `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/RFC002.md` - Technical design
+- `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/RFC002.md` - Technical design (Section 2)
 
 **Documentation to Create**:
 - `notes/deployment/configuration_guide.md` - Configuration guide

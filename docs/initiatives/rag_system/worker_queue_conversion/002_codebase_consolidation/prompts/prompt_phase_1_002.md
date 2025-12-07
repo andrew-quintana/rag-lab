@@ -41,25 +41,11 @@ Execute Phase 1 of Initiative 002: Eliminate code duplication by updating Azure 
 - [ ] `infra/azure/azure_functions/embedding-worker/__init__.py`
 - [ ] `infra/azure/azure_functions/indexing-worker/__init__.py`
 
-**Required Pattern** (from RFC002.md):
-```python
-from pathlib import Path
-import sys
-from dotenv import load_dotenv
-
-# Load .env.local from project root
-project_root = Path(__file__).parent.parent.parent.parent.parent
-env_file = project_root / ".env.local"
-if env_file.exists():
-    load_dotenv(env_file, override=True)
-
-# Add project root to path for backend imports
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
-
-# Now import from backend
-from rag_eval.services.workers.ingestion_worker import process_ingestion_message
-```
+**Required Pattern**: 
+- Reference `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/RFC002.md` - Section 1.2 for the exact implementation pattern
+- Pattern must support flexible environment variable loading (Azure settings > `.env.local` > system environment > test fixtures)
+- Pattern must add project root to Python path before importing backend code
+- Pattern must handle environment variable loading according to the flexible strategy documented in architecture rules
 
 **Critical Requirements**:
 - [ ] Dotenv loading happens BEFORE path manipulation
