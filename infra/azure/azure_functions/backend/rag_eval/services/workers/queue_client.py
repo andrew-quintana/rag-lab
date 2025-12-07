@@ -163,39 +163,6 @@ def deserialize_message(message_str: str) -> QueueMessage:
         raise ValidationError(f"Failed to deserialize message: {e}") from e
 
 
-def _is_local_development(connection_string: str) -> bool:
-    """Check if connection string indicates local development (Azurite)
-    
-    Args:
-        connection_string: Azure Storage connection string
-        
-    Returns:
-        True if using Azurite (local development), False otherwise
-    """
-    return connection_string == "UseDevelopmentStorage=true"
-
-
-def _get_azurite_connection_string() -> str:
-    """Get Azurite connection string for Python SDK
-    
-    Returns:
-        Azurite connection string compatible with Python SDK
-    """
-    # Azurite default credentials:
-    # Account: devstoreaccount1
-    # Key: Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==
-    # Note: Using account_url approach might be more reliable, but connection string should work
-    # If issues persist, try: AccountUrl=http://127.0.0.1:10001/devstoreaccount1
-    return (
-        "DefaultEndpointsProtocol=http;"
-        "AccountName=devstoreaccount1;"
-        "AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;"
-        "BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
-        "QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;"
-        "TableEndpoint=http://127.0.0.1:10002/devstoreaccount1"
-    )
-
-
 def _get_queue_client(queue_name: str, config) -> QueueClient:
     """Get Azure Storage Queue client for a queue
     
@@ -214,45 +181,19 @@ def _get_queue_client(queue_name: str, config) -> QueueClient:
         raise ValueError("queue_name cannot be empty")
     
     # Try to get connection string from config, with fallback to environment variable
-    # Priority: 1) AZURE_STORAGE_QUEUES_CONNECTION_STRING env var (if UseDevelopmentStorage), 2) config.azure_blob_connection_string, 3) AZURE_STORAGE_QUEUES_CONNECTION_STRING env var
-    import os
-    env_connection_string = os.getenv("AZURE_STORAGE_QUEUES_CONNECTION_STRING", "")
+    # Priority: 1) config.azure_blob_connection_string, 2) AZURE_STORAGE_QUEUES_CONNECTION_STRING env var
+    connection_string = config.azure_blob_connection_string
     
-    # Prioritize UseDevelopmentStorage=true from environment for local development
-    if env_connection_string == "UseDevelopmentStorage=true":
-        connection_string = env_connection_string
-    else:
-        # Use config value, fallback to environment variable
-        connection_string = config.azure_blob_connection_string
+    # If not in config, try environment variable directly
     if not connection_string:
-            connection_string = env_connection_string
+        import os
+        connection_string = os.getenv("AZURE_STORAGE_QUEUES_CONNECTION_STRING", "")
     
     if not connection_string:
         raise AzureServiceError(
             "Azure Storage connection string is not configured. "
             "Set AZURE_BLOB_CONNECTION_STRING in config or AZURE_STORAGE_QUEUES_CONNECTION_STRING in environment."
         )
-    
-    # Convert UseDevelopmentStorage=true to Azurite connection string for Python SDK
-    if _is_local_development(connection_string):
-        logger.debug("Using Azurite (local development) for queue operations")
-        # Use account_url for Azurite - key must be base64 string (not decoded)
-        from azure.core.credentials import AzureNamedKeyCredential
-        account_url = "http://127.0.0.1:10001/devstoreaccount1"
-        # Azurite default key (base64 encoded string - SDK will decode internally)
-        azurite_key = "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw=="
-        credential = AzureNamedKeyCredential(
-            name="devstoreaccount1",
-            key=azurite_key
-        )
-        try:
-            queue_service_client = QueueServiceClient(account_url=account_url, credential=credential)
-            queue_client = queue_service_client.get_queue_client(queue_name)
-            return queue_client
-        except Exception as e:
-            logger.warning(f"Account URL approach failed, trying connection string: {e}")
-            # Fallback to connection string
-            connection_string = _get_azurite_connection_string()
     
     try:
         queue_service_client = QueueServiceClient.from_connection_string(connection_string)

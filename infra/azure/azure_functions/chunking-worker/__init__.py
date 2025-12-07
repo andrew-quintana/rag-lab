@@ -8,10 +8,23 @@ import logging
 import sys
 from pathlib import Path
 
+# Load .env.local from project root BEFORE importing backend code
+# From infra/azure/azure_functions/chunking-worker/__init__.py
+# Go up 5 levels to project root: chunking-worker -> azure_functions -> azure -> infra -> project_root
+try:
+    from dotenv import load_dotenv
+    project_root = Path(__file__).parent.parent.parent.parent.parent
+    env_file = project_root / ".env.local"
+    if env_file.exists():
+        load_dotenv(env_file, override=True)
+except ImportError:
+    # dotenv not available, continue without loading
+    pass
+
 # Add backend to Python path
 # From infra/azure/azure_functions/chunking-worker/__init__.py
 # Go up 4 levels to project root, then add backend
-backend_dir = Path(__file__).parent.parent.parent.parent.parent / "backend"
+backend_dir = Path(__file__).parent.parent / "backend"
 sys.path.insert(0, str(backend_dir))
 
 from rag_eval.services.workers.chunking_worker import chunking_worker

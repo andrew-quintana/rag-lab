@@ -19,7 +19,10 @@ backend/venv/
 
 # Environment variables
 .env
-.env.local
+.env.*
+
+# Azure Functions local settings
+infra/azure/azure_functions/local.settings.json
 
 # IDE
 .vscode/

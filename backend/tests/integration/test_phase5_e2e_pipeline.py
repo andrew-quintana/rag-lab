@@ -34,10 +34,24 @@ from rag_eval.services.workers.persistence import (
 from rag_eval.services.rag.supabase_storage import upload_document_to_storage
 
 
+def _is_local_development(config) -> bool:
+    """Check if running in local development mode (Azurite)"""
+    import os
+    connection_string = config.azure_blob_connection_string or os.getenv("AZURE_STORAGE_QUEUES_CONNECTION_STRING", "")
+    return connection_string == "UseDevelopmentStorage=true"
+
+
 @pytest.fixture(scope="module")
 def config():
     """Load configuration from environment"""
     return Config.from_env()
+
+
+@pytest.fixture(scope="module")
+def is_local():
+    """Check if running in local development mode"""
+    config_obj = Config.from_env()
+    return _is_local_development(config_obj)
 
 
 @pytest.fixture(scope="module")
@@ -120,7 +134,8 @@ def test_document_id(db_conn, config, test_pdf_path):
 class TestEndToEndPipeline:
     """Test complete end-to-end pipeline flow"""
     
-    def test_message_passing_between_stages(self, config, test_document_id):
+    @pytest.mark.local
+    def test_message_passing_between_stages(self, config, test_document_id, is_local):
         """Test message passing between stages through actual queues"""
         # Enqueue initial message to ingestion-uploads
         message = QueueMessage(
@@ -142,7 +157,8 @@ class TestEndToEndPipeline:
         # and verify the message moved to the next queue. For now, we just
         # verify the message was enqueued correctly.
     
-    def test_status_transitions_through_pipeline(self, config, test_document_id, db_conn):
+    @pytest.mark.local
+    def test_status_transitions_through_pipeline(self, config, test_document_id, db_conn, is_local):
         """Test status transitions through complete pipeline (verified in Supabase)"""
         # This test would require actual Azure Functions to be running
         # For now, we test the status update mechanism
@@ -166,7 +182,8 @@ class TestEndToEndPipeline:
         status = check_document_status(test_document_id, config)
         assert status == "indexed"
     
-    def test_queue_depth_handling(self, config):
+    @pytest.mark.local
+    def test_queue_depth_handling(self, config, is_local):
         """Test queue depth handling under load"""
         # Enqueue multiple messages
         messages = []
@@ -190,12 +207,15 @@ class TestEndToEndPipeline:
         # Cleanup: Note - in real scenario, these would be processed by workers
         # For test cleanup, we'd need to manually dequeue or wait for processing
     
-    def test_azure_functions_queue_trigger_behavior(self, config, test_document_id):
+    @pytest.mark.cloud
+    def test_azure_functions_queue_trigger_behavior(self, config, test_document_id, is_local):
         """Test Azure Functions queue trigger behavior
         
         This test requires Azure Functions to be deployed and running.
         It verifies that functions are triggered by queue messages.
         """
+        if is_local:
+            pytest.skip("This test requires cloud Azure Functions, not local")
         # Enqueue message
         message = QueueMessage(
             document_id=test_document_id,
@@ -220,7 +240,9 @@ class TestEndToEndPipeline:
         else:
             pytest.fail("Azure Function did not process message within timeout")
     
-    def test_concurrent_document_processing(self, config):
+    @pytest.mark.local
+    @pytest.mark.cloud
+    def test_concurrent_document_processing(self, config, is_local):
         """Test concurrent document processing across multiple workers
         
         This test requires Azure Functions to be deployed and running.
@@ -236,7 +258,9 @@ class TestEndToEndPipeline:
 class TestFailureScenarios:
     """Test failure scenarios and dead-letter handling"""
     
-    def test_dead_letter_handling(self, config):
+    @pytest.mark.local
+    @pytest.mark.cloud
+    def test_dead_letter_handling(self, config, is_local):
         """Test dead-letter queue handling with real queues
         
         This test requires Azure Functions to be deployed and running.
@@ -247,7 +271,8 @@ class TestFailureScenarios:
         # Verify it ends up in dead-letter queue after max retries
         pass
     
-    def test_idempotency_with_real_database(self, config, test_document_id):
+    @pytest.mark.local
+    def test_idempotency_with_real_database(self, config, test_document_id, is_local):
         """Test idempotency with real database state"""
         from rag_eval.services.workers.persistence import (
             should_process_document,
@@ -275,7 +300,8 @@ class TestFailureScenarios:
 class TestSupabaseIntegration:
     """Test Supabase integration with real database"""
     
-    def test_persistence_operations_real_database(self, config, test_document_id):
+    @pytest.mark.local
+    def test_persistence_operations_real_database(self, config, test_document_id, is_local):
         """Test persistence operations with real Supabase database"""
         from rag_eval.services.workers.persistence import (
             persist_extracted_text,
@@ -285,7 +311,7 @@ class TestSupabaseIntegration:
             persist_embeddings,
             load_embeddings,
         )
-        from rag_eval.services.workers.queue_client import Chunk
+        from rag_eval.core.interfaces import Chunk
         
         # Test extracted text
         test_text = "Test extracted text from real database"
@@ -308,7 +334,8 @@ class TestSupabaseIntegration:
         loaded_embeddings = load_embeddings(test_document_id, config)
         assert len(loaded_embeddings) == 2
     
-    def test_batch_metadata_storage_real_database(self, config, test_document_id):
+    @pytest.mark.local
+    def test_batch_metadata_storage_real_database(self, config, test_document_id, is_local):
         """Test batch processing metadata storage and retrieval"""
         from rag_eval.services.workers.persistence import (
             update_ingestion_metadata,

@@ -36,6 +36,11 @@ Generate these documents **sequentially**, using each as foundational context fo
     - **summary.md**: require a document in the root initiative directory to summarize the implementation and allow for ease of understanding the initiative
     - **technical_debt.md**: require a document in the root initiative directory to capture testing gaps and the technical debt that is left after the initiative
 - **Validation Tasks**: Performance testing, security review, stakeholder approval
+- **File Organization Requirements**: Clear guidance on where files created during implementation should be placed
+    - Specify which directory each type of file belongs in (scoping/, prompts/, intermediate/, notes/, or root)
+    - Include examples of file naming conventions
+    - Document when to create subdirectories in notes/ for categorization
+    - Clarify which files go in intermediate/ vs notes/ vs root directory
 
 ### 4.  prompt_phase_X_{serial}.md (Prompts for Executing Phases of TODO.md)
 **Purpose**: Map for accessing information relevant for executing phases of TODO.md
@@ -78,6 +83,10 @@ docs/initiatives/{initiative_name}/
     phase_1_testing.md
     phase_1_handoff.md
     ... (phase-specific documents created during implementation)
+  notes/
+    {category_name}/
+      ... (miscellaneous documents for specific efforts, categories, or subefforts)
+    ... (category-specific subdirectories as needed)
   summary.md
   fracas.md
   technical_debt.md (optional)
@@ -101,11 +110,20 @@ docs/initiatives/{initiative_name}/
    - **phase_X_testing.md**: Testing documentation for each phase
    - **phase_X_handoff.md**: Handoff documentation between phases
    - Other phase-specific or intermediate documentation created during implementation
+   - **When to use**: Phase-specific documents that are part of the standard workflow
 
-4. **Root directory**: Contains final summary documents
+4. **notes/**: Contains miscellaneous documents for specific efforts, categories, or subefforts
+   - Organized by category or subeffort in subdirectories
+   - Examples: deployment notes, research findings, meeting notes, design explorations, troubleshooting guides
+   - Structure: `notes/{category_name}/` for categorized documents
+   - Use for documents that don't fit into scoping, prompts, or intermediate categories
+   - **When to use**: Supporting documentation, research, exploration, or category-specific notes
+
+5. **Root directory**: Contains final summary documents
    - **summary.md**: Final summary of the initiative (required)
    - **technical_debt.md**: Technical debt and testing gaps (optional, from TODO.md)
    - **fracas.md**: Failure tracking document (created in Phase 0, part of summary documents)
+   - **When to use**: Only for final summary documents that provide an overview of the entire initiative
 
 ### File References
 
@@ -113,13 +131,18 @@ When creating phase prompts and intermediate documents:
 - Reference scoping documents using: `@docs/initiatives/{initiative_name}/scoping/{filename}.md`
 - Reference intermediate documents using: `@docs/initiatives/{initiative_name}/intermediate/{filename}.md`
 - Reference prompts using: `@docs/initiatives/{initiative_name}/prompts/{filename}.md`
+- Reference notes using: `@docs/initiatives/{initiative_name}/notes/{category}/{filename}.md` (if categorized) or `@docs/initiatives/{initiative_name}/notes/{filename}.md` (if uncategorized)
 
 ### Implementation Workflow
 
 1. **Scoping Phase**: Create PRD, RFC, TODO, and context.md in `scoping/` directory
+   - **TODO.md must include**: File organization requirements section specifying where different types of files should be placed
 2. **Prompt Creation**: Create phase prompts in `prompts/` directory (one per phase from TODO.md)
 3. **Implementation**: During each phase:
-   - Create intermediate documents in `intermediate/` directory
+   - Follow file organization requirements specified in TODO.md
+   - Create intermediate documents in `intermediate/` directory (phase-specific workflow docs)
+   - Store miscellaneous notes in `notes/` directory (organized by category if needed)
+   - Place final summary documents in root directory only
    - Update TODO.md checkboxes
    - Reference scoping documents in phase prompts
 4. **Phase 0**: Create `fracas.md` in root directory (summary document, not intermediate)
@@ -174,6 +197,34 @@ When requesting documentation generation, provide:
 - Technical review requirements
 - Decision-making authority
 ```
+
+## File Organization Requirements in TODO.md
+
+Every TODO.md must include a **File Organization Requirements** section that clearly specifies where different types of files created during implementation should be placed. This section should:
+
+1. **Categorize File Types**: List common file types that will be created and specify their target directory
+   - Example: "Deployment guides → `notes/deployment/`"
+   - Example: "Phase decisions → `intermediate/phase_X_decisions.md`"
+
+2. **Provide Naming Conventions**: Specify naming patterns for files in each directory
+   - Example: "Phase documents: `phase_{phase_number}_{type}.md` (e.g., `phase_1_decisions.md`)"
+   - Example: "Notes: Use descriptive names with underscores (e.g., `azure_functions_troubleshooting.md`)"
+
+3. **Clarify Directory Usage**: Explain when to use each directory
+   - **intermediate/**: Phase-specific workflow documents (decisions, testing, handoff)
+   - **notes/**: Supporting documentation, research, exploration, troubleshooting
+   - **Root**: Only final summary documents (summary.md, fracas.md, technical_debt.md)
+
+4. **Subdirectory Guidelines**: When to create subdirectories in `notes/`
+   - Create subdirectories for distinct categories or subefforts
+   - Examples: `notes/deployment/`, `notes/research/`, `notes/troubleshooting/`
+
+5. **Examples**: Provide concrete examples of file placement decisions
+   - "Deployment verification results → `notes/deployment/verification_results.md`"
+   - "Phase 2 testing results → `intermediate/phase_2_testing.md`"
+   - "Research on Azure Functions scaling → `notes/research/azure_functions_scaling.md`"
+
+This ensures consistency across the initiative and helps developers know exactly where to place files as they create them.
 
 ## Quality Standards
 

@@ -258,6 +258,81 @@ Environment variables not configured in Function App. Only basic infrastructure 
 
 ---
 
+### **FM-005: Azure Functions Not Processing Queue Messages**
+- **Severity**: Critical
+- **Status**: ✅ **RESOLVED** (requires redeployment)
+- **First Observed**: 2025-01-XX
+- **Last Updated**: 2025-01-XX
+
+**Symptoms:**
+- 18 messages queued in `ingestion-uploads` queue but not being processed
+- No function execution logs in Application Insights (last 24 hours)
+- Function App host is running (lease renewals every 12 seconds)
+- Functions are deployed and enabled
+- Test `test_azure_functions_queue_trigger_behavior` fails (timeout waiting for processing)
+
+**Observations:**
+- Queue depths: `ingestion-uploads` has 18 messages, other queues empty
+- Application Insights: No function execution traces
+- Function App status: Running, all functions enabled
+- Configuration: Queue triggers configured correctly, `AzureWebJobsStorage` set correctly
+- Host activity: Lease renewals ongoing (host is alive)
+
+**Investigation Notes:**
+- Phase 5.3 testing: Functions deployed but not processing messages
+- Queue operations verified: Messages successfully enqueued
+- Function configuration verified: Queue triggers configured correctly
+- Application Insights: Only host lease renewal logs, no function execution logs
+- Likely causes:
+  1. Function code import errors preventing function loading
+  2. Queue trigger extension not properly installed
+  3. Function deployment issues (backend code not included)
+  4. Environment variable issues causing silent startup failures
+
+**Root Cause:**
+**IDENTIFIED**: Message encoding issue - Azure Functions queue triggers cannot decode messages.
+
+**Evidence from Application Insights**:
+- Multiple errors: "Message decoding has failed! Check MessageEncoding settings."
+- Functions are receiving messages but failing to decode them
+- 18 messages queued but not processed due to decoding failures
+
+**Root Cause Details**:
+- Azure Functions Python queue triggers expect messages with `dataType: "string"` in function.json
+- Without this setting, Azure Functions tries to auto-detect encoding and fails
+- Messages are being sent as plain JSON strings, but Functions can't decode them without explicit dataType
+
+**Solution:**
+**IMPLEMENTED**: 
+1. ✅ Added `"dataType": "string"` to all function.json bindings (ingestion-worker, chunking-worker, embedding-worker, indexing-worker)
+2. ✅ Updated queue_client.py to send messages as plain text strings (removed base64 encoding attempt)
+3. ✅ Simplified deserialize_message to handle plain text (removed base64 decoding logic)
+
+**Next Steps**:
+1. **Redeploy Azure Functions** to apply function.json changes
+2. **Clear existing queue messages** (they were sent with wrong encoding)
+3. **Test with new messages** after redeployment
+4. **Verify functions process messages** successfully
+
+**Evidence:**
+- Queue depth: 18 messages in `ingestion-uploads` queue
+- Application Insights query: 0 function executions in last 24 hours
+- Function App status: Running, functions enabled
+- Test failure: `test_azure_functions_queue_trigger_behavior` times out waiting for processing
+- Analysis document: `worker_logs_analysis.md`
+
+**Impact:**
+- **Critical**: Messages accumulating in queues but not being processed
+- Blocks end-to-end pipeline testing
+- Production risk: Documents would not be processed if deployed
+- Test failure: `test_azure_functions_queue_trigger_behavior` cannot pass until functions process messages
+
+**Related Issues:**
+- Phase 5.3 test failure: `test_azure_functions_queue_trigger_behavior`
+- See `worker_logs_analysis.md` for detailed analysis
+
+---
+
 ## 🧪 **Testing Scenarios**
 
 ### **Scenario 1: Phase 0 Environment Validation**

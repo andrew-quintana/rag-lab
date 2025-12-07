@@ -249,11 +249,13 @@ pytest tests/integration/test_phase5_performance.py -v -m integration -m perform
   - Successfully enqueued 5 messages to `ingestion-uploads` queue
   - Verified queue depth handling under load
   - Queue length verified: >= 5 messages
-- ⚠️ **test_azure_functions_queue_trigger_behavior**: FAILED (expected - requires actual Azure Functions processing)
+- ❌ **test_azure_functions_queue_trigger_behavior**: FAILED (critical issue identified)
   - Message successfully enqueued to queue
   - Azure Functions did not process message within 5-minute timeout
-  - This is expected behavior - functions may have cold start delay or processing issues
-  - Test verifies queue trigger mechanism works (message enqueued successfully)
+  - **Root Cause Identified**: Functions are NOT processing queue messages
+  - **Evidence**: 18 messages queued in `ingestion-uploads`, 0 function executions in Application Insights
+  - **Issue**: FM-005 - Azure Functions not processing queue messages (Critical)
+  - See `worker_logs_analysis.md` and `fracas.md` FM-005 for details
 - ✅ **test_concurrent_document_processing**: PASSED
   - Test implementation verified
   - Concurrent processing test structure validated
