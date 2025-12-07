@@ -11,6 +11,7 @@ from pathlib import Path
 # Add backend to Python path
 # From infra/azure/azure_functions/ingestion-worker/__init__.py
 # Go up 4 levels to project root, then add backend
+# Note: build.sh updates this path during Git deployment
 backend_dir = Path(__file__).parent.parent.parent.parent.parent / "backend"
 sys.path.insert(0, str(backend_dir))
 

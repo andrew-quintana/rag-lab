@@ -8,9 +8,12 @@ Execute Phase 2 of Phase 5 integration testing: Azure Functions Deployment Valid
 
 **Key Documentation to Reference**:
 - `phase_5_azure_functions_deployment.md` - Azure Functions deployment guide
+- `GIT_DEPLOYMENT.md` - Git-based deployment guide (recommended approach)
+- `DEPLOYMENT_GUIDE.md` - Complete deployment guide
 - `phase_5_testing.md` - Testing overview and test locations
 - `phase_5_handoff.md` - Phase 5 completion summary
 - `../../setup/environment_variables.md` - Environment variable reference
+- `ENV_VARIABLE_MAPPING.md` - Environment variable name mapping
 - `fracas.md` - Document all failures immediately
 - `scoping/TODO001.md` - Task checklist (mark tasks complete)
 
@@ -27,6 +30,13 @@ Execute Phase 2 of Phase 5 integration testing: Azure Functions Deployment Valid
 3. Access to Azure Portal for Application Insights
 4. Azure Storage Account `raglabqueues` accessible
 5. Test PDF available: `docs/inputs/scan_classic_hmo.pdf` (use only first 6 pages)
+6. (Optional) Git deployment configured - Check if functions are deployed via Git:
+   ```bash
+   az functionapp deployment source show \
+     --name func-raglab-uploadworkers \
+     --resource-group rag-lab \
+     --query "{Repo:repoUrl, Branch:branch}" -o json
+   ```
 
 **If any prerequisite is missing, document it in `fracas.md` and stop execution.**
 
@@ -47,6 +57,12 @@ az functionapp function list \
   --name func-raglab-uploadworkers \
   --resource-group rag-lab \
   --query "[].{Name:name, Language:language, Status:status}" -o table
+
+# (Optional) Check Git deployment status
+az functionapp deployment source show \
+  --name func-raglab-uploadworkers \
+  --resource-group rag-lab \
+  --query "{Repo:repoUrl, Branch:branch, Status:status}" -o json
 ```
 
 **Verify**:
@@ -55,13 +71,17 @@ az functionapp function list \
 - ✅ Python runtime version 3.12 (or 3.11)
 - ✅ Functions Extension Version ~4
 - ✅ All functions show "Enabled" status
+- (Optional) Git deployment configured and active
 
 **Document**: 
 - Record status in `phase_5_testing.md` under "Phase 2: Azure Functions Deployment Validation"
 - If any function is missing, document in `fracas.md` with severity "Critical"
 - Include Function App details (name, state, location, runtime)
+- Note deployment method (Git-based or manual)
 
-**Reference**: `phase_5_azure_functions_deployment.md` - Step 7: Testing Deployment
+**Reference**: 
+- `phase_5_azure_functions_deployment.md` - Step 7: Testing Deployment
+- `GIT_DEPLOYMENT.md` - Git-based deployment guide
 
 ---
 
@@ -79,12 +99,12 @@ az functionapp config appsettings list \
 az functionapp config appsettings list \
   --name func-raglab-uploadworkers \
   --resource-group rag-lab \
-  --query "[?contains(name, 'DATABASE') || contains(name, 'SUPABASE') || contains(name, 'AZURE_AI') || contains(name, 'AZURE_SEARCH') || contains(name, 'AZURE_DOCUMENT') || contains(name, 'AZURE_BLOB') || contains(name, 'AZURE_STORAGE_QUEUES')].{Name:name}" -o table
+  --query "[?contains(name, 'DATABASE') || contains(name, 'SUPABASE') || contains(name, 'AZURE_AI') || contains(name, 'AZURE_SEARCH') || contains(name, 'AZURE_DOCUMENT') || contains(name, 'AZURE_BLOB') || contains(name, 'AZURE_STORAGE_QUEUES') || contains(name, 'AZURE_STORAGE_CONNECTION')].{Name:name}" -o table
 ```
 
 **Verify all required variables are present**:
 - `AzureWebJobsStorage` (storage connection string) - **REQUIRED**
-- `AZURE_STORAGE_QUEUES_CONNECTION_STRING` - **REQUIRED**
+- `AZURE_STORAGE_QUEUES_CONNECTION_STRING` - **REQUIRED** (or `AZURE_STORAGE_CONNECTION_STRING` mapped to this)
 - `DATABASE_URL` - **REQUIRED**
 - `SUPABASE_URL` - **REQUIRED**
 - `SUPABASE_KEY` - **REQUIRED**
@@ -97,7 +117,9 @@ az functionapp config appsettings list \
 - `AZURE_DOCUMENT_INTELLIGENCE_API_KEY` - **REQUIRED**
 - `AZURE_BLOB_CONNECTION_STRING` (if used) - Optional
 - `AZURE_BLOB_CONTAINER_NAME` (if used) - Optional
-- `APPLICATIONINSIGHTS_CONNECTION_STRING` - Recommended
+- `APPLICATIONINSIGHTS_CONNECTION_STRING` or `AZURE_APPLICATIONINSIGHTS_CONNECTION_STRING` - Recommended
+
+**Note**: Variable names may differ between `.env.local` and Azure Functions. See `ENV_VARIABLE_MAPPING.md` for mapping details.
 
 **Document**: 
 - List all found variables in `phase_5_testing.md`
@@ -108,6 +130,7 @@ az functionapp config appsettings list \
 
 **Reference**: 
 - `../../setup/environment_variables.md` for variable descriptions
+- `ENV_VARIABLE_MAPPING.md` for variable name mapping
 - `phase_5_azure_functions_deployment.md` - Step 2: Configure Environment Variables
 
 ---
@@ -205,6 +228,7 @@ done
 - [ ] All recommended environment variables configured
 - [ ] Function configurations verified
 - [ ] Application Insights connection configured
+- [ ] Git deployment configured (if using Git-based deployment)
 
 **If any "Must Pass" criteria fails, document in `fracas.md` and stop execution.**
 
@@ -219,6 +243,7 @@ done
    - Environment variables status
    - Queue trigger test results
    - Trigger latency measurements
+   - Deployment method (Git-based or manual)
 
 2. **Document Failures**: Immediately document any failures in `fracas.md` with:
    - Failure description
@@ -253,14 +278,16 @@ done
 - List functions: `az functionapp function list --name func-raglab-uploadworkers --resource-group rag-lab`
 - Environment variables: `az functionapp config appsettings list --name func-raglab-uploadworkers --resource-group rag-lab`
 - Function logs: `az functionapp log tail --name func-raglab-uploadworkers --resource-group rag-lab`
+- Git deployment status: `az functionapp deployment source show --name func-raglab-uploadworkers --resource-group rag-lab`
 
 **Key Files**:
 - `phase_5_testing.md` - Test results
 - `fracas.md` - Failure tracking
 - `phase_5_handoff.md` - Handoff document
 - `scoping/TODO001.md` - Task tracking
+- `GIT_DEPLOYMENT.md` - Git-based deployment guide
+- `ENV_VARIABLE_MAPPING.md` - Environment variable mapping
 
 ---
 
 **Begin execution now. Good luck!**
-

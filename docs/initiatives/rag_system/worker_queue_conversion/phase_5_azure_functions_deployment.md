@@ -120,10 +120,11 @@ else
 fi
 
 # Determine storage connection string to use
-# Priority: 1) AZURE_STORAGE_QUEUES_CONNECTION_STRING from .env.local
-#           2) AZURE_BLOB_CONNECTION_STRING from .env.local
-#           3) AZURE_STORAGE_CONNECTION_STRING from Step 1.4 (Azure CLI)
-STORAGE_CONN_STRING="${AZURE_STORAGE_QUEUES_CONNECTION_STRING:-${AZURE_BLOB_CONNECTION_STRING:-$AZURE_STORAGE_CONNECTION_STRING}}"
+# Priority: 1) AZURE_STORAGE_CONNECTION_STRING from .env.local (matches .env.example)
+#           2) AZURE_STORAGE_QUEUES_CONNECTION_STRING from .env.local (legacy)
+#           3) AZURE_BLOB_CONNECTION_STRING from .env.local
+#           4) AZURE_STORAGE_CONNECTION_STRING from Step 1.4 (Azure CLI)
+STORAGE_CONN_STRING="${AZURE_STORAGE_CONNECTION_STRING:-${AZURE_STORAGE_QUEUES_CONNECTION_STRING:-${AZURE_BLOB_CONNECTION_STRING:-$AZURE_STORAGE_CONNECTION_STRING}}}"
 
 # Set required environment variables in Function App
 # These match the variable names in your .env.local file
@@ -145,12 +146,15 @@ az functionapp config appsettings set \
     AZURE_DOCUMENT_INTELLIGENCE_API_KEY="${AZURE_DOCUMENT_INTELLIGENCE_API_KEY}" \
     AZURE_BLOB_CONNECTION_STRING="${AZURE_BLOB_CONNECTION_STRING}" \
     AZURE_BLOB_CONTAINER_NAME="${AZURE_BLOB_CONTAINER_NAME}" \
-    AZURE_STORAGE_QUEUES_CONNECTION_STRING="${AZURE_STORAGE_QUEUES_CONNECTION_STRING:-$STORAGE_CONN_STRING}" \
+    AZURE_STORAGE_QUEUES_CONNECTION_STRING="${AZURE_STORAGE_CONNECTION_STRING:-${AZURE_STORAGE_QUEUES_CONNECTION_STRING:-$STORAGE_CONN_STRING}}" \
+    APPLICATIONINSIGHTS_CONNECTION_STRING="${AZURE_APPLICATIONINSIGHTS_CONNECTION_STRING:-${APPLICATIONINSIGHTS_CONNECTION_STRING:-}}" \
     AzureWebJobsStorage="$STORAGE_CONN_STRING"
 ```
 
 **Note**: 
 - `AzureWebJobsStorage` is required by Azure Functions runtime for queue triggers. It uses the same connection string as `AZURE_STORAGE_QUEUES_CONNECTION_STRING` (or falls back to `AZURE_BLOB_CONNECTION_STRING` or the value from Step 1.4).
+- In `.env.local`, use `AZURE_STORAGE_CONNECTION_STRING` (matches `.env.example`). This maps to `AZURE_STORAGE_QUEUES_CONNECTION_STRING` in Azure Functions.
+- In `.env.local`, use `AZURE_APPLICATIONINSIGHTS_CONNECTION_STRING` (matches `.env.example`). This maps to `APPLICATIONINSIGHTS_CONNECTION_STRING` in Azure Functions.
 - `APPINSIGHTS_INSTRUMENTATIONKEY` is automatically set by Azure Functions when Application Insights is configured in Step 1.4, so it doesn't need to be set manually unless you want to override it.
 ```
 
@@ -242,33 +246,85 @@ az functionapp config appsettings set \
 
 ## Step 3: Deploy Functions
 
-### 3.1 Prepare Deployment Package
+### 3.1 Git-Based Deployment (Recommended) ⭐
+
+**Best Practice**: Use Git-based deployment for automatic deployments synced with your repository.
+
+#### 3.1.1 Set Up Git Deployment
 
 ```bash
-# Navigate to Azure Functions directory
-cd infra/azure/azure_functions
+# Run setup script (auto-detects git remote)
+./scripts/setup_git_deployment.sh
 
-# Install Azure Functions Core Tools dependencies
-# Note: You may need to copy backend/requirements.txt here or
-# create a symlink for deployment
+# Or specify repository URL manually
+./scripts/setup_git_deployment.sh https://github.com/your-org/rag_evaluator.git main
 ```
 
-### 3.2 Deploy Using Azure Functions Core Tools
+This configures:
+- Automatic deployment on push to main branch
+- Build script that includes backend code
+- Native Azure Functions integration
+
+#### 3.1.2 How It Works
+
+1. **Build Script**: `infra/azure/azure_functions/build.sh` runs automatically during deployment
+   - Copies `backend/rag_eval/` to deployment package
+   - Updates function import paths
+   - Prepares complete deployment package
+
+2. **Deployment Trigger**: Push to configured branch (default: `main`)
+   ```bash
+   git push origin main
+   ```
+
+3. **Azure Functions**: Automatically pulls, builds, and deploys
+
+#### 3.1.3 Verify Git Deployment
+
+Check deployment status in Azure Portal:
+- Navigate to Function App → Deployment Center
+- View deployment history and logs
+- See build script output
+
+Or via CLI:
+```bash
+az functionapp deployment source show \
+  --name $FUNCTION_APP_NAME \
+  --resource-group $RESOURCE_GROUP
+```
+
+### 3.2 Manual Deployment (Alternative)
+
+If you prefer manual deployment or need to deploy without Git:
+
+#### 3.2.1 Deploy Using Script
+
+```bash
+./scripts/deploy_azure_functions.sh
+```
+
+#### 3.2.2 Deploy Using Azure Functions Core Tools
 
 ```bash
 # Login to Azure
 az login
 
+# Navigate to Azure Functions directory
+cd infra/azure/azure_functions
+
+# Run build script first
+./build.sh
+
 # Deploy Function App
-func azure functionapp publish $FUNCTION_APP_NAME \
-  --python
+func azure functionapp publish $FUNCTION_APP_NAME --python
 ```
 
-### 3.3 Alternative: Deploy Using Azure CLI
+#### 3.2.3 Deploy Using Azure CLI
 
 ```bash
 # Create deployment package
 cd infra/azure/azure_functions
+./build.sh  # Prepare package
 zip -r functionapp.zip .
 
 # Deploy using Azure CLI

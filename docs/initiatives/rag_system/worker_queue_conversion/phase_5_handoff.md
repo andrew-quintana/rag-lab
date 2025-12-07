@@ -201,13 +201,39 @@ This document summarizes Phase 5 completion and provides handoff information for
 
 ### Critical Issues
 - **FM-002**: Azure Functions not deployed (Critical Blocker)
+- **FM-003**: Missing critical environment variables (Critical Blocker)
 - **FM-001**: Batch metadata test failure (Low severity, non-blocking)
 
+### Phase 2: Azure Functions Deployment Validation (2025-01-XX)
+**Status**: ⚠️ **BLOCKED** - Critical blockers identified
+
+**Completed Tasks**:
+1. ✅ Task 2.1: Function App Health Check
+   - Function App exists and running (Python 3.12, East US)
+   - Functions Extension Version: null (expected ~4)
+   - Functions deployed: 0/4 (all missing)
+2. ✅ Task 2.2: Environment Variables Verification
+   - Configured: 3 variables (AzureWebJobsStorage, APPLICATIONINSIGHTS_CONNECTION_STRING, AZURE_STORAGE_QUEUES_CONNECTION_STRING)
+   - Missing: 10 critical variables (DATABASE_URL, SUPABASE_*, AZURE_AI_FOUNDRY_*, AZURE_SEARCH_*, AZURE_DOCUMENT_INTELLIGENCE_*)
+
+**Blocked Tasks**:
+1. ❌ Task 2.3: Queue Trigger Configuration Test - Cannot test (functions not deployed)
+2. ❌ Task 2.4: Function Configuration Verification - Cannot verify (functions not deployed)
+
+**Success Criteria Assessment**:
+- Function App running: ✅ PASSED
+- Functions deployed: ❌ FAILED (0/4)
+- Environment variables configured: ❌ FAILED (3/13)
+- Queue trigger tested: ❌ FAILED (cannot test)
+
+**Documented**: FM-002, FM-003 in fracas.md
+
 ### Next Actions Required
-1. **Deploy Azure Functions** - Follow `phase_5_azure_functions_deployment.md`
-2. **Configure Environment Variables** - Set all required variables in Function App
-3. **Re-run Post-Deployment Tests** - Execute Phase 2-6 tests after deployment
-4. **Fix Batch Metadata Test** - Address FM-001 (non-blocking)
+1. **Deploy Azure Functions** (FM-002) - Follow `phase_5_azure_functions_deployment.md` Step 3
+2. **Configure Environment Variables** (FM-003) - Follow `phase_5_azure_functions_deployment.md` Step 2
+3. **Re-run Phase 2 Validation** - Execute all tasks after deployment
+4. **Re-run Post-Deployment Tests** - Execute Phase 3-6 tests after deployment
+5. **Fix Batch Metadata Test** - Address FM-001 (non-blocking)
 
 ## Known Issues / Limitations
 

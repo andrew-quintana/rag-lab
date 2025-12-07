@@ -171,18 +171,54 @@ pytest tests/integration/test_phase5_performance.py -v -m integration -m perform
 
 ---
 
-**Azure Functions Deployment Validation**:
+**Azure Functions Deployment Validation** (Phase 2):
 - ⚠️ **BLOCKED** - Functions not deployed
 - ✅ Function App exists: `func-raglab-uploadworkers`
 - ✅ Function App state: Running
+- ✅ Location: East US
 - ✅ Runtime: Python 3.12
+- ⚠️ Functions Extension Version: null (should be ~4)
 - ❌ Functions not deployed: ingestion-worker, chunking-worker, embedding-worker, indexing-worker
+- ❌ Queue trigger test: Cannot test (functions not deployed)
 - ⚠️ Environment variables partially configured (missing critical variables)
+
+**Task 2.1: Function App Health Check**:
+- ✅ Function App status: Running
+- ✅ Function App name: func-raglab-uploadworkers
+- ✅ Location: East US
+- ✅ Runtime: Python|3.12
+- ❌ Functions Extension Version: null (expected ~4)
+- ❌ Functions deployed: 0/4 (ingestion-worker, chunking-worker, embedding-worker, indexing-worker missing)
+
+**Task 2.2: Environment Variables Verification**:
+- ✅ Configured: AzureWebJobsStorage
+- ✅ Configured: APPLICATIONINSIGHTS_CONNECTION_STRING
+- ✅ Configured: AZURE_STORAGE_QUEUES_CONNECTION_STRING
+- ❌ Missing (Critical): DATABASE_URL
+- ❌ Missing (Critical): SUPABASE_URL
+- ❌ Missing (Critical): SUPABASE_KEY
+- ❌ Missing (Critical): AZURE_AI_FOUNDRY_ENDPOINT
+- ❌ Missing (Critical): AZURE_AI_FOUNDRY_API_KEY
+- ❌ Missing (Critical): AZURE_SEARCH_ENDPOINT
+- ❌ Missing (Critical): AZURE_SEARCH_API_KEY
+- ❌ Missing (Critical): AZURE_SEARCH_INDEX_NAME
+- ❌ Missing (Critical): AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT
+- ❌ Missing (Critical): AZURE_DOCUMENT_INTELLIGENCE_API_KEY
+- ⚠️ Optional: AZURE_BLOB_CONNECTION_STRING (not configured)
+- ⚠️ Optional: AZURE_BLOB_CONTAINER_NAME (not configured)
+
+**Task 2.3: Queue Trigger Configuration Test**:
+- ❌ Cannot test - Functions not deployed
+- ❌ Cannot send test message - Functions not available to process
+
+**Task 2.4: Function Configuration Verification**:
+- ❌ Cannot verify - Functions not deployed
+- ❌ Cannot check queue trigger bindings - Functions not available
 
 **Execution**: `az functionapp function list --name func-raglab-uploadworkers --resource-group rag-lab`
 **Result**: Functions not found - deployment required
 **Blocking**: Phase 2, Phase 3, Phase 4 tests cannot proceed
-**Documented**: fracas.md FM-002
+**Documented**: fracas.md FM-002, FM-003
 
 ---
 
@@ -286,4 +322,137 @@ pytest tests/integration/test_phase5_performance.py -v -m integration -m perform
   - Blocks all Phase 2-6 testing
   - Must deploy functions before proceeding
   - See `phase_5_azure_functions_deployment.md` for deployment instructions
+- **FM-003**: Missing critical environment variables (Critical)
+  - 10 critical environment variables missing from Function App
+  - Functions cannot execute even if deployed
+  - Must configure all required variables before deployment
+  - See `phase_5_azure_functions_deployment.md` Step 2 for configuration instructions
+
+---
+
+## Phase 2: Azure Functions Deployment Validation Results
+
+**Date**: 2025-01-XX  
+**Status**: ⚠️ **BLOCKED** - Critical blockers identified
+
+### Task 2.1: Function App Health Check ✅
+**Status**: Completed  
+**Result**: Function App exists and is running, but no functions deployed
+
+**Findings**:
+- ✅ Function App name: `func-raglab-uploadworkers`
+- ✅ Function App state: Running
+- ✅ Location: East US
+- ✅ Runtime: Python 3.12
+- ⚠️ Functions Extension Version: null (expected ~4)
+- ❌ Functions deployed: 0/4
+  - ❌ ingestion-worker: Not deployed
+  - ❌ chunking-worker: Not deployed
+  - ❌ embedding-worker: Not deployed
+  - ❌ indexing-worker: Not deployed
+
+**Command Executed**:
+```bash
+az functionapp show --name func-raglab-uploadworkers --resource-group rag-lab
+az functionapp function list --name func-raglab-uploadworkers --resource-group rag-lab
+```
+
+**Documented**: FM-002 in fracas.md
+
+---
+
+### Task 2.2: Environment Variables Verification ✅
+**Status**: Completed  
+**Result**: Only 3 of 13 required variables configured
+
+**Findings**:
+- ✅ Configured (3):
+  - AzureWebJobsStorage
+  - APPLICATIONINSIGHTS_CONNECTION_STRING
+  - AZURE_STORAGE_QUEUES_CONNECTION_STRING
+- ❌ Missing Critical (10):
+  - DATABASE_URL
+  - SUPABASE_URL
+  - SUPABASE_KEY
+  - AZURE_AI_FOUNDRY_ENDPOINT
+  - AZURE_AI_FOUNDRY_API_KEY
+  - AZURE_SEARCH_ENDPOINT
+  - AZURE_SEARCH_API_KEY
+  - AZURE_SEARCH_INDEX_NAME
+  - AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT
+  - AZURE_DOCUMENT_INTELLIGENCE_API_KEY
+- ⚠️ Optional Not Configured (2):
+  - AZURE_BLOB_CONNECTION_STRING
+  - AZURE_BLOB_CONTAINER_NAME
+
+**Command Executed**:
+```bash
+az functionapp config appsettings list --name func-raglab-uploadworkers --resource-group rag-lab
+```
+
+**Documented**: FM-003 in fracas.md
+
+---
+
+### Task 2.3: Queue Trigger Configuration Test ❌
+**Status**: Cannot Execute  
+**Result**: Blocked - Functions not deployed
+
+**Reason**: Cannot test queue triggers without deployed functions. Functions must be deployed first.
+
+**Next Steps**: Deploy functions per `phase_5_azure_functions_deployment.md` Step 3, then re-run this test.
+
+---
+
+### Task 2.4: Function Configuration Verification ❌
+**Status**: Cannot Execute  
+**Result**: Blocked - Functions not deployed
+
+**Reason**: Cannot verify function configurations without deployed functions. Functions must be deployed first.
+
+**Next Steps**: Deploy functions per `phase_5_azure_functions_deployment.md` Step 3, then re-run this test.
+
+---
+
+### Phase 2 Success Criteria Assessment
+
+**Must Pass (Blocking) - All Required**:
+- [ ] Function App is running ✅ **PASSED**
+- [ ] All 4 worker functions are deployed and enabled ❌ **FAILED** - No functions deployed
+- [ ] All critical environment variables are configured ❌ **FAILED** - 10 variables missing
+- [ ] Queue trigger successfully triggers at least one function ❌ **FAILED** - Cannot test (functions not deployed)
+
+**Should Pass (Non-Blocking) - Document Results**:
+- [ ] All recommended environment variables configured ⚠️ **PARTIAL** - Application Insights configured
+- [ ] Function configurations verified ❌ **FAILED** - Cannot verify (functions not deployed)
+- [ ] Application Insights connection configured ✅ **PASSED**
+
+**Overall Status**: ❌ **BLOCKED** - 2 critical blockers identified (FM-002, FM-003)
+
+---
+
+### Phase 2 Next Steps
+
+**Immediate Actions Required**:
+1. **Deploy Azure Functions** (FM-002)
+   - Follow `phase_5_azure_functions_deployment.md` Step 3
+   - Deploy all 4 worker functions
+   - Verify functions appear in `az functionapp function list`
+
+2. **Configure Environment Variables** (FM-003)
+   - Follow `phase_5_azure_functions_deployment.md` Step 2
+   - Set all 10 missing critical variables
+   - Use `.env.local` or Azure Key Vault for secure storage
+   - Verify all variables are present
+
+3. **Re-run Phase 2 Validation**
+   - Re-execute Task 2.1 (verify functions deployed)
+   - Re-execute Task 2.2 (verify all variables configured)
+   - Execute Task 2.3 (test queue trigger)
+   - Execute Task 2.4 (verify function configurations)
+
+**Reference Documentation**:
+- `phase_5_azure_functions_deployment.md` - Complete deployment guide
+- `../../setup/environment_variables.md` - Environment variable reference
+- `fracas.md` - Failure tracking (FM-002, FM-003)
 

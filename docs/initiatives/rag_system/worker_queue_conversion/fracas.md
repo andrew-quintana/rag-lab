@@ -121,7 +121,8 @@ Use this template when documenting new failures:
 - `az functionapp function show` returns NotFound error
 
 **Observations:**
-- Function App infrastructure exists (Python 3.12, Running state)
+- Function App infrastructure exists (Python 3.12, Running state, East US location)
+- Functions Extension Version: null (expected ~4)
 - Environment variables partially configured (AzureWebJobsStorage, AZURE_STORAGE_QUEUES_CONNECTION_STRING, APPLICATIONINSIGHTS_CONNECTION_STRING)
 - Missing: DATABASE_URL, SUPABASE_URL, SUPABASE_KEY, AZURE_AI_FOUNDRY_*, AZURE_SEARCH_*, AZURE_DOCUMENT_INTELLIGENCE_*
 - Functions not deployed to Function App
@@ -131,13 +132,14 @@ Use this template when documenting new failures:
 - Need to deploy functions from `infra/azure/azure_functions/` directory
 - Need to configure all required environment variables
 - Blocking Phase 2 and Phase 3 integration tests
+- Phase 2 validation executed: Function App health check completed, functions not found
 
 **Root Cause:**
 Azure Functions deployment not completed. Functions need to be deployed per `phase_5_azure_functions_deployment.md`.
 
 **Solution:**
 1. Deploy functions using Azure Functions Core Tools or Azure CLI
-2. Configure all required environment variables
+2. Configure all required environment variables (see FM-003)
 3. Verify queue triggers are configured
 4. Test function deployment
 
@@ -145,13 +147,68 @@ Azure Functions deployment not completed. Functions need to be deployed per `pha
 - `az functionapp function show` error: "Error retrieving function"
 - `az functionapp function list` returns empty
 - Function App state: Running, but no functions deployed
+- Phase 2 validation: Task 2.1 completed, functions not found
 
 **Impact:**
 - Blocks Phase 2: Azure Functions Deployment Validation
 - Blocks Phase 3: End-to-End Pipeline Integration Testing (requires deployed functions)
 - Blocks Phase 4: Performance Testing (requires deployed functions)
 - Phase 1 tests can proceed (database and Supabase integration)
-```
+
+---
+
+### **FM-003: Missing Critical Environment Variables**
+- **Severity**: Critical
+- **Status**: ⚠️ Known issue
+- **First Observed**: 2025-01-XX
+- **Last Updated**: 2025-01-XX
+
+**Symptoms:**
+- Function App `func-raglab-uploadworkers` has only 3 environment variables configured
+- Missing 10 critical environment variables required for worker execution
+- Functions cannot execute even if deployed (missing database, AI services, storage connections)
+
+**Observations:**
+- Configured variables: AzureWebJobsStorage, APPLICATIONINSIGHTS_CONNECTION_STRING, AZURE_STORAGE_QUEUES_CONNECTION_STRING
+- Missing critical variables:
+  - DATABASE_URL (required for database connections)
+  - SUPABASE_URL (required for Supabase operations)
+  - SUPABASE_KEY (required for Supabase authentication)
+  - AZURE_AI_FOUNDRY_ENDPOINT (required for embeddings and generation)
+  - AZURE_AI_FOUNDRY_API_KEY (required for AI Foundry authentication)
+  - AZURE_SEARCH_ENDPOINT (required for Azure AI Search)
+  - AZURE_SEARCH_API_KEY (required for Azure AI Search authentication)
+  - AZURE_SEARCH_INDEX_NAME (required for search index operations)
+  - AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT (required for document extraction)
+  - AZURE_DOCUMENT_INTELLIGENCE_API_KEY (required for Document Intelligence authentication)
+- Optional variables not configured: AZURE_BLOB_CONNECTION_STRING, AZURE_BLOB_CONTAINER_NAME
+
+**Investigation Notes:**
+- Phase 2 validation: Task 2.2 completed
+- Environment variables check executed via Azure CLI
+- All critical variables missing - functions will fail immediately if deployed without these
+- Variables should be set per `phase_5_azure_functions_deployment.md` Step 2
+
+**Root Cause:**
+Environment variables not configured in Function App. Only basic infrastructure variables (storage, Application Insights) are set.
+
+**Solution:**
+1. Configure all required environment variables per `phase_5_azure_functions_deployment.md` Step 2
+2. Use `.env.local` file or Azure Key Vault for secure storage
+3. Set variables via Azure CLI or Azure Portal
+4. Verify all variables are present before deploying functions
+
+**Evidence:**
+- `az functionapp config appsettings list` shows only 3 relevant variables
+- Phase 2 validation: Task 2.2 completed, 10 critical variables missing
+- Reference: `../../setup/environment_variables.md` for variable descriptions
+
+**Impact:**
+- Blocks function execution even if functions are deployed
+- Functions will fail immediately on startup or first operation
+- Blocks Phase 2: Azure Functions Deployment Validation
+- Blocks Phase 3: End-to-End Pipeline Integration Testing
+- Blocks Phase 4: Performance Testing
 
 ---
 

@@ -21,8 +21,9 @@ DATABASE_URL=postgresql://postgres:password@db.your-project.supabase.co:5432/pos
 # =============================================================================
 AZURE_AI_FOUNDRY_ENDPOINT=https://your-endpoint.openai.azure.com/
 AZURE_AI_FOUNDRY_API_KEY=your-ai-foundry-api-key
-AZURE_AI_FOUNDRY_EMBEDDING_MODEL=text-embedding-3-small
+AZURE_AI_FOUNDRY_EMBEDDING_MODEL=text-embedding-ada-002
 AZURE_AI_FOUNDRY_GENERATION_MODEL=gpt-4o
+AZURE_AI_FOUNDRY_REASONING_MODEL=gpt-4o
 
 # =============================================================================
 # Azure AI Search
@@ -49,7 +50,9 @@ AZURE_BLOB_CONTAINER_NAME=your-container-name
 # Connection string for Azure Storage Account with Queue Storage enabled
 # Used by workers for queue operations (enqueue, dequeue, etc.)
 # Can use the same connection string as AZURE_BLOB_CONNECTION_STRING if using same storage account
-AZURE_STORAGE_QUEUES_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net
+# Note: In .env.local, use AZURE_STORAGE_CONNECTION_STRING
+#       This maps to AZURE_STORAGE_QUEUES_CONNECTION_STRING in Azure Functions
+AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net
 
 # =============================================================================
 # Azure Functions (for deployed workers)
@@ -62,9 +65,11 @@ AZURE_STORAGE_QUEUES_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountNam
 # =============================================================================
 # Azure Application Insights
 # =============================================================================
-# APPINSIGHTS_INSTRUMENTATIONKEY is automatically set by Azure Functions when Application Insights is configured
-# For local development/testing, you can set it manually:
-# APPINSIGHTS_INSTRUMENTATIONKEY=your-instrumentation-key
+# AZURE_APPINSIGHTS_INSTRUMENTATION_KEY is for local development/testing
+# AZURE_APPLICATIONINSIGHTS_CONNECTION_STRING is the connection string (preferred)
+# Note: In Azure Functions, this maps to APPLICATIONINSIGHTS_CONNECTION_STRING
+AZURE_APPINSIGHTS_INSTRUMENTATION_KEY=your-instrumentation-key
+AZURE_APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=...;IngestionEndpoint=...
 
 # =============================================================================
 # API Configuration (with defaults)
@@ -86,8 +91,9 @@ API_RELOAD=true
 
 - **AZURE_AI_FOUNDRY_ENDPOINT**: Your Azure AI Foundry endpoint URL
 - **AZURE_AI_FOUNDRY_API_KEY**: API key for Azure AI Foundry
-- **AZURE_AI_FOUNDRY_EMBEDDING_MODEL**: Embedding model name (default: `text-embedding-3-small`)
+- **AZURE_AI_FOUNDRY_EMBEDDING_MODEL**: Embedding model name (default: `text-embedding-ada-002`)
 - **AZURE_AI_FOUNDRY_GENERATION_MODEL**: Generation model name (default: `gpt-4o`)
+- **AZURE_AI_FOUNDRY_REASONING_MODEL**: Reasoning model name (default: `gpt-4o`)
 
 ### Azure AI Search
 
@@ -107,8 +113,10 @@ API_RELOAD=true
 
 ### Azure Storage Queues (Worker-Queue Architecture)
 
-- **AZURE_STORAGE_QUEUES_CONNECTION_STRING**: Connection string for Azure Storage Account with Queue Storage enabled
+- **AZURE_STORAGE_CONNECTION_STRING**: Connection string for Azure Storage Account with Queue Storage enabled
   - Used by workers for queue operations (enqueue, dequeue, etc.)
+  - In `.env.local`, use `AZURE_STORAGE_CONNECTION_STRING`
+  - In Azure Functions, this maps to `AZURE_STORAGE_QUEUES_CONNECTION_STRING`
   - Can use the same connection string as `AZURE_BLOB_CONNECTION_STRING` if using the same storage account
   - The queue client also checks `AZURE_BLOB_CONNECTION_STRING` as a fallback
 
@@ -121,10 +129,12 @@ API_RELOAD=true
 
 ### Azure Application Insights
 
-- **APPINSIGHTS_INSTRUMENTATIONKEY**: Application Insights instrumentation key
+- **AZURE_APPINSIGHTS_INSTRUMENTATION_KEY**: Application Insights instrumentation key (for local development)
+- **AZURE_APPLICATIONINSIGHTS_CONNECTION_STRING**: Application Insights connection string (preferred)
+  - In `.env.local`, use `AZURE_APPLICATIONINSIGHTS_CONNECTION_STRING`
+  - In Azure Functions, this maps to `APPLICATIONINSIGHTS_CONNECTION_STRING`
   - **Automatically set** by Azure Functions when Application Insights is configured
   - Used for logging, metrics, and telemetry
-  - Only needed for local development/testing
 
 ### API Configuration
 
@@ -169,7 +179,7 @@ For local development:
 - **No quotes needed**: Connection strings should not be wrapped in quotes
 - **Same storage account**: You can use the same connection string for both Blob Storage and Queue Storage if they're in the same storage account
 - **Auto-set variables**: `AZUREWEBJOBSSTORAGE` and `APPINSIGHTS_INSTRUMENTATIONKEY` are automatically configured by Azure Functions - you only need to set them manually for local testing
-- **Priority**: The queue client checks `AZURE_BLOB_CONNECTION_STRING` first, then falls back to `AZURE_STORAGE_QUEUES_CONNECTION_STRING`
+- **Priority**: The queue client checks `AZURE_BLOB_CONNECTION_STRING` first, then falls back to `AZURE_STORAGE_QUEUES_CONNECTION_STRING` (or `AZURE_STORAGE_CONNECTION_STRING` in `.env.local`)
 
 ## Related Documentation
 
