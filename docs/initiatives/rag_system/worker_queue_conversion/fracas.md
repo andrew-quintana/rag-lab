@@ -26,7 +26,36 @@ This document serves as a comprehensive failure tracking system for the RAG Inge
 
 ## 🚨 **Active Failure Modes**
 
-*No active failure modes at this time. This section will be populated as issues are encountered during implementation.*
+### **FM-001: Batch Metadata Test Failure**
+- **Severity**: Low
+- **Status**: 🔍 Under Investigation
+- **First Observed**: 2025-01-XX
+- **Last Updated**: 2025-01-XX
+
+**Symptoms:**
+- `test_batch_result_persistence` test fails with "tuple index out of range" error
+- Error occurs in `get_completed_batches` function when querying chunks table
+- 12 of 13 Supabase integration tests pass
+
+**Observations:**
+- Error occurs during batch metadata persistence test
+- Query execution fails with tuple index out of range
+- Other persistence operations work correctly
+
+**Investigation Notes:**
+- Issue appears to be in `get_completed_batches` function in persistence.py
+- May be related to query result handling or batch metadata structure
+- Non-blocking for Phase 5 testing - other tests pass
+
+**Root Cause:**
+Under investigation
+
+**Solution:**
+Pending
+
+**Evidence:**
+- Test output: `ERROR rag_eval.db.queries:queries.py:32 Query execution failed: tuple index out of range`
+- Test: `tests/integration/test_supabase_phase5.py::TestBatchMetadata::test_batch_result_persistence`
 
 ---
 
@@ -76,6 +105,52 @@ Use this template when documenting new failures:
 
 **Related Issues:**
 - [Links to related failures or issues]
+
+---
+
+### **FM-002: Azure Functions Not Deployed**
+- **Severity**: Critical
+- **Status**: ⚠️ Known issue
+- **First Observed**: 2025-01-XX
+- **Last Updated**: 2025-01-XX
+
+**Symptoms:**
+- Azure Function App `func-raglab-uploadworkers` exists and is running
+- No worker functions are deployed (ingestion-worker, chunking-worker, embedding-worker, indexing-worker)
+- `az functionapp function list` returns empty
+- `az functionapp function show` returns NotFound error
+
+**Observations:**
+- Function App infrastructure exists (Python 3.12, Running state)
+- Environment variables partially configured (AzureWebJobsStorage, AZURE_STORAGE_QUEUES_CONNECTION_STRING, APPLICATIONINSIGHTS_CONNECTION_STRING)
+- Missing: DATABASE_URL, SUPABASE_URL, SUPABASE_KEY, AZURE_AI_FOUNDRY_*, AZURE_SEARCH_*, AZURE_DOCUMENT_INTELLIGENCE_*
+- Functions not deployed to Function App
+
+**Investigation Notes:**
+- Function App created but functions not deployed
+- Need to deploy functions from `infra/azure/azure_functions/` directory
+- Need to configure all required environment variables
+- Blocking Phase 2 and Phase 3 integration tests
+
+**Root Cause:**
+Azure Functions deployment not completed. Functions need to be deployed per `phase_5_azure_functions_deployment.md`.
+
+**Solution:**
+1. Deploy functions using Azure Functions Core Tools or Azure CLI
+2. Configure all required environment variables
+3. Verify queue triggers are configured
+4. Test function deployment
+
+**Evidence:**
+- `az functionapp function show` error: "Error retrieving function"
+- `az functionapp function list` returns empty
+- Function App state: Running, but no functions deployed
+
+**Impact:**
+- Blocks Phase 2: Azure Functions Deployment Validation
+- Blocks Phase 3: End-to-End Pipeline Integration Testing (requires deployed functions)
+- Blocks Phase 4: Performance Testing (requires deployed functions)
+- Phase 1 tests can proceed (database and Supabase integration)
 ```
 
 ---

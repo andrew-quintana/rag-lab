@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from typing import List
 
 from rag_eval.core.config import Config
-from rag_eval.core.database import DatabaseConnection
+from rag_eval.db.connection import DatabaseConnection
 from rag_eval.services.workers.persistence import (
     persist_extracted_text,
     load_extracted_text,
@@ -31,7 +31,7 @@ from rag_eval.services.workers.persistence import (
     update_ingestion_metadata,
     get_ingestion_metadata,
 )
-from rag_eval.services.workers.queue_client import Chunk
+from rag_eval.core.interfaces import Chunk
 
 
 @pytest.fixture(scope="module")
@@ -45,7 +45,7 @@ def db_conn(config):
     """Create database connection"""
     if not config.database_url:
         pytest.skip("DATABASE_URL not set - skipping integration tests")
-    return DatabaseConnection(config.database_url)
+    return DatabaseConnection(config)
 
 
 @pytest.fixture
@@ -56,8 +56,8 @@ def test_document_id(db_conn):
     
     doc_id = str(uuid.uuid4())
     cursor.execute("""
-        INSERT INTO documents (id, filename, status, created_at)
-        VALUES (%s, 'test_document.pdf', 'uploaded', NOW())
+        INSERT INTO documents (id, filename, status, file_size, storage_path)
+        VALUES (%s, 'test_document.pdf', 'uploaded', 0, 'test/path.pdf')
         ON CONFLICT (id) DO NOTHING
     """, (doc_id,))
     conn.commit()
@@ -71,7 +71,7 @@ def test_document_id(db_conn):
     cursor.execute("DELETE FROM documents WHERE id = %s", (doc_id,))
     conn.commit()
     cursor.close()
-    conn.close()
+    db_conn.return_connection(conn)
 
 
 @pytest.mark.integration
@@ -142,7 +142,7 @@ class TestPersistenceOperations:
         assert len(loaded_embeddings) == 2
         assert len(loaded_embeddings[0]) == 1536
         assert loaded_embeddings[0][0] == pytest.approx(0.0)
-        assert loaded_embeddings[1][0] == pytest.approx(1.0)
+        assert loaded_embeddings[1][0] == pytest.approx(0.1)  # 0.1 * (1 + 0) = 0.1
 
 
 @pytest.mark.integration
@@ -225,14 +225,17 @@ class TestBatchMetadata:
     
     def test_batch_result_persistence(self, config, test_document_id):
         """Test persisting and loading batch results"""
+        batch_index = 0
         batch_id = "batch_0"
         batch_text = "Batch 0 extracted text content"
+        start_page = 1
+        end_page = 2
         
         # Persist batch result
-        persist_batch_result(test_document_id, batch_id, batch_text, config)
+        persist_batch_result(test_document_id, batch_index, batch_text, start_page, end_page, config)
         
         # Load batch result
-        loaded_text = load_batch_result(test_document_id, batch_id, config)
+        loaded_text = load_batch_result(test_document_id, batch_index, config)
         
         assert loaded_text == batch_text
         
@@ -275,10 +278,10 @@ class TestErrorHandling:
         # This test verifies that connection errors are properly raised
         # In a real scenario, we'd test with invalid connection string
         # For now, we just verify the connection works
-        db_conn = DatabaseConnection(config.database_url)
+        db_conn = DatabaseConnection(config)
         conn = db_conn.get_connection()
         assert conn is not None
-        conn.close()
+        db_conn.return_connection(conn)
 
 
 @pytest.mark.integration
