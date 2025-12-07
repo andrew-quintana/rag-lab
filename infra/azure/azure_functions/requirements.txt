@@ -1,0 +1,14 @@
+# Azure Functions requirements
+# This file should include all dependencies needed by the workers
+
+# Copy from backend/requirements.txt and ensure all worker dependencies are included
+# The Azure Functions runtime will install these packages
+
+# Core dependencies
+azure-functions>=1.18.0
+azure-storage-queue>=12.8.0
+
+# Note: All other dependencies from backend/requirements.txt should be included
+# For deployment, you may want to copy backend/requirements.txt here or
+# use a shared requirements file
+

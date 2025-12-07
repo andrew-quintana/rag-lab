@@ -1,0 +1,13 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "queueMessage",
+      "type": "queueTrigger",
+      "direction": "in",
+      "queueName": "ingestion-chunking",
+      "connection": "AzureWebJobsStorage"
+    }
+  ]
+}
+
