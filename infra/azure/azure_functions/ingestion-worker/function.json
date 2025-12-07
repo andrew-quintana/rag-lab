@@ -6,7 +6,8 @@
       "type": "queueTrigger",
       "direction": "in",
       "queueName": "ingestion-uploads",
-      "connection": "AzureWebJobsStorage"
+      "connection": "AzureWebJobsStorage",
+      "dataType": "string"
     }
   ]
 }
