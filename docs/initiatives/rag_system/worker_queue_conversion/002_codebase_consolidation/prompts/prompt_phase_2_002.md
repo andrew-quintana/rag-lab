@@ -14,16 +14,16 @@ Execute Phase 2 of Initiative 002: Consolidate configuration management by unify
 - `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/intermediate/phase_1_handoff.md` - Phase 1 handoff
 
 **Prerequisites** (from Phase 1):
-- ✅ Function entry points updated to import from project root
-- ✅ Duplicate code removed
-- ✅ Build script simplified
+- ✅ Azure Functions moved to `backend/azure_functions/`
+- ✅ Function entry points simplified (direct imports, no path manipulation)
+- ✅ Build script updated for new location
 
 ## Prerequisites Check
 
 **Before starting, verify**:
 1. Phase 1 is complete (check `intermediate/phase_1_handoff.md`)
-2. Function entry points implement flexible environment variable loading (reference RFC002.md Section 2.1)
-3. `local.settings.json` exists in `infra/azure/azure_functions/`
+2. Function entry points use simple direct imports (no dotenv loading needed - Azure handles env vars)
+3. `local.settings.json` exists in `backend/azure_functions/`
 4. Configuration files exist as needed (`.env.local` optional for local development)
 5. Azure Function App settings are accessible (for documentation)
 
@@ -250,7 +250,7 @@ Execute Phase 2 of Initiative 002: Consolidate configuration management by unify
 
 **Key Files**:
 - Configuration files (reference RFC002.md Section 2.2 for details)
-- `infra/azure/azure_functions/local.settings.json` - Azurite/runtime settings
+- `backend/azure_functions/local.settings.json` - Azurite/runtime settings
 - Function entry points - Configuration loading implementation (reference RFC002.md Section 1.2)
 - `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/TODO002.md` - Task tracking
 - `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/RFC002.md` - Technical design (Section 2)

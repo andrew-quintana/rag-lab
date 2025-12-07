@@ -1,71 +1,79 @@
 #!/bin/bash
 # Build script for Azure Functions Git deployment
 # This script runs automatically when Azure Functions pulls from Git
-# It prepares the deployment package by copying backend code and updating paths
+# It validates prerequisites and prepares the deployment package
+# Note: Functions now import directly from project root, so no code copying is needed
 
 set -e
 
 echo "=========================================="
 echo "Azure Functions Build Script"
 echo "=========================================="
-echo "Preparing deployment package..."
+echo "Validating prerequisites and preparing deployment package..."
 echo ""
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Calculate paths relative to script location
+# Calculate project root
 # Script is in: infra/azure/azure_functions/build.sh
 # Project root is 3 levels up: infra/azure/azure_functions -> infra/azure -> infra -> project_root
-# Backend is in: backend/rag_eval (relative to project root)
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 BACKEND_SOURCE="$PROJECT_ROOT/backend/rag_eval"
-BACKEND_TARGET="$SCRIPT_DIR/backend"
 
 echo "Project root: $PROJECT_ROOT"
 echo "Backend source: $BACKEND_SOURCE"
-echo "Backend target: $BACKEND_TARGET"
 echo ""
 
-# Copy backend code (rag_eval package)
+# Validate prerequisites
+echo "Validating prerequisites..."
+
+# Check if backend source exists
 if [ ! -d "$BACKEND_SOURCE" ]; then
   echo "Error: Backend source directory not found: $BACKEND_SOURCE"
   exit 1
 fi
+echo "✓ Backend source directory found"
 
-echo "Copying backend code..."
-mkdir -p "$BACKEND_TARGET"
-cp -r "$BACKEND_SOURCE" "$BACKEND_TARGET/"
-echo "✓ Backend code copied"
-echo ""
+# Check if requirements.txt exists
+if [ ! -f "$SCRIPT_DIR/requirements.txt" ]; then
+  echo "Error: requirements.txt not found in $SCRIPT_DIR"
+  exit 1
+fi
+echo "✓ requirements.txt found"
 
-# Update function __init__.py files to use local backend
-echo "Updating function entry points..."
-for func_dir in "$SCRIPT_DIR"/*-worker; do
-  if [ -d "$func_dir" ] && [ -f "$func_dir/__init__.py" ]; then
-    func_name=$(basename "$func_dir")
-    echo "  Updating $func_name..."
-    
-    # Update the path in __init__.py to use local backend
-    # Original: backend_dir = Path(__file__).parent.parent.parent.parent.parent / "backend"
-    # Updated: backend_dir = Path(__file__).parent.parent / "backend"
-    sed -i.bak 's|backend_dir = Path(__file__).parent.parent.parent.parent.parent / "backend"|backend_dir = Path(__file__).parent.parent / "backend"|g' "$func_dir/__init__.py"
-    rm -f "$func_dir/__init__.py.bak"
-    echo "    ✓ Updated $func_name/__init__.py"
+# Validate function entry points exist
+FUNCTIONS=("ingestion-worker" "chunking-worker" "embedding-worker" "indexing-worker")
+for func_name in "${FUNCTIONS[@]}"; do
+  func_dir="$SCRIPT_DIR/$func_name"
+  if [ ! -d "$func_dir" ]; then
+    echo "Error: Function directory not found: $func_dir"
+    exit 1
   fi
+  if [ ! -f "$func_dir/__init__.py" ]; then
+    echo "Error: Function entry point not found: $func_dir/__init__.py"
+    exit 1
+  fi
+  if [ ! -f "$func_dir/function.json" ]; then
+    echo "Error: Function binding not found: $func_dir/function.json"
+    exit 1
+  fi
+  echo "✓ $func_name entry point validated"
 done
 
 echo ""
 echo "=========================================="
-echo "Build complete!"
+echo "Build validation complete!"
 echo "=========================================="
 echo ""
 echo "Deployment package structure:"
-echo "  - Function entry points: *-worker/__init__.py"
+echo "  - Function entry points: *-worker/__init__.py (import from project root)"
 echo "  - Function bindings: *-worker/function.json"
-echo "  - Backend code: backend/rag_eval/"
 echo "  - Dependencies: requirements.txt"
 echo "  - Configuration: host.json"
+echo ""
+echo "Note: Functions import directly from project root backend/rag_eval/"
+echo "      No code copying is required."
 echo ""
 

@@ -24,6 +24,9 @@ backend/venv/
 # Azure Functions local settings
 infra/azure/azure_functions/local.settings.json
 
+# Azure Functions duplicate backend code (should not exist after Phase 1)
+infra/azure/azure_functions/backend/
+
 # IDE
 .vscode/
 .idea/

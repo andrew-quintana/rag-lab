@@ -1,8 +1,8 @@
-# Prompt: Phase 1 - Code Duplication Elimination
+# Prompt: Phase 1 - Code Duplication Elimination & Structure Reorganization
 
 ## Your Mission
 
-Execute Phase 1 of Initiative 002: Eliminate code duplication by updating Azure Functions to import directly from project root, removing duplicate backend code, and simplifying the build script. This phase establishes a single source of truth for all backend code.
+Execute Phase 1 of Initiative 002: Move Azure Functions to `backend/azure_functions/` and simplify function entry points to use direct imports from `rag_eval`. This phase establishes a single source of truth for all backend code in one location, eliminating the need for path manipulation or code copying.
 
 ## Context & References
 
@@ -23,7 +23,7 @@ Execute Phase 1 of Initiative 002: Eliminate code duplication by updating Azure 
 **Before starting, verify**:
 1. Phase 0 is complete (check `intermediate/phase_0_handoff.md`)
 2. All 4 Azure Functions exist in `infra/azure/azure_functions/`
-3. Duplicate code exists in `infra/azure/azure_functions/backend/rag_eval/`
+3. Duplicate code exists in `infra/azure/azure_functions/backend/rag_eval/` (if still present)
 4. Build script exists at `infra/azure/azure_functions/build.sh`
 5. Local development environment is functional (Azurite, local Supabase)
 
@@ -31,47 +31,183 @@ Execute Phase 1 of Initiative 002: Eliminate code duplication by updating Azure 
 
 ---
 
-## Task 1.1: Update Function Entry Points
+## Task 1.1: Move Azure Functions to Backend
 
-**Execute**: Update all 4 function entry points to import from project root using path manipulation
+**Execute**: Move the entire `infra/azure/azure_functions/` directory to `backend/azure_functions/`
+
+**Required Actions**:
+- [ ] Move `infra/azure/azure_functions/` → `backend/azure_functions/`
+- [ ] Verify all files moved correctly (all 4 functions, build.sh, host.json, requirements.txt, etc.)
+- [ ] Update any hardcoded paths in scripts or documentation
+- [ ] Remove empty `infra/azure/` directory if no longer needed
+
+**Files to Move**:
+- `infra/azure/azure_functions/ingestion-worker/`
+- `infra/azure/azure_functions/chunking-worker/`
+- `infra/azure/azure_functions/embedding-worker/`
+- `infra/azure/azure_functions/indexing-worker/`
+- `infra/azure/azure_functions/build.sh`
+- `infra/azure/azure_functions/host.json`
+- `infra/azure/azure_functions/requirements.txt`
+- `infra/azure/azure_functions/.deployment`
+- `infra/azure/azure_functions/.funcignore`
+- `infra/azure/azure_functions/local.settings.json`
+- Any other files in the directory
+
+**Success Criteria**:
+- ✅ All files moved to `backend/azure_functions/`
+- ✅ Directory structure preserved
+- ✅ No files left in old location
+
+**Document**: 
+- Record the move in `intermediate/phase_1_decisions.md`
+- Note any files that needed special handling
+
+---
+
+## Task 1.2: Simplify Function Entry Points
+
+**Execute**: Update all 4 function entry points to use simple direct imports (no path manipulation)
 
 **Functions to Update**:
-- [ ] `infra/azure/azure_functions/ingestion-worker/__init__.py`
-- [ ] `infra/azure/azure_functions/chunking-worker/__init__.py`
-- [ ] `infra/azure/azure_functions/embedding-worker/__init__.py`
-- [ ] `infra/azure/azure_functions/indexing-worker/__init__.py`
+- [ ] `backend/azure_functions/ingestion-worker/__init__.py`
+- [ ] `backend/azure_functions/chunking-worker/__init__.py`
+- [ ] `backend/azure_functions/embedding-worker/__init__.py`
+- [ ] `backend/azure_functions/indexing-worker/__init__.py`
 
 **Required Pattern**: 
 - Reference `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/RFC002.md` - Section 1.2 for the exact implementation pattern
-- Pattern must support flexible environment variable loading (Azure settings > `.env.local` > system environment > test fixtures)
-- Pattern must add project root to Python path before importing backend code
-- Pattern must handle environment variable loading according to the flexible strategy documented in architecture rules
+- Functions are now in `backend/azure_functions/` alongside `backend/rag_eval/`
+- No path manipulation needed - direct imports work naturally
+- No dotenv loading needed - Azure handles environment variables automatically
+
+**Example Pattern:**
+```python
+"""Azure Function for ingestion worker
+
+This function is triggered by messages in the ingestion-uploads queue.
+It processes documents through the ingestion stage (text extraction).
+"""
+import json
+from rag_eval.services.workers.ingestion_worker import ingestion_worker
+from rag_eval.core.logging import get_logger
+
+logger = get_logger("azure_functions.ingestion_worker")
+
+def main(queueMessage: str) -> None:
+    """
+    Azure Function entry point for ingestion worker.
+    
+    Args:
+        queueMessage: JSON string from queue trigger
+    """
+    try:
+        # Parse queue message
+        message_dict = json.loads(queueMessage)
+        
+        logger.info(f"Processing ingestion message for document: {message_dict.get('document_id')}")
+        
+        # Call worker function
+        ingestion_worker(message_dict, context=None)
+        
+        logger.info(f"Successfully processed ingestion for document: {message_dict.get('document_id')}")
+    
+    except Exception as e:
+        logger.error(f"Error processing ingestion message: {e}", exc_info=True)
+        raise
+```
 
 **Critical Requirements**:
-- [ ] Dotenv loading happens BEFORE path manipulation
-- [ ] Path resolution correctly identifies project root
-- [ ] All imports use `rag_eval.*` from project root
-- [ ] No imports reference `backend/rag_eval/` or copied code
+- [ ] Remove all path manipulation code (`Path(__file__).parent.parent...`)
+- [ ] Remove dotenv loading code (Azure handles env vars)
+- [ ] Use direct imports: `from rag_eval.services.workers.ingestion_worker import ingestion_worker`
+- [ ] Keep function logic simple and maintainable
 
 **Reference**: 
 - `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/RFC002.md` - Section 1.2 for pattern
 - Current function entry points for reference
 
 **Success Criteria**:
-- ✅ All 4 functions updated with correct import pattern
-- ✅ Dotenv loads before path manipulation
-- ✅ Path resolution works correctly
-- ✅ No references to copied code remain
+- ✅ All 4 functions updated with simple direct imports
+- ✅ No path manipulation code remains
+- ✅ No dotenv loading code remains
+- ✅ Functions are clean and maintainable
 
 **Document**: 
-- Record any path resolution issues in `intermediate/phase_1_decisions.md`
+- Record any import issues in `intermediate/phase_1_decisions.md`
 - Note any deviations from the pattern and rationale
 
 ---
 
-## Task 1.2: Test Local Function Execution
+## Task 1.3: Update Build Script & Configuration
 
-**Execute**: Test all 4 functions locally with new import structure
+**Execute**: Update build script and deployment configuration for new location
+
+**Required Actions**:
+- [ ] Update `backend/azure_functions/build.sh` paths (if needed)
+- [ ] Remove backend code copying logic (no longer needed)
+- [ ] Update build script to only verify prerequisites
+- [ ] Update `.deployment` file if paths changed
+- [ ] Update any deployment scripts that reference the old location
+
+**Build Script Requirements**:
+- [ ] Verify prerequisites (Azure CLI, Function Core Tools, etc.)
+- [ ] Validate function entry points exist
+- [ ] Validate `requirements.txt` exists
+- [ ] No code copying needed (functions import directly from `rag_eval`)
+
+**Reference**: 
+- `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/RFC002.md` - Section 1.3 for requirements
+- Current build script for reference
+
+**Success Criteria**:
+- ✅ Build script updated for new location
+- ✅ Build script no longer copies backend code
+- ✅ Build script validates prerequisites
+- ✅ Build script validates function structure
+
+**Document**: 
+- Record build script changes in `intermediate/phase_1_decisions.md`
+- Document new build process steps
+
+---
+
+## Task 1.4: Remove Duplicate Code (if still present)
+
+**Execute**: Delete duplicate backend code directory if it still exists
+
+**Required Actions**:
+- [ ] Check if `backend/azure_functions/backend/rag_eval/` exists (from old location)
+- [ ] If it exists, delete it (no longer needed)
+- [ ] Update `.gitignore` to prevent accidental commits of duplicate code
+- [ ] Verify Git repository doesn't track duplicate code
+
+**Gitignore Update**:
+- [ ] Add pattern to ignore `backend/azure_functions/backend/` if it doesn't exist
+- [ ] Verify `.gitignore` prevents duplicate code from being committed
+
+**Verification**:
+```bash
+# Check if duplicate code is tracked
+git ls-files backend/azure_functions/backend/rag_eval/
+
+# Should return empty (no tracked files)
+```
+
+**Success Criteria**:
+- ✅ Duplicate directory deleted (if it existed)
+- ✅ `.gitignore` updated
+- ✅ No duplicate code tracked in Git
+
+**Document**: 
+- Record deletion in `intermediate/phase_1_decisions.md`
+- Note any files that needed special handling
+
+---
+
+## Task 1.5: Test Local Function Execution
+
+**Execute**: Test all 4 functions locally with new structure
 
 **Required Tests**:
 - [ ] Start Azurite (`./scripts/start_azurite.sh`)
@@ -89,92 +225,24 @@ Execute Phase 1 of Initiative 002: Eliminate code duplication by updating Azure 
 supabase start
 
 # Test functions (example for ingestion-worker)
-cd infra/azure/azure_functions
+cd backend/azure_functions
 func start ingestion-worker
 ```
 
 **Success Criteria**:
 - ✅ All 4 functions start without import errors
-- ✅ Functions can import from project root
+- ✅ Functions can import from `rag_eval` directly
 - ✅ Functions can process queue messages
 - ✅ No runtime errors during execution
 
 **Document**: 
 - Record test results in `intermediate/phase_1_testing.md`
-- Document any import errors or path resolution issues
+- Document any import errors or issues
 - Note any fixes applied
 
 ---
 
-## Task 1.3: Remove Duplicate Code
-
-**Execute**: Delete duplicate backend code directory
-
-**Required Actions**:
-- [ ] Verify functions work with project root imports (from Task 1.2)
-- [ ] Delete `infra/azure/azure_functions/backend/rag_eval/` directory
-- [ ] Update `.gitignore` to prevent accidental commits of duplicate code
-- [ ] Verify Git repository doesn't track duplicate code
-
-**Gitignore Update**:
-- [ ] Add pattern to ignore `infra/azure/azure_functions/backend/` if it doesn't exist
-- [ ] Verify `.gitignore` prevents duplicate code from being committed
-
-**Verification**:
-```bash
-# Check if duplicate code is tracked
-git ls-files infra/azure/azure_functions/backend/rag_eval/
-
-# Should return empty (no tracked files)
-```
-
-**Success Criteria**:
-- ✅ Duplicate directory deleted
-- ✅ `.gitignore` updated
-- ✅ No duplicate code tracked in Git
-- ✅ Functions still work after deletion
-
-**Document**: 
-- Record deletion in `intermediate/phase_1_decisions.md`
-- Note any files that needed special handling
-
----
-
-## Task 1.4: Simplify Build Script
-
-**Execute**: Update build script to remove code copying logic
-
-**Required Actions**:
-- [ ] Review current `infra/azure/azure_functions/build.sh`
-- [ ] Remove backend code copying logic
-- [ ] Update build script to only verify prerequisites
-- [ ] Ensure build script validates function entry points are correct
-- [ ] Ensure build script validates `requirements.txt` is present
-
-**Build Script Requirements**:
-- [ ] Verify prerequisites (Azure CLI, Function Core Tools, etc.)
-- [ ] Validate function entry points exist
-- [ ] Validate `requirements.txt` exists
-- [ ] Prepare deployment package without code copying
-- [ ] Document new build process
-
-**Reference**: 
-- `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/RFC002.md` - Section 1.3 for requirements
-- Current build script for reference
-
-**Success Criteria**:
-- ✅ Build script no longer copies backend code
-- ✅ Build script validates prerequisites
-- ✅ Build script validates function structure
-- ✅ Build process is simplified
-
-**Document**: 
-- Record build script changes in `intermediate/phase_1_decisions.md`
-- Document new build process steps
-
----
-
-## Task 1.5: Test Deployment Package Creation
+## Task 1.6: Test Deployment Package Creation
 
 **Execute**: Test that deployment package can be created without code copying
 
@@ -187,7 +255,7 @@ git ls-files infra/azure/azure_functions/backend/rag_eval/
 
 **Test Commands**:
 ```bash
-cd infra/azure/azure_functions
+cd backend/azure_functions
 ./build.sh
 # Verify package contents
 ```
@@ -205,29 +273,28 @@ cd infra/azure/azure_functions
 
 ---
 
-## Task 1.6: Validate in Azure Environment (Optional/Staging)
+## Task 1.7: Update Deployment Scripts
 
-**Execute**: If staging environment available, validate functions work in Azure
+**Execute**: Update any deployment scripts that reference the old location
 
-**Required Tests** (if staging available):
-- [ ] Deploy to staging/test Azure Function App
-- [ ] Verify functions can import from project root in Azure
-- [ ] Test that path resolution works correctly in cloud
-- [ ] Verify functions process queue messages in Azure
-- [ ] Monitor function logs for errors
+**Scripts to Check**:
+- [ ] `scripts/setup_git_deployment.sh`
+- [ ] `scripts/deploy_azure_functions.sh`
+- [ ] Any other scripts that reference `infra/azure/azure_functions/`
 
-**Note**: This is optional if staging environment is not available. Can be deferred to Phase 4.
+**Required Updates**:
+- [ ] Update paths to reference `backend/azure_functions/`
+- [ ] Update any hardcoded paths in scripts
+- [ ] Test scripts still work with new location
 
-**Success Criteria** (if executed):
-- ✅ Functions deploy successfully
-- ✅ Functions can import from project root in Azure
-- ✅ Path resolution works in cloud environment
-- ✅ Functions process messages correctly
+**Success Criteria**:
+- ✅ All deployment scripts updated
+- ✅ Scripts reference new location
+- ✅ Scripts work correctly
 
 **Document**: 
-- Record Azure validation results in `intermediate/phase_1_testing.md`
-- Document any cloud-specific issues found
-- Note if deferred to Phase 4
+- Record script updates in `intermediate/phase_1_decisions.md`
+- Note any scripts that needed special handling
 
 ---
 
@@ -235,20 +302,19 @@ cd infra/azure/azure_functions
 
 **You MUST**:
 1. **Record Decisions**: Create `intermediate/phase_1_decisions.md` with:
-   - Path resolution approach and any issues
+   - Move operation details
+   - Function entry point simplification approach
    - Build script changes and rationale
    - Any deviations from RFC pattern
-   - Gitignore updates
 
 2. **Document Testing**: Create `intermediate/phase_1_testing.md` with:
    - Local function execution test results
    - Deployment package creation results
    - Package size reduction metrics
-   - Azure validation results (if performed)
    - Any errors encountered and fixes
 
 3. **Create Handoff**: Create `intermediate/phase_1_handoff.md` with:
-   - Summary of code duplication elimination
+   - Summary of structure reorganization
    - Status of function entry points
    - Build script simplification status
    - Prerequisites verified for Phase 2
@@ -267,10 +333,10 @@ cd infra/azure/azure_functions
 ## Success Criteria
 
 ### Must Pass (Blocking) - All Required:
-- [ ] All 4 function entry points updated
-- [ ] Functions work locally with new import structure
-- [ ] Duplicate code directory deleted
-- [ ] Build script simplified
+- [ ] Azure Functions moved to `backend/azure_functions/`
+- [ ] All 4 function entry points simplified (no path manipulation)
+- [ ] Build script updated for new location
+- [ ] Functions work locally with new structure
 - [ ] Deployment package created successfully
 
 **If any "Must Pass" criteria fails, document in `intermediate/phase_1_decisions.md` and `fracas.md`, then address before proceeding.**
@@ -293,9 +359,9 @@ cd infra/azure/azure_functions
 ## Quick Reference
 
 **Key Files**:
-- `infra/azure/azure_functions/*-worker/__init__.py` - Function entry points
-- `infra/azure/azure_functions/build.sh` - Build script
-- `infra/azure/azure_functions/backend/rag_eval/` - Duplicate code (to be deleted)
+- `backend/azure_functions/*-worker/__init__.py` - Function entry points (new location)
+- `backend/azure_functions/build.sh` - Build script (new location)
+- `backend/rag_eval/services/workers/` - Worker implementations (imported by functions)
 - `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/TODO002.md` - Task tracking
 - `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/RFC002.md` - Technical design
 
@@ -307,4 +373,3 @@ cd infra/azure/azure_functions
 ---
 
 **Begin execution now. Good luck!**
-

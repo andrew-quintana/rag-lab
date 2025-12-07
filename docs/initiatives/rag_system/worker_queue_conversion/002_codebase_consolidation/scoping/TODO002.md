@@ -4,7 +4,7 @@
 
 This TODO document provides the implementation breakdown for consolidating the codebase structure, eliminating duplication, and ensuring production readiness, as specified in [PRD002.md](./PRD002.md) and [RFC002.md](./RFC002.md).
 
-**Current Status**: The Azure Functions deployment includes duplicate backend code in `infra/azure/azure_functions/backend/rag_eval/`, and configuration management is fragmented. This TODO provides the implementation plan for consolidation.
+**Current Status**: The Azure Functions deployment includes duplicate backend code in `infra/azure/azure_functions/backend/rag_eval/`, and configuration management is fragmented. This TODO provides the implementation plan for consolidation by moving Azure Functions to `backend/` for a simpler, more maintainable structure.
 
 **Implementation Phases**: This TODO follows a 5-phase implementation plan that consolidates the codebase incrementally, starting with Phase 0 (scoping and documentation updates), then progressing through code duplication elimination, configuration consolidation, test infrastructure consolidation, and production readiness validation.
 
@@ -85,36 +85,36 @@ This TODO document provides the implementation breakdown for consolidating the c
 
 ---
 
-## Phase 1 — Code Duplication Elimination
+## Phase 1 — Code Duplication Elimination & Structure Reorganization
 
-**Status**: ⏳ Pending
+**Status**: ⏳ Pending (Reverted - New Approach)
 
-### 1.1 Update Function Entry Points
-- [ ] Review current function entry point import structure
-- [ ] Update `infra/azure/azure_functions/ingestion-worker/__init__.py` to import from project root
-- [ ] Update `infra/azure/azure_functions/chunking-worker/__init__.py` to import from project root
-- [ ] Update `infra/azure/azure_functions/embedding-worker/__init__.py` to import from project root
-- [ ] Update `infra/azure/azure_functions/indexing-worker/__init__.py` to import from project root
-- [ ] Ensure dotenv loading happens before path manipulation
-- [ ] Test local function execution with new import structure
+### 1.1 Move Azure Functions to Backend
+- [ ] Move `infra/azure/azure_functions/` directory to `backend/azure_functions/`
+- [ ] Update all file references to new location
+- [ ] Update deployment scripts to reference new location
+- [ ] Update documentation references
 
-### 1.2 Remove Duplicate Code
-- [ ] Verify functions work with project root imports
-- [ ] Delete `infra/azure/azure_functions/backend/rag_eval/` directory
-- [ ] Update `.gitignore` to prevent accidental commits of duplicate code
-- [ ] Verify Git repository doesn't track duplicate code
+### 1.2 Simplify Function Entry Points
+- [ ] Update `backend/azure_functions/ingestion-worker/__init__.py` to use direct imports
+- [ ] Update `backend/azure_functions/chunking-worker/__init__.py` to use direct imports
+- [ ] Update `backend/azure_functions/embedding-worker/__init__.py` to use direct imports
+- [ ] Update `backend/azure_functions/indexing-worker/__init__.py` to use direct imports
+- [ ] Remove all path manipulation code
+- [ ] Remove dotenv loading (Azure handles env vars automatically)
 
-### 1.3 Simplify Build Script
-- [ ] Review current `infra/azure/azure_functions/build.sh`
-- [ ] Remove backend code copying logic
-- [ ] Update build script to only verify prerequisites
+### 1.3 Update Build Script & Configuration
+- [ ] Update `backend/azure_functions/build.sh` for new location
+- [ ] Remove backend code copying logic (no longer needed)
+- [ ] Update `.deployment` file if needed
+- [ ] Update deployment scripts to reference new location
 - [ ] Test build script in local environment
-- [ ] Document new build process
 
 ### 1.4 Testing & Validation
-- [ ] Test all 4 functions locally with new import structure
+- [ ] Test all 4 functions locally with new structure
+- [ ] Verify functions can import from `rag_eval` directly
 - [ ] Verify functions can process queue messages correctly
-- [ ] Test deployment package creation (without code copying)
+- [ ] Test deployment package creation
 - [ ] Validate functions work in Azure environment (staging/test)
 
 ---
@@ -246,11 +246,12 @@ This TODO document provides the implementation breakdown for consolidating the c
 ## Success Criteria Checklist
 
 ### Codebase Consolidation
-- [ ] Duplicate `backend/rag_eval/` code removed from `infra/azure/azure_functions/backend/`
-- [ ] Functions import directly from project root
+- [ ] Azure Functions moved to `backend/azure_functions/`
+- [ ] Functions import directly from `rag_eval` (no path manipulation)
 - [ ] Build script simplified (no code copying)
 - [ ] Deployment package size reduced
 - [ ] Single source of truth verified
+- [ ] All backend code in one location (`backend/`)
 
 ### Configuration Consolidation
 - [ ] Configuration loading strategy documented

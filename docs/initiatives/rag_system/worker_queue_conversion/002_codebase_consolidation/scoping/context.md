@@ -75,6 +75,7 @@ This document defines the context for Initiative 002: Codebase Consolidation and
 - ⚠️ Build script (`build.sh`) copies `backend/rag_eval/` to deployment package during Git deployment
 - ⚠️ Functions currently reference copied code via path manipulation
 - ⚠️ Two sources of truth for backend code (source in `backend/rag_eval/` vs. copied in `infra/azure/azure_functions/backend/rag_eval/`)
+- ⚠️ Azure Functions are in `infra/azure/azure_functions/` requiring complex path manipulation
 
 **Impact:**
 - Code duplication increases maintenance burden
@@ -83,14 +84,16 @@ This document defines the context for Initiative 002: Codebase Consolidation and
 - Build process unnecessarily copies entire backend directory
 - Deployment package size larger than necessary
 - Confusion about which code is the source of truth
+- Fragile path manipulation (`parent.parent.parent.parent.parent`) is hard to maintain
 
 **Consolidation Goals:**
-- Eliminate duplicate code in Azure Functions directory
-- Functions should import directly from project root `backend/rag_eval/` using proper path resolution
+- Move Azure Functions to `backend/azure_functions/` (all backend code in one place)
+- Functions import directly from `rag_eval` (no path manipulation needed)
+- Eliminate duplicate code completely
 - Simplify build process to eliminate code copying step
 - Single source of truth for all backend code
 - Reduce deployment package size
-- Improve code maintainability and clarity
+- Improve code maintainability and clarity with simple, direct imports
 
 ### 3.3 Phase 5 Local Testing Results
 
@@ -151,10 +154,11 @@ This document defines the context for Initiative 002: Codebase Consolidation and
 - Build script copies source to deployment package during Git deployment
 
 **Consolidation Approach:**
-- Functions should import from project root using relative paths
+- Move Azure Functions from `infra/azure/azure_functions/` to `backend/azure_functions/`
+- Functions import directly from `rag_eval` (both in `backend/`, no path manipulation needed)
 - Eliminate need for code copying in build process
-- Use Python path manipulation in function entry points
 - Single source of truth for all backend code
+- Simple, maintainable structure with all backend code in one place
 
 ### 4.2 Local Development Environment
 
@@ -241,12 +245,12 @@ This document defines the context for Initiative 002: Codebase Consolidation and
 - `rag_eval/services/workers/queue_client.py` - Queue operations (with local dev support)
 - `rag_eval/services/workers/persistence.py` - Database persistence operations
 
-### 5.3 Azure Functions (From 001)
-- `infra/azure/azure_functions/ingestion-worker/__init__.py` - Function entry point
-- `infra/azure/azure_functions/chunking-worker/__init__.py` - Function entry point
-- `infra/azure/azure_functions/embedding-worker/__init__.py` - Function entry point
-- `infra/azure/azure_functions/indexing-worker/__init__.py` - Function entry point
-- All functions load `.env.local` via dotenv before importing backend code
+### 5.3 Azure Functions (From 001, to be moved in Phase 1)
+- `infra/azure/azure_functions/ingestion-worker/__init__.py` - Function entry point (to move to `backend/azure_functions/`)
+- `infra/azure/azure_functions/chunking-worker/__init__.py` - Function entry point (to move to `backend/azure_functions/`)
+- `infra/azure/azure_functions/embedding-worker/__init__.py` - Function entry point (to move to `backend/azure_functions/`)
+- `infra/azure/azure_functions/indexing-worker/__init__.py` - Function entry point (to move to `backend/azure_functions/`)
+- After Phase 1: Functions will import directly from `rag_eval` (no path manipulation, no dotenv loading needed)
 
 ### 5.4 Database & Storage
 - **Supabase**: PostgreSQL database with migrations 0019, 0020
@@ -434,11 +438,12 @@ pytest tests/integration/test_phase5_performance.py -v -m integration -m perform
 
 ### 10.1 Primary Goals (Codebase Consolidation)
 
-1. **Eliminate Code Duplication**
-   - Remove duplicate `backend/rag_eval/` code from `infra/azure/azure_functions/backend/`
+1. **Eliminate Code Duplication & Reorganize Structure**
+   - Move Azure Functions from `infra/azure/azure_functions/` to `backend/azure_functions/`
    - Consolidate to single source of truth in `backend/rag_eval/`
-   - Update build scripts and deployment process to reference source code directly
-   - Ensure functions import from project root backend, not copied code
+   - Functions import directly from `rag_eval` (no path manipulation needed)
+   - Update build scripts and deployment process for new location
+   - All backend code (workers + functions) in one place for simplicity
 
 2. **Consolidate Configuration Management**
    - Unify environment variable loading strategy

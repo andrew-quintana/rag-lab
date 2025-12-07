@@ -65,7 +65,7 @@ Execute Phase 0 of Initiative 002: Update foundational cursor rules files to ref
 **Required Updates**:
 - [ ] Update "High-Level System Overview" to include worker-queue architecture
 - [ ] Add worker infrastructure to codebase structure diagram
-- [ ] Document Azure Functions deployment structure (`infra/azure/azure_functions/`)
+- [ ] Document Azure Functions deployment structure (will be moved to `backend/azure_functions/` in Phase 1)
 - [ ] Update "Out of Scope" section (remove workers from out-of-scope list)
 - [ ] Add Azure Storage Queues to infrastructure architecture section
 - [ ] Update database scope to include worker status tracking (migrations 0019, 0020)
