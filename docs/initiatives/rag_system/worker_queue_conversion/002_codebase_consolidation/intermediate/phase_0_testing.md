@@ -18,7 +18,7 @@ This document records validation results for Phase 0 of Initiative 002: Codebase
 
 **Validation Checks**:
 - ✅ Worker-queue architecture layer description added
-- ✅ Worker infrastructure (`rag_eval/services/workers/`) documented
+- ✅ Worker infrastructure (`src/services/workers/`) documented
 - ✅ Layer boundaries updated to include Azure Functions as worker execution layer
 - ✅ Queue-based communication patterns documented
 - ✅ Development workflow updated to include local Azure Functions development with Azurite
@@ -132,7 +132,7 @@ This document records validation results for Phase 0 of Initiative 002: Codebase
 
 **Description**: Initial codebase structure diagram did not include worker infrastructure.
 
-**Resolution**: Added `rag_eval/services/workers/` section to codebase structure diagram with all worker files documented.
+**Resolution**: Added `src/services/workers/` section to codebase structure diagram with all worker files documented.
 
 ---
 

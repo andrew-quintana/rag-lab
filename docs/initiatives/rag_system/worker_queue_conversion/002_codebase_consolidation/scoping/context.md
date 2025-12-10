@@ -71,10 +71,10 @@ This document defines the context for Initiative 002: Codebase Consolidation and
 ### 3.2 Codebase Duplication Issues
 
 **Current State:**
-- ⚠️ Duplicate backend code exists in `infra/azure/azure_functions/backend/rag_eval/`
-- ⚠️ Build script (`build.sh`) copies `backend/rag_eval/` to deployment package during Git deployment
+- ⚠️ Duplicate backend code exists in `infra/azure/azure_functions/backend/src/`
+- ⚠️ Build script (`build.sh`) copies `backend/src/` to deployment package during Git deployment
 - ⚠️ Functions currently reference copied code via path manipulation
-- ⚠️ Two sources of truth for backend code (source in `backend/rag_eval/` vs. copied in `infra/azure/azure_functions/backend/rag_eval/`)
+- ⚠️ Two sources of truth for backend code (source in `backend/src/` vs. copied in `infra/azure/azure_functions/backend/src/`)
 - ⚠️ Azure Functions are in `infra/azure/azure_functions/` requiring complex path manipulation
 
 **Impact:**
@@ -88,7 +88,7 @@ This document defines the context for Initiative 002: Codebase Consolidation and
 
 **Consolidation Goals:**
 - Move Azure Functions to `backend/azure_functions/` (all backend code in one place)
-- Functions import directly from `rag_eval` (no path manipulation needed)
+- Functions import directly from `src` (no path manipulation needed)
 - Eliminate duplicate code completely
 - Simplify build process to eliminate code copying step
 - Single source of truth for all backend code
@@ -149,13 +149,13 @@ This document defines the context for Initiative 002: Codebase Consolidation and
 ### 4.1 Codebase Structure Issues
 
 **Duplication:**
-- `backend/rag_eval/` - Source code (project root)
-- `infra/azure/azure_functions/backend/rag_eval/` - Copied code (duplicate)
+- `backend/src/` - Source code (project root)
+- `infra/azure/azure_functions/backend/src/` - Copied code (duplicate)
 - Build script copies source to deployment package during Git deployment
 
 **Consolidation Approach:**
 - Move Azure Functions from `infra/azure/azure_functions/` to `backend/azure_functions/`
-- Functions import directly from `rag_eval` (both in `backend/`, no path manipulation needed)
+- Functions import directly from `src` (both in `backend/`, no path manipulation needed)
 - Eliminate need for code copying in build process
 - Single source of truth for all backend code
 - Simple, maintainable structure with all backend code in one place
@@ -231,26 +231,26 @@ This document defines the context for Initiative 002: Codebase Consolidation and
 ## 5. Adjacent & Integrating Components
 
 ### 5.1 Core RAG Services (Unchanged)
-- `rag_eval/services/rag/ingestion.py` - Text extraction (wrapped by ingestion worker)
-- `rag_eval/services/rag/chunking.py` - Text chunking (wrapped by chunking worker)
-- `rag_eval/services/rag/embeddings.py` - Embedding generation (wrapped by embedding worker)
-- `rag_eval/services/rag/search.py` - Vector indexing (wrapped by indexing worker)
-- `rag_eval/services/rag/pipeline.py` - Query-time RAG pipeline (unchanged)
+- `src/services/rag/ingestion.py` - Text extraction (wrapped by ingestion worker)
+- `src/services/rag/chunking.py` - Text chunking (wrapped by chunking worker)
+- `src/services/rag/embeddings.py` - Embedding generation (wrapped by embedding worker)
+- `src/services/rag/search.py` - Vector indexing (wrapped by indexing worker)
+- `src/services/rag/pipeline.py` - Query-time RAG pipeline (unchanged)
 
 ### 5.2 Worker Infrastructure (From 001)
-- `rag_eval/services/workers/ingestion_worker.py` - Ingestion worker implementation
-- `rag_eval/services/workers/chunking_worker.py` - Chunking worker implementation
-- `rag_eval/services/workers/embedding_worker.py` - Embedding worker implementation
-- `rag_eval/services/workers/indexing_worker.py` - Indexing worker implementation
-- `rag_eval/services/workers/queue_client.py` - Queue operations (with local dev support)
-- `rag_eval/services/workers/persistence.py` - Database persistence operations
+- `src/services/workers/ingestion_worker.py` - Ingestion worker implementation
+- `src/services/workers/chunking_worker.py` - Chunking worker implementation
+- `src/services/workers/embedding_worker.py` - Embedding worker implementation
+- `src/services/workers/indexing_worker.py` - Indexing worker implementation
+- `src/services/workers/queue_client.py` - Queue operations (with local dev support)
+- `src/services/workers/persistence.py` - Database persistence operations
 
 ### 5.3 Azure Functions (From 001, to be moved in Phase 1)
 - `infra/azure/azure_functions/ingestion-worker/__init__.py` - Function entry point (to move to `backend/azure_functions/`)
 - `infra/azure/azure_functions/chunking-worker/__init__.py` - Function entry point (to move to `backend/azure_functions/`)
 - `infra/azure/azure_functions/embedding-worker/__init__.py` - Function entry point (to move to `backend/azure_functions/`)
 - `infra/azure/azure_functions/indexing-worker/__init__.py` - Function entry point (to move to `backend/azure_functions/`)
-- After Phase 1: Functions will import directly from `rag_eval` (no path manipulation, no dotenv loading needed)
+- After Phase 1: Functions will import directly from `src` (no path manipulation, no dotenv loading needed)
 
 ### 5.4 Database & Storage
 - **Supabase**: PostgreSQL database with migrations 0019, 0020
@@ -423,7 +423,7 @@ pytest tests/integration/test_phase5_performance.py -v -m integration -m perform
 - **Status**: Known issue
 - **Impact**: `test_batch_result_persistence` fails locally
 - **Error**: `DatabaseError: Query failed: tuple index out of range`
-- **Location**: `rag_eval/services/workers/persistence.py:575` in `get_completed_batches()`
+- **Location**: `src/services/workers/persistence.py:575` in `get_completed_batches()`
 - **Priority**: Low (other batch operations work)
 
 ### 9.3 Technical Debt
@@ -440,8 +440,8 @@ pytest tests/integration/test_phase5_performance.py -v -m integration -m perform
 
 1. **Eliminate Code Duplication & Reorganize Structure**
    - Move Azure Functions from `infra/azure/azure_functions/` to `backend/azure_functions/`
-   - Consolidate to single source of truth in `backend/rag_eval/`
-   - Functions import directly from `rag_eval` (no path manipulation needed)
+   - Consolidate to single source of truth in `backend/src/`
+   - Functions import directly from `src` (no path manipulation needed)
    - Update build scripts and deployment process for new location
    - All backend code (workers + functions) in one place for simplicity
 
@@ -492,7 +492,7 @@ pytest tests/integration/test_phase5_performance.py -v -m integration -m perform
 
 1. **Update `.cursor/rules/architecture_rules.md`**
    - Add worker-queue architecture layer to the architecture description
-   - Document the worker infrastructure (`rag_eval/services/workers/`)
+   - Document the worker infrastructure (`src/services/workers/`)
    - Update layer boundaries to include Azure Functions as the worker execution layer
    - Document queue-based communication patterns
    - Update development workflow to include local Azure Functions development with Azurite

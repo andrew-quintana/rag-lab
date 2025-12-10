@@ -16,22 +16,22 @@ import json
 from pathlib import Path
 from typing import Dict, Any
 
-from rag_eval.core.config import Config
-from rag_eval.db.connection import DatabaseConnection
-from rag_eval.services.workers.queue_client import (
+from src.core.config import Config
+from src.db.connection import DatabaseConnection
+from src.services.workers.queue_client import (
     QueueMessage,
     enqueue_message,
     get_queue_length,
     ProcessingStage,
     SourceStorage,
 )
-from rag_eval.services.workers.persistence import (
+from src.services.workers.persistence import (
     check_document_status,
     load_extracted_text,
     load_chunks,
     load_embeddings,
 )
-from rag_eval.services.rag.supabase_storage import upload_document_to_storage
+from src.services.rag.supabase_storage import upload_document_to_storage
 
 
 def _is_local_development(config) -> bool:
@@ -71,7 +71,7 @@ def test_pdf_path():
         pytest.skip(f"Test PDF not found: {pdf_path}")
     
     # Slice to first 6 pages only (budget constraint)
-    from rag_eval.services.workers.pdf_utils import slice_pdf_to_batch
+    from src.services.workers.pdf_utils import slice_pdf_to_batch
     
     with open(pdf_path, "rb") as f:
         full_pdf = f.read()
@@ -163,7 +163,7 @@ class TestEndToEndPipeline:
         # This test would require actual Azure Functions to be running
         # For now, we test the status update mechanism
         
-        from rag_eval.services.workers.persistence import update_document_status
+        from src.services.workers.persistence import update_document_status
         
         # Simulate status transitions
         update_document_status(test_document_id, "parsed", "parsed_at", config)
@@ -274,7 +274,7 @@ class TestFailureScenarios:
     @pytest.mark.local
     def test_idempotency_with_real_database(self, config, test_document_id, is_local):
         """Test idempotency with real database state"""
-        from rag_eval.services.workers.persistence import (
+        from src.services.workers.persistence import (
             should_process_document,
             update_document_status,
         )
@@ -303,7 +303,7 @@ class TestSupabaseIntegration:
     @pytest.mark.local
     def test_persistence_operations_real_database(self, config, test_document_id, is_local):
         """Test persistence operations with real Supabase database"""
-        from rag_eval.services.workers.persistence import (
+        from src.services.workers.persistence import (
             persist_extracted_text,
             load_extracted_text,
             persist_chunks,
@@ -311,7 +311,7 @@ class TestSupabaseIntegration:
             persist_embeddings,
             load_embeddings,
         )
-        from rag_eval.core.interfaces import Chunk
+        from src.core.interfaces import Chunk
         
         # Test extracted text
         test_text = "Test extracted text from real database"
@@ -337,7 +337,7 @@ class TestSupabaseIntegration:
     @pytest.mark.local
     def test_batch_metadata_storage_real_database(self, config, test_document_id, is_local):
         """Test batch processing metadata storage and retrieval"""
-        from rag_eval.services.workers.persistence import (
+        from src.services.workers.persistence import (
             update_ingestion_metadata,
             get_ingestion_metadata,
         )

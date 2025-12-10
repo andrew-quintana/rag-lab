@@ -16,8 +16,8 @@ from pathlib import Path
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
-from rag_eval.core.config import Config
-from rag_eval.db.connection import DatabaseConnection
+from src.core.config import Config
+from src.db.connection import DatabaseConnection
 from typing import List, Tuple
 
 

@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime
 from typing import List
 
-from rag_eval.core.interfaces import (
+from src.core.interfaces import (
     EvaluationResult,
     JudgeEvaluationResult,
     MetaEvaluationResult,
@@ -14,9 +14,9 @@ from rag_eval.core.interfaces import (
     JudgePerformanceMetrics,
     JudgeMetricScores
 )
-from rag_eval.db.queries import QueryExecutor
-from rag_eval.db.connection import DatabaseConnection
-from rag_eval.services.evaluator.logging import (
+from src.db.queries import QueryExecutor
+from src.db.connection import DatabaseConnection
+from src.services.evaluator.logging import (
     log_evaluation_result,
     log_evaluation_batch,
     _serialize_judge_output,
@@ -620,7 +620,7 @@ class TestEdgeCases:
         
         # This will cause serialization to fail
         # We need to patch json.dumps to raise an exception
-        with patch('rag_eval.services.evaluator.logging.json.dumps', side_effect=Exception("Serialization failed")):
+        with patch('src.services.evaluator.logging.json.dumps', side_effect=Exception("Serialization failed")):
             results = [
                 EvaluationResult(
                     example_id="val_001",

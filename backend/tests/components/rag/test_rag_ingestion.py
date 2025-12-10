@@ -4,9 +4,9 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 from azure.core.exceptions import AzureError
 
-from rag_eval.core.exceptions import AzureServiceError
-from rag_eval.core.config import Config
-from rag_eval.services.rag.ingestion import (
+from src.core.exceptions import AzureServiceError
+from src.core.config import Config
+from src.services.rag.ingestion import (
     extract_text_from_document,
     ingest_document
 )
@@ -28,7 +28,7 @@ class TestExtractTextFromDocument:
         """Sample file content for testing"""
         return b"Sample PDF content"
     
-    @patch('rag_eval.services.rag.ingestion.DocumentIntelligenceClient')
+    @patch('src.services.rag.ingestion.DocumentIntelligenceClient')
     def test_extract_text_success(self, mock_client_class, mock_config, sample_file_content):
         """Test successful text extraction from document"""
         # Setup mocks
@@ -61,7 +61,7 @@ class TestExtractTextFromDocument:
         assert call_args[1]['model_id'] == "prebuilt-read"
         assert 'body' in call_args[1]  # body parameter should be present
     
-    @patch('rag_eval.services.rag.ingestion.DocumentIntelligenceClient')
+    @patch('src.services.rag.ingestion.DocumentIntelligenceClient')
     def test_extract_text_with_tables(self, mock_client_class, mock_config, sample_file_content):
         """Test text extraction including table content"""
         # Setup mocks
@@ -92,7 +92,7 @@ class TestExtractTextFromDocument:
         assert "Cell 2 content" in result
         assert "\n\n" in result  # Should have separator
     
-    @patch('rag_eval.services.rag.ingestion.DocumentIntelligenceClient')
+    @patch('src.services.rag.ingestion.DocumentIntelligenceClient')
     def test_extract_text_empty_content(self, mock_client_class, mock_config, sample_file_content):
         """Test extraction with empty content"""
         # Setup mocks
@@ -114,7 +114,7 @@ class TestExtractTextFromDocument:
         # Verify
         assert result == ""
     
-    @patch('rag_eval.services.rag.ingestion.DocumentIntelligenceClient')
+    @patch('src.services.rag.ingestion.DocumentIntelligenceClient')
     def test_extract_text_table_with_empty_cells(self, mock_client_class, mock_config, sample_file_content):
         """Test extraction with table containing empty cells"""
         # Setup mocks
@@ -144,7 +144,7 @@ class TestExtractTextFromDocument:
         assert "Cell with content" in result
         # Empty cell should not be included
     
-    @patch('rag_eval.services.rag.ingestion.DocumentIntelligenceClient')
+    @patch('src.services.rag.ingestion.DocumentIntelligenceClient')
     def test_extract_text_azure_error(self, mock_client_class, mock_config, sample_file_content):
         """Test that Azure errors are wrapped in AzureServiceError"""
         # Setup mocks
@@ -159,7 +159,7 @@ class TestExtractTextFromDocument:
         assert "Failed to extract text from document" in str(exc_info.value)
         assert "Azure service error" in str(exc_info.value)
     
-    @patch('rag_eval.services.rag.ingestion.DocumentIntelligenceClient')
+    @patch('src.services.rag.ingestion.DocumentIntelligenceClient')
     def test_extract_text_unexpected_error(self, mock_client_class, mock_config, sample_file_content):
         """Test that unexpected errors are wrapped in AzureServiceError"""
         # Setup mocks
@@ -172,7 +172,7 @@ class TestExtractTextFromDocument:
         assert "Failed to extract text from document" in str(exc_info.value)
         assert "Unexpected error" in str(exc_info.value)
     
-    @patch('rag_eval.services.rag.ingestion.DocumentIntelligenceClient')
+    @patch('src.services.rag.ingestion.DocumentIntelligenceClient')
     def test_extract_text_poller_error(self, mock_client_class, mock_config, sample_file_content):
         """Test that poller errors are handled"""
         # Setup mocks
@@ -193,7 +193,7 @@ class TestExtractTextFromDocument:
         """Test that empty file content is handled"""
         # Empty content should still be processed (may be valid for some edge cases)
         # But we should test the behavior
-        with patch('rag_eval.services.rag.ingestion.DocumentIntelligenceClient') as mock_client_class:
+        with patch('src.services.rag.ingestion.DocumentIntelligenceClient') as mock_client_class:
             mock_client = Mock()
             mock_poller = Mock()
             mock_result = Mock()
@@ -213,7 +213,7 @@ class TestExtractTextFromDocument:
         config.azure_document_intelligence_endpoint = ""
         config.azure_document_intelligence_api_key = "test-key"
         
-        with patch('rag_eval.services.rag.ingestion.DocumentIntelligenceClient') as mock_client_class:
+        with patch('src.services.rag.ingestion.DocumentIntelligenceClient') as mock_client_class:
             mock_client_class.side_effect = Exception("Invalid endpoint")
             
             with pytest.raises(AzureServiceError):
@@ -225,7 +225,7 @@ class TestExtractTextFromDocument:
         config.azure_document_intelligence_endpoint = "https://test-endpoint.cognitiveservices.azure.com/"
         config.azure_document_intelligence_api_key = ""
         
-        with patch('rag_eval.services.rag.ingestion.DocumentIntelligenceClient') as mock_client_class:
+        with patch('src.services.rag.ingestion.DocumentIntelligenceClient') as mock_client_class:
             mock_client_class.side_effect = Exception("Invalid credentials")
             
             with pytest.raises(AzureServiceError):
@@ -248,7 +248,7 @@ class TestIngestDocument:
         """Sample file content for testing"""
         return b"Sample PDF content"
     
-    @patch('rag_eval.services.rag.ingestion.extract_text_from_document')
+    @patch('src.services.rag.ingestion.extract_text_from_document')
     def test_ingest_document_success(self, mock_extract, mock_config, sample_file_content):
         """Test successful document ingestion"""
         # Setup mock
@@ -261,7 +261,7 @@ class TestIngestDocument:
         assert result == "Extracted text"
         mock_extract.assert_called_once_with(sample_file_content, mock_config)
     
-    @patch('rag_eval.services.rag.ingestion.extract_text_from_document')
+    @patch('src.services.rag.ingestion.extract_text_from_document')
     def test_ingest_document_error_propagation(self, mock_extract, mock_config, sample_file_content):
         """Test that errors from extract_text_from_document are propagated"""
         # Setup mock

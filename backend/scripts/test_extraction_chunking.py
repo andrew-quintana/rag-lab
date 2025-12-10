@@ -8,9 +8,9 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from rag_eval.core.config import Config
-from rag_eval.services.rag.ingestion import ingest_document
-from rag_eval.services.rag.chunking import chunk_text
+from src.core.config import Config
+from src.services.rag.ingestion import ingest_document
+from src.services.rag.chunking import chunk_text
 
 def test_extraction_and_chunking(pdf_path: str):
     """Test extraction and chunking for a PDF file"""

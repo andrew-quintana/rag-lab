@@ -8,9 +8,9 @@ from PIL import Image
 
 logging.disable(logging.CRITICAL)
 
-from rag_eval.core.exceptions import DatabaseError
-from rag_eval.core.config import Config
-from rag_eval.services.rag.supabase_storage import (
+from src.core.exceptions import DatabaseError
+from src.core.config import Config
+from src.services.rag.supabase_storage import (
     upload_document_to_storage,
     download_document_from_storage,
     delete_document_from_storage,
@@ -50,7 +50,7 @@ def mock_supabase_client():
 class TestSupabaseStorage:
     """Tests for Supabase Storage operations"""
     
-    @patch('rag_eval.services.rag.supabase_storage._get_supabase_client')
+    @patch('src.services.rag.supabase_storage._get_supabase_client')
     def test_upload_document_success(self, mock_get_client, mock_config, mock_supabase_client):
         """Test successful document upload"""
         mock_get_client.return_value = mock_supabase_client
@@ -67,7 +67,7 @@ class TestSupabaseStorage:
         mock_supabase_client.storage.from_.assert_called_once_with("documents")
         mock_supabase_client.storage.from_().upload.assert_called_once()
     
-    @patch('rag_eval.services.rag.supabase_storage._get_supabase_client')
+    @patch('src.services.rag.supabase_storage._get_supabase_client')
     def test_upload_document_empty_content(self, mock_get_client, mock_config):
         """Test upload with empty content raises ValueError"""
         with pytest.raises(ValueError, match="file_content cannot be empty"):
@@ -78,7 +78,7 @@ class TestSupabaseStorage:
                 mock_config
             )
     
-    @patch('rag_eval.services.rag.supabase_storage._get_supabase_client')
+    @patch('src.services.rag.supabase_storage._get_supabase_client')
     def test_upload_document_empty_id(self, mock_get_client, mock_config):
         """Test upload with empty document_id raises ValueError"""
         with pytest.raises(ValueError, match="document_id cannot be empty"):
@@ -89,7 +89,7 @@ class TestSupabaseStorage:
                 mock_config
             )
     
-    @patch('rag_eval.services.rag.supabase_storage._get_supabase_client')
+    @patch('src.services.rag.supabase_storage._get_supabase_client')
     def test_download_document_success(self, mock_get_client, mock_config, mock_supabase_client):
         """Test successful document download"""
         mock_get_client.return_value = mock_supabase_client
@@ -99,7 +99,7 @@ class TestSupabaseStorage:
         assert result == b"file content"
         mock_supabase_client.storage.from_().download.assert_called_once_with("test-id")
     
-    @patch('rag_eval.services.rag.supabase_storage._get_supabase_client')
+    @patch('src.services.rag.supabase_storage._get_supabase_client')
     def test_delete_document_success(self, mock_get_client, mock_config, mock_supabase_client):
         """Test successful document deletion"""
         mock_get_client.return_value = mock_supabase_client
@@ -108,7 +108,7 @@ class TestSupabaseStorage:
         
         mock_supabase_client.storage.from_().remove.assert_called_once_with(["test-id"])
     
-    @patch('rag_eval.services.rag.supabase_storage._get_supabase_client')
+    @patch('src.services.rag.supabase_storage._get_supabase_client')
     def test_get_public_url_success(self, mock_get_client, mock_config, mock_supabase_client):
         """Test getting public URL"""
         mock_get_client.return_value = mock_supabase_client
@@ -118,8 +118,8 @@ class TestSupabaseStorage:
         assert result == "https://test.supabase.co/storage/v1/object/sign/documents/test-id"
         mock_supabase_client.storage.from_().create_signed_url.assert_called_once()
     
-    @patch('rag_eval.services.rag.supabase_storage.upload_document_to_storage')
-    @patch('rag_eval.services.rag.supabase_storage._get_supabase_client')
+    @patch('src.services.rag.supabase_storage.upload_document_to_storage')
+    @patch('src.services.rag.supabase_storage._get_supabase_client')
     def test_generate_image_preview_jpeg(self, mock_get_client, mock_upload, mock_config):
         """Test generating preview for JPEG image"""
         # Create a test image
@@ -141,8 +141,8 @@ class TestSupabaseStorage:
         assert result == "test-id_preview.jpg"
         mock_upload.assert_called_once()
     
-    @patch('rag_eval.services.rag.supabase_storage.upload_document_to_storage')
-    @patch('rag_eval.services.rag.supabase_storage._get_supabase_client')
+    @patch('src.services.rag.supabase_storage.upload_document_to_storage')
+    @patch('src.services.rag.supabase_storage._get_supabase_client')
     def test_generate_image_preview_png(self, mock_get_client, mock_upload, mock_config):
         """Test generating preview for PNG image"""
         # Create a test PNG image
@@ -164,7 +164,7 @@ class TestSupabaseStorage:
         assert result == "test-id_preview.jpg"
         mock_upload.assert_called_once()
     
-    @patch('rag_eval.services.rag.supabase_storage._get_supabase_client')
+    @patch('src.services.rag.supabase_storage._get_supabase_client')
     def test_generate_image_preview_unsupported(self, mock_get_client, mock_config):
         """Test preview generation for unsupported file type"""
         result = generate_image_preview(

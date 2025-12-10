@@ -19,7 +19,7 @@ This document records decisions made during Phase 0 of Initiative 002: Codebase 
 **Rationale**: The architecture rules file previously described the system as synchronous and did not include worker infrastructure. Since Initiative 001 successfully implemented the worker-queue architecture, the rules must accurately reflect the current system.
 
 **Changes Made**:
-- Added worker infrastructure section (`rag_eval/services/workers/`)
+- Added worker infrastructure section (`src/services/workers/`)
 - Added worker execution layer (Azure Functions)
 - Documented queue-based communication patterns
 - Updated development workflow to include local Azure Functions development with Azurite
@@ -37,7 +37,7 @@ This document records decisions made during Phase 0 of Initiative 002: Codebase 
 
 **Changes Made**:
 - Updated "High-Level System Overview" to include worker-queue architecture
-- Added worker infrastructure to codebase structure diagram (`rag_eval/services/workers/`)
+- Added worker infrastructure to codebase structure diagram (`src/services/workers/`)
 - Documented Azure Functions deployment structure (`infra/azure/azure_functions/`)
 - Updated "Out of Scope" section (removed workers from out-of-scope list)
 - Added Azure Storage Queues to infrastructure architecture section

@@ -4,13 +4,13 @@ from typing import Literal
 
 from langgraph.graph import StateGraph, END
 
-from rag_eval.services.evaluator.graph_base import (
+from src.services.evaluator.graph_base import (
     JudgeEvaluationState,
     validate_initial_state,
     get_config_from_state,
 )
-from rag_eval.services.evaluator.correctness import CorrectnessEvaluator
-from rag_eval.services.evaluator.hallucination import HallucinationEvaluator
+from src.services.evaluator.correctness import CorrectnessEvaluator
+from src.services.evaluator.hallucination import HallucinationEvaluator
 
 
 def correctness_node(state: JudgeEvaluationState) -> dict:

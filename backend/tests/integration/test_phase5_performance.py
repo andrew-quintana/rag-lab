@@ -15,15 +15,15 @@ from pathlib import Path
 from typing import List, Dict, Any
 from statistics import mean, median
 
-from rag_eval.core.config import Config
-from rag_eval.services.workers.queue_client import (
+from src.core.config import Config
+from src.services.workers.queue_client import (
     QueueMessage,
     enqueue_message,
     get_queue_length,
     ProcessingStage,
     SourceStorage,
 )
-from rag_eval.services.workers.persistence import check_document_status
+from src.services.workers.persistence import check_document_status
 
 
 @pytest.fixture(scope="module")
@@ -41,7 +41,7 @@ def test_pdf_path():
         pytest.skip(f"Test PDF not found: {pdf_path}")
     
     # Slice to first 6 pages only (budget constraint)
-    from rag_eval.services.workers.pdf_utils import slice_pdf_to_batch
+    from src.services.workers.pdf_utils import slice_pdf_to_batch
     
     with open(pdf_path, "rb") as f:
         full_pdf = f.read()

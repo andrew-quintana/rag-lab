@@ -5,10 +5,10 @@ from unittest.mock import Mock, patch, MagicMock
 import requests
 from datetime import datetime
 
-from rag_eval.core.exceptions import AzureServiceError
-from rag_eval.core.config import Config
-from rag_eval.core.interfaces import Chunk, Query
-from rag_eval.services.rag.embeddings import (
+from src.core.exceptions import AzureServiceError
+from src.core.config import Config
+from src.core.interfaces import Chunk, Query
+from src.services.rag.embeddings import (
     generate_embeddings,
     generate_query_embedding,
     _call_embedding_api,
@@ -60,7 +60,7 @@ class TestRetryWithBackoff:
 class TestCallEmbeddingAPI:
     """Tests for _call_embedding_api function"""
     
-    @patch('rag_eval.services.rag.embeddings.requests.post')
+    @patch('src.services.rag.embeddings.requests.post')
     def test_call_embedding_api_success(self, mock_post):
         """Test successful embedding API call"""
         # Mock response
@@ -95,7 +95,7 @@ class TestCallEmbeddingAPI:
         assert call_args[1]["json"]["input"] == texts
         assert call_args[1]["json"]["model"] == "text-embedding-3-small"
     
-    @patch('rag_eval.services.rag.embeddings.requests.post')
+    @patch('src.services.rag.embeddings.requests.post')
     def test_call_embedding_api_empty_list(self, mock_post):
         """Test that empty text list returns empty embeddings"""
         embeddings = _call_embedding_api(
@@ -107,7 +107,7 @@ class TestCallEmbeddingAPI:
         assert embeddings == []
         mock_post.assert_not_called()
     
-    @patch('rag_eval.services.rag.embeddings.requests.post')
+    @patch('src.services.rag.embeddings.requests.post')
     def test_call_embedding_api_invalid_response(self, mock_post):
         """Test that invalid response structure raises ValueError"""
         mock_response = Mock()
@@ -124,7 +124,7 @@ class TestCallEmbeddingAPI:
             )
         assert "missing 'data' field" in str(exc_info.value)
     
-    @patch('rag_eval.services.rag.embeddings.requests.post')
+    @patch('src.services.rag.embeddings.requests.post')
     def test_call_embedding_api_dimension_mismatch(self, mock_post):
         """Test that dimension mismatch raises ValueError"""
         mock_response = Mock()
@@ -146,7 +146,7 @@ class TestCallEmbeddingAPI:
             )
         assert "dimension mismatch" in str(exc_info.value)
     
-    @patch('rag_eval.services.rag.embeddings.requests.post')
+    @patch('src.services.rag.embeddings.requests.post')
     def test_call_embedding_api_count_mismatch(self, mock_post):
         """Test that count mismatch raises ValueError"""
         mock_response = Mock()
@@ -193,7 +193,7 @@ class TestGenerateEmbeddings:
         embeddings = generate_embeddings([], config)
         assert embeddings == []
     
-    @patch('rag_eval.services.rag.embeddings._call_embedding_api')
+    @patch('src.services.rag.embeddings._call_embedding_api')
     def test_generate_embeddings_success(self, mock_api):
         """Test successful embedding generation"""
         # Mock API response
@@ -309,7 +309,7 @@ class TestGenerateEmbeddings:
             generate_embeddings(chunks, config)
         assert "embedding model is not configured" in str(exc_info.value)
     
-    @patch('rag_eval.services.rag.embeddings._call_embedding_api')
+    @patch('src.services.rag.embeddings._call_embedding_api')
     def test_generate_embeddings_api_error(self, mock_api):
         """Test that API errors are wrapped in AzureServiceError"""
         mock_api.side_effect = requests.RequestException("API error")
@@ -340,7 +340,7 @@ class TestGenerateEmbeddings:
 class TestGenerateQueryEmbedding:
     """Tests for generate_query_embedding function"""
     
-    @patch('rag_eval.services.rag.embeddings._call_embedding_api')
+    @patch('src.services.rag.embeddings._call_embedding_api')
     def test_generate_query_embedding_success(self, mock_api):
         """Test successful query embedding generation"""
         # Mock API response
@@ -422,7 +422,7 @@ class TestGenerateQueryEmbedding:
             generate_query_embedding(query, config)
         assert "Query text cannot be empty" in str(exc_info.value)
     
-    @patch('rag_eval.services.rag.embeddings._call_embedding_api')
+    @patch('src.services.rag.embeddings._call_embedding_api')
     def test_generate_query_embedding_wrong_count(self, mock_api):
         """Test that wrong embedding count raises ValueError"""
         # Mock API returns wrong number of embeddings
@@ -450,7 +450,7 @@ class TestGenerateQueryEmbedding:
             generate_query_embedding(query, config)
         assert "Expected 1 embedding" in str(exc_info.value)
     
-    @patch('rag_eval.services.rag.embeddings._call_embedding_api')
+    @patch('src.services.rag.embeddings._call_embedding_api')
     def test_generate_query_embedding_model_consistency(self, mock_api):
         """Test that query embedding uses same model as chunks"""
         mock_api.return_value = [[0.1, 0.2, 0.3]]

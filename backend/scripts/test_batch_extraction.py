@@ -7,8 +7,8 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from rag_eval.core.config import Config
-from rag_eval.services.rag.ingestion import extract_text_from_document
+from src.core.config import Config
+from src.services.rag.ingestion import extract_text_from_document
 
 def main():
     pdf_path = sys.argv[1] if len(sys.argv) > 1 else "docs/inputs/scan_classic_hmo.pdf"

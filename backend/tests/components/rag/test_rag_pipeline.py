@@ -4,10 +4,10 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime, timezone
 
-from rag_eval.core.exceptions import AzureServiceError, DatabaseError, ValidationError
-from rag_eval.core.config import Config
-from rag_eval.core.interfaces import Query, ModelAnswer, RetrievalResult
-from rag_eval.services.rag.pipeline import run_rag
+from src.core.exceptions import AzureServiceError, DatabaseError, ValidationError
+from src.core.config import Config
+from src.core.interfaces import Query, ModelAnswer, RetrievalResult
+from src.services.rag.pipeline import run_rag
 
 
 @pytest.fixture
@@ -75,10 +75,10 @@ def sample_model_answer():
 class TestRunRAGEndToEnd:
     """Tests for end-to-end pipeline flow with mocked components"""
     
-    @patch('rag_eval.services.rag.pipeline.generate_answer')
-    @patch('rag_eval.services.rag.pipeline.retrieve_chunks')
-    @patch('rag_eval.services.rag.pipeline.generate_query_embedding')
-    @patch('rag_eval.services.rag.pipeline.DatabaseConnection')
+    @patch('src.services.rag.pipeline.generate_answer')
+    @patch('src.services.rag.pipeline.retrieve_chunks')
+    @patch('src.services.rag.pipeline.generate_query_embedding')
+    @patch('src.services.rag.pipeline.DatabaseConnection')
     def test_run_rag_success(
         self,
         mock_db_conn_class,
@@ -119,11 +119,11 @@ class TestRunRAGEndToEnd:
         mock_db_conn.connect.assert_called_once()
         mock_db_conn.close.assert_called_once()
     
-    @patch('rag_eval.services.rag.pipeline.generate_answer')
-    @patch('rag_eval.services.rag.pipeline.retrieve_chunks')
-    @patch('rag_eval.services.rag.pipeline.generate_query_embedding')
-    @patch('rag_eval.services.rag.pipeline.generate_id')
-    @patch('rag_eval.services.rag.pipeline.DatabaseConnection')
+    @patch('src.services.rag.pipeline.generate_answer')
+    @patch('src.services.rag.pipeline.retrieve_chunks')
+    @patch('src.services.rag.pipeline.generate_query_embedding')
+    @patch('src.services.rag.pipeline.generate_id')
+    @patch('src.services.rag.pipeline.DatabaseConnection')
     def test_run_rag_generates_query_id_if_missing(
         self,
         mock_db_conn_class,
@@ -157,10 +157,10 @@ class TestRunRAGEndToEnd:
         mock_generate_id.assert_called_once_with("query")
         assert result.query_id == sample_model_answer.query_id
     
-    @patch('rag_eval.services.rag.pipeline.generate_answer')
-    @patch('rag_eval.services.rag.pipeline.retrieve_chunks')
-    @patch('rag_eval.services.rag.pipeline.generate_query_embedding')
-    @patch('rag_eval.services.rag.pipeline.DatabaseConnection')
+    @patch('src.services.rag.pipeline.generate_answer')
+    @patch('src.services.rag.pipeline.retrieve_chunks')
+    @patch('src.services.rag.pipeline.generate_query_embedding')
+    @patch('src.services.rag.pipeline.DatabaseConnection')
     def test_run_rag_generates_timestamp_if_missing(
         self,
         mock_db_conn_class,
@@ -187,7 +187,7 @@ class TestRunRAGEndToEnd:
         mock_db_conn_class.return_value = mock_db_conn
         
         # Run pipeline
-        with patch('rag_eval.services.rag.pipeline.datetime') as mock_datetime:
+        with patch('src.services.rag.pipeline.datetime') as mock_datetime:
             mock_datetime.now.return_value = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
             mock_datetime.side_effect = lambda *args, **kw: datetime(*args, **kw)
             result = run_rag(query, prompt_version="v1", config=mock_config)
@@ -199,10 +199,10 @@ class TestRunRAGEndToEnd:
 class TestRunRAGComponentIntegration:
     """Tests for component integration and data flow"""
     
-    @patch('rag_eval.services.rag.pipeline.generate_answer')
-    @patch('rag_eval.services.rag.pipeline.retrieve_chunks')
-    @patch('rag_eval.services.rag.pipeline.generate_query_embedding')
-    @patch('rag_eval.services.rag.pipeline.DatabaseConnection')
+    @patch('src.services.rag.pipeline.generate_answer')
+    @patch('src.services.rag.pipeline.retrieve_chunks')
+    @patch('src.services.rag.pipeline.generate_query_embedding')
+    @patch('src.services.rag.pipeline.DatabaseConnection')
     def test_pipeline_passes_data_correctly(
         self,
         mock_db_conn_class,
@@ -247,10 +247,10 @@ class TestRunRAGComponentIntegration:
         assert call_args[1]['prompt_version'] == "v2"
         assert call_args[1]['config'] == mock_config
     
-    @patch('rag_eval.services.rag.pipeline.generate_answer')
-    @patch('rag_eval.services.rag.pipeline.retrieve_chunks')
-    @patch('rag_eval.services.rag.pipeline.generate_query_embedding')
-    @patch('rag_eval.services.rag.pipeline.DatabaseConnection')
+    @patch('src.services.rag.pipeline.generate_answer')
+    @patch('src.services.rag.pipeline.retrieve_chunks')
+    @patch('src.services.rag.pipeline.generate_query_embedding')
+    @patch('src.services.rag.pipeline.DatabaseConnection')
     def test_pipeline_uses_default_config(
         self,
         mock_db_conn_class,
@@ -273,7 +273,7 @@ class TestRunRAGComponentIntegration:
         mock_db_conn_class.return_value = mock_db_conn
         
         # Mock Config.from_env()
-        with patch('rag_eval.services.rag.pipeline.Config') as mock_config_class:
+        with patch('src.services.rag.pipeline.Config') as mock_config_class:
             mock_config = Mock()
             mock_config_class.from_env.return_value = mock_config
             
@@ -291,7 +291,7 @@ class TestRunRAGComponentIntegration:
 class TestRunRAGErrorHandling:
     """Tests for error propagation and handling"""
     
-    @patch('rag_eval.services.rag.pipeline.generate_query_embedding')
+    @patch('src.services.rag.pipeline.generate_query_embedding')
     def test_run_rag_handles_embedding_error(
         self,
         mock_generate_query_embedding,
@@ -309,9 +309,9 @@ class TestRunRAGErrorHandling:
         assert "Embedding API failed" in str(exc_info.value)
         assert "Query embedding generation failed" in str(exc_info.value)
     
-    @patch('rag_eval.services.rag.pipeline.generate_answer')
-    @patch('rag_eval.services.rag.pipeline.retrieve_chunks')
-    @patch('rag_eval.services.rag.pipeline.generate_query_embedding')
+    @patch('src.services.rag.pipeline.generate_answer')
+    @patch('src.services.rag.pipeline.retrieve_chunks')
+    @patch('src.services.rag.pipeline.generate_query_embedding')
     def test_run_rag_handles_retrieval_error(
         self,
         mock_generate_query_embedding,
@@ -333,10 +333,10 @@ class TestRunRAGErrorHandling:
         assert "Search API failed" in str(exc_info.value)
         assert "Chunk retrieval failed" in str(exc_info.value)
     
-    @patch('rag_eval.services.rag.pipeline.generate_answer')
-    @patch('rag_eval.services.rag.pipeline.retrieve_chunks')
-    @patch('rag_eval.services.rag.pipeline.generate_query_embedding')
-    @patch('rag_eval.services.rag.pipeline.DatabaseConnection')
+    @patch('src.services.rag.pipeline.generate_answer')
+    @patch('src.services.rag.pipeline.retrieve_chunks')
+    @patch('src.services.rag.pipeline.generate_query_embedding')
+    @patch('src.services.rag.pipeline.DatabaseConnection')
     def test_run_rag_handles_generation_error(
         self,
         mock_db_conn_class,
@@ -365,10 +365,10 @@ class TestRunRAGErrorHandling:
         assert "Generation API failed" in str(exc_info.value)
         assert "Answer generation failed" in str(exc_info.value)
     
-    @patch('rag_eval.services.rag.pipeline.generate_answer')
-    @patch('rag_eval.services.rag.pipeline.retrieve_chunks')
-    @patch('rag_eval.services.rag.pipeline.generate_query_embedding')
-    @patch('rag_eval.services.rag.pipeline.DatabaseConnection')
+    @patch('src.services.rag.pipeline.generate_answer')
+    @patch('src.services.rag.pipeline.retrieve_chunks')
+    @patch('src.services.rag.pipeline.generate_query_embedding')
+    @patch('src.services.rag.pipeline.DatabaseConnection')
     def test_run_rag_handles_validation_error(
         self,
         mock_db_conn_class,
@@ -418,11 +418,11 @@ class TestRunRAGErrorHandling:
 class TestRunRAGLatencyMeasurement:
     """Tests for latency measurement"""
     
-    @patch('rag_eval.services.rag.pipeline.generate_answer')
-    @patch('rag_eval.services.rag.pipeline.retrieve_chunks')
-    @patch('rag_eval.services.rag.pipeline.generate_query_embedding')
-    @patch('rag_eval.services.rag.pipeline.DatabaseConnection')
-    @patch('rag_eval.services.rag.pipeline.time')
+    @patch('src.services.rag.pipeline.generate_answer')
+    @patch('src.services.rag.pipeline.retrieve_chunks')
+    @patch('src.services.rag.pipeline.generate_query_embedding')
+    @patch('src.services.rag.pipeline.DatabaseConnection')
+    @patch('src.services.rag.pipeline.time')
     def test_pipeline_measures_latency(
         self,
         mock_time,
@@ -484,10 +484,10 @@ class TestRunRAGLatencyMeasurement:
 class TestRunRAGResponseAssembly:
     """Tests for response assembly and formatting"""
     
-    @patch('rag_eval.services.rag.pipeline.generate_answer')
-    @patch('rag_eval.services.rag.pipeline.retrieve_chunks')
-    @patch('rag_eval.services.rag.pipeline.generate_query_embedding')
-    @patch('rag_eval.services.rag.pipeline.DatabaseConnection')
+    @patch('src.services.rag.pipeline.generate_answer')
+    @patch('src.services.rag.pipeline.retrieve_chunks')
+    @patch('src.services.rag.pipeline.generate_query_embedding')
+    @patch('src.services.rag.pipeline.DatabaseConnection')
     def test_pipeline_assembles_complete_model_answer(
         self,
         mock_db_conn_class,
@@ -521,10 +521,10 @@ class TestRunRAGResponseAssembly:
         assert result.retrieved_chunk_ids == ["chunk_1", "chunk_2"]
         assert result.timestamp is not None
     
-    @patch('rag_eval.services.rag.pipeline.generate_answer')
-    @patch('rag_eval.services.rag.pipeline.retrieve_chunks')
-    @patch('rag_eval.services.rag.pipeline.generate_query_embedding')
-    @patch('rag_eval.services.rag.pipeline.DatabaseConnection')
+    @patch('src.services.rag.pipeline.generate_answer')
+    @patch('src.services.rag.pipeline.retrieve_chunks')
+    @patch('src.services.rag.pipeline.generate_query_embedding')
+    @patch('src.services.rag.pipeline.DatabaseConnection')
     def test_pipeline_preserves_query_id(
         self,
         mock_db_conn_class,
@@ -565,10 +565,10 @@ class TestRunRAGResponseAssembly:
 class TestRunRAGPipelineStateManagement:
     """Tests for pipeline state management"""
     
-    @patch('rag_eval.services.rag.pipeline.generate_answer')
-    @patch('rag_eval.services.rag.pipeline.retrieve_chunks')
-    @patch('rag_eval.services.rag.pipeline.generate_query_embedding')
-    @patch('rag_eval.services.rag.pipeline.DatabaseConnection')
+    @patch('src.services.rag.pipeline.generate_answer')
+    @patch('src.services.rag.pipeline.retrieve_chunks')
+    @patch('src.services.rag.pipeline.generate_query_embedding')
+    @patch('src.services.rag.pipeline.DatabaseConnection')
     def test_pipeline_closes_database_connection_on_success(
         self,
         mock_db_conn_class,
@@ -597,10 +597,10 @@ class TestRunRAGPipelineStateManagement:
         # Verify database connection was closed
         mock_db_conn.close.assert_called_once()
     
-    @patch('rag_eval.services.rag.pipeline.generate_answer')
-    @patch('rag_eval.services.rag.pipeline.retrieve_chunks')
-    @patch('rag_eval.services.rag.pipeline.generate_query_embedding')
-    @patch('rag_eval.services.rag.pipeline.DatabaseConnection')
+    @patch('src.services.rag.pipeline.generate_answer')
+    @patch('src.services.rag.pipeline.retrieve_chunks')
+    @patch('src.services.rag.pipeline.generate_query_embedding')
+    @patch('src.services.rag.pipeline.DatabaseConnection')
     def test_pipeline_closes_database_connection_on_error(
         self,
         mock_db_conn_class,

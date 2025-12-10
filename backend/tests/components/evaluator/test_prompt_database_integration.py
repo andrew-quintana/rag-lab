@@ -7,19 +7,19 @@ They require a real database connection (unlike unit tests which use mocks).
 
 import pytest
 from pathlib import Path
-from rag_eval.core.config import Config
-from rag_eval.db.queries import QueryExecutor
-from rag_eval.services.rag.generation import load_prompt_template
-from rag_eval.services.evaluator.correctness import CorrectnessEvaluator
-from rag_eval.services.evaluator.hallucination import HallucinationEvaluator
-from rag_eval.services.evaluator.risk_direction import RiskDirectionEvaluator
+from src.core.config import Config
+from src.db.queries import QueryExecutor
+from src.services.rag.generation import load_prompt_template
+from src.services.evaluator.correctness import CorrectnessEvaluator
+from src.services.evaluator.hallucination import HallucinationEvaluator
+from src.services.evaluator.risk_direction import RiskDirectionEvaluator
 
 
 @pytest.fixture(scope="module")
 def query_executor():
     """Create QueryExecutor for database operations"""
     try:
-        from rag_eval.db.connection import DatabaseConnection
+        from src.db.connection import DatabaseConnection
         config = Config.from_env()
         db_conn = DatabaseConnection(config)
         return QueryExecutor(db_conn)

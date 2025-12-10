@@ -2,7 +2,7 @@
 
 ## Your Mission
 
-Execute Phase 1 of Initiative 002: Move Azure Functions to `backend/azure_functions/` and simplify function entry points to use direct imports from `rag_eval`. This phase establishes a single source of truth for all backend code in one location, eliminating the need for path manipulation or code copying.
+Execute Phase 1 of Initiative 002: Move Azure Functions to `backend/azure_functions/` and simplify function entry points to use direct imports from `src`. This phase establishes a single source of truth for all backend code in one location, eliminating the need for path manipulation or code copying.
 
 ## Context & References
 
@@ -23,7 +23,7 @@ Execute Phase 1 of Initiative 002: Move Azure Functions to `backend/azure_functi
 **Before starting, verify**:
 1. Phase 0 is complete (check `intermediate/phase_0_handoff.md`)
 2. All 4 Azure Functions exist in `infra/azure/azure_functions/`
-3. Duplicate code exists in `infra/azure/azure_functions/backend/rag_eval/` (if still present)
+3. Duplicate code exists in `infra/azure/azure_functions/backend/src/` (if still present)
 4. Build script exists at `infra/azure/azure_functions/build.sh`
 5. Local development environment is functional (Azurite, local Supabase)
 
@@ -77,7 +77,7 @@ Execute Phase 1 of Initiative 002: Move Azure Functions to `backend/azure_functi
 
 **Required Pattern**: 
 - Reference `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/RFC002.md` - Section 1.2 for the exact implementation pattern
-- Functions are now in `backend/azure_functions/` alongside `backend/rag_eval/`
+- Functions are now in `backend/azure_functions/` alongside `backend/src/`
 - No path manipulation needed - direct imports work naturally
 - No dotenv loading needed - Azure handles environment variables automatically
 
@@ -89,8 +89,8 @@ This function is triggered by messages in the ingestion-uploads queue.
 It processes documents through the ingestion stage (text extraction).
 """
 import json
-from rag_eval.services.workers.ingestion_worker import ingestion_worker
-from rag_eval.core.logging import get_logger
+from src.services.workers.ingestion_worker import ingestion_worker
+from src.core.logging import get_logger
 
 logger = get_logger("azure_functions.ingestion_worker")
 
@@ -120,7 +120,7 @@ def main(queueMessage: str) -> None:
 **Critical Requirements**:
 - [ ] Remove all path manipulation code (`Path(__file__).parent.parent...`)
 - [ ] Remove dotenv loading code (Azure handles env vars)
-- [ ] Use direct imports: `from rag_eval.services.workers.ingestion_worker import ingestion_worker`
+- [ ] Use direct imports: `from src.services.workers.ingestion_worker import ingestion_worker`
 - [ ] Keep function logic simple and maintainable
 
 **Reference**: 
@@ -154,7 +154,7 @@ def main(queueMessage: str) -> None:
 - [ ] Verify prerequisites (Azure CLI, Function Core Tools, etc.)
 - [ ] Validate function entry points exist
 - [ ] Validate `requirements.txt` exists
-- [ ] No code copying needed (functions import directly from `rag_eval`)
+- [ ] No code copying needed (functions import directly from `src`)
 
 **Reference**: 
 - `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/RFC002.md` - Section 1.3 for requirements
@@ -177,7 +177,7 @@ def main(queueMessage: str) -> None:
 **Execute**: Delete duplicate backend code directory if it still exists
 
 **Required Actions**:
-- [ ] Check if `backend/azure_functions/backend/rag_eval/` exists (from old location)
+- [ ] Check if `backend/azure_functions/backend/src/` exists (from old location)
 - [ ] If it exists, delete it (no longer needed)
 - [ ] Update `.gitignore` to prevent accidental commits of duplicate code
 - [ ] Verify Git repository doesn't track duplicate code
@@ -189,7 +189,7 @@ def main(queueMessage: str) -> None:
 **Verification**:
 ```bash
 # Check if duplicate code is tracked
-git ls-files backend/azure_functions/backend/rag_eval/
+git ls-files backend/azure_functions/backend/src/
 
 # Should return empty (no tracked files)
 ```
@@ -231,7 +231,7 @@ func start ingestion-worker
 
 **Success Criteria**:
 - ✅ All 4 functions start without import errors
-- ✅ Functions can import from `rag_eval` directly
+- ✅ Functions can import from `src` directly
 - ✅ Functions can process queue messages
 - ✅ No runtime errors during execution
 
@@ -361,7 +361,7 @@ cd backend/azure_functions
 **Key Files**:
 - `backend/azure_functions/*-worker/__init__.py` - Function entry points (new location)
 - `backend/azure_functions/build.sh` - Build script (new location)
-- `backend/rag_eval/services/workers/` - Worker implementations (imported by functions)
+- `backend/src/services/workers/` - Worker implementations (imported by functions)
 - `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/TODO002.md` - Task tracking
 - `@docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/scoping/RFC002.md` - Technical design
 

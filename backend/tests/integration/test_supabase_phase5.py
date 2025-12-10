@@ -12,9 +12,9 @@ import uuid
 from datetime import datetime, timezone
 from typing import List
 
-from rag_eval.core.config import Config
-from rag_eval.db.connection import DatabaseConnection
-from rag_eval.services.workers.persistence import (
+from src.core.config import Config
+from src.db.connection import DatabaseConnection
+from src.services.workers.persistence import (
     persist_extracted_text,
     load_extracted_text,
     persist_chunks,
@@ -31,7 +31,7 @@ from rag_eval.services.workers.persistence import (
     update_ingestion_metadata,
     get_ingestion_metadata,
 )
-from rag_eval.core.interfaces import Chunk
+from src.core.interfaces import Chunk
 
 
 @pytest.fixture(scope="module")

@@ -11,12 +11,12 @@ def test_imports():
     print("=" * 60)
     
     tests = [
-        ("Core", "from rag_eval.core import Chunk, Query, Config, get_logger, RAGEvalException"),
-        ("RAG Services", "from rag_eval.services.rag import chunk_text, ingest_document, extract_text_from_document, upload_document_to_blob"),
-        ("DB", "from rag_eval.db import QueryExecutor, DatabaseConnection, QueryRecord"),
-        ("Utils", "from rag_eval.utils import generate_id, timer, read_prompt_file"),
-        ("Evaluator", "from rag_eval.services.evaluator import normalize_score, aggregate_scores, classify_correctness"),
-        ("Main Package", "from rag_eval import Chunk, Query, Config, get_logger, __version__"),
+        ("Core", "from src.core import Chunk, Query, Config, get_logger, RAGEvalException"),
+        ("RAG Services", "from src.services.rag import chunk_text, ingest_document, extract_text_from_document, upload_document_to_blob"),
+        ("DB", "from src.db import QueryExecutor, DatabaseConnection, QueryRecord"),
+        ("Utils", "from src.utils import generate_id, timer, read_prompt_file"),
+        ("Evaluator", "from src.services.evaluator import normalize_score, aggregate_scores, classify_correctness"),
+        ("Main Package", "from src import Chunk, Query, Config, get_logger, __version__"),
     ]
     
     results = []
@@ -38,12 +38,12 @@ def test_all_lists():
     print("=" * 60)
     
     tests = [
-        ("rag_eval", "rag_eval"),
-        ("rag_eval.core", "rag_eval.core"),
-        ("rag_eval.services.rag", "rag_eval.services.rag"),
-        ("rag_eval.db", "rag_eval.db"),
-        ("rag_eval.utils", "rag_eval.utils"),
-        ("rag_eval.services.evaluator", "rag_eval.services.evaluator"),
+        ("src", "src"),
+        ("src.core", "src.core"),
+        ("src.services.rag", "src.services.rag"),
+        ("src.db", "src.db"),
+        ("src.utils", "src.utils"),
+        ("src.services.evaluator", "src.services.evaluator"),
     ]
     
     results = []
@@ -70,13 +70,13 @@ def test_exports_validity():
     print("=" * 60)
     
     try:
-        import rag_eval
-        main_all = rag_eval.__all__
+        import src
+        main_all = src.__all__
         
         missing = []
         for item in main_all:
             if not item.startswith('_'):
-                if not hasattr(rag_eval, item):
+                if not hasattr(src, item):
                     missing.append(item)
         
         if missing:
@@ -102,9 +102,9 @@ def test_module_execution():
     os.chdir(backend_dir)
     
     modules = [
-        "rag_eval.core.config",
-        "rag_eval.core.logging",
-        "rag_eval.utils.ids",
+        "src.core.config",
+        "src.core.logging",
+        "src.utils.ids",
     ]
     
     results = []

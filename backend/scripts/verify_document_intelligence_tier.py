@@ -8,8 +8,8 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from rag_eval.core.config import Config
-from rag_eval.services.rag.ingestion import extract_text_from_document
+from src.core.config import Config
+from src.services.rag.ingestion import extract_text_from_document
 
 def verify_tier_and_extraction(pdf_path: str):
     """Verify tier and test extraction"""

@@ -11,12 +11,12 @@ from pathlib import Path
 # Disable logging during tests
 logging.disable(logging.CRITICAL)
 
-from rag_eval.core.exceptions import AzureServiceError, DatabaseError, ValidationError
-from rag_eval.core.config import Config
-from rag_eval.core.interfaces import Query, ModelAnswer, Chunk, RetrievalResult
-from rag_eval.api.routes.upload import handle_upload, UploadResponse
-from rag_eval.api.routes.query import handle_query, QueryRequest, QueryResponse
-from rag_eval.services.rag.pipeline import run_rag
+from src.core.exceptions import AzureServiceError, DatabaseError, ValidationError
+from src.core.config import Config
+from src.core.interfaces import Query, ModelAnswer, Chunk, RetrievalResult
+from src.api.routes.upload import handle_upload, UploadResponse
+from src.api.routes.query import handle_query, QueryRequest, QueryResponse
+from src.services.rag.pipeline import run_rag
 
 
 @pytest.fixture
@@ -122,15 +122,15 @@ def sample_model_answer():
 class TestEndToEndUploadPipeline:
     """End-to-end tests for complete upload pipeline"""
     
-    @patch('rag_eval.api.routes.upload.doc_service')
-    @patch('rag_eval.api.routes.upload.generate_image_preview')
-    @patch('rag_eval.api.routes.upload.upload_document_to_storage')
-    @patch('rag_eval.api.routes.upload.index_chunks')
-    @patch('rag_eval.api.routes.upload.generate_embeddings')
-    @patch('rag_eval.api.routes.upload.chunk_text')
-    @patch('rag_eval.api.routes.upload.ingest_document')
-    @patch('rag_eval.api.routes.upload.generate_id')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.doc_service')
+    @patch('src.api.routes.upload.generate_image_preview')
+    @patch('src.api.routes.upload.upload_document_to_storage')
+    @patch('src.api.routes.upload.index_chunks')
+    @patch('src.api.routes.upload.generate_embeddings')
+    @patch('src.api.routes.upload.chunk_text')
+    @patch('src.api.routes.upload.ingest_document')
+    @patch('src.api.routes.upload.generate_id')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_pipeline_complete_flow(
         self,
@@ -192,15 +192,15 @@ class TestEndToEndUploadPipeline:
         assert mock_index_chunks.call_args[0][0] == sample_chunks
         assert mock_index_chunks.call_args[0][1] == sample_embeddings
     
-    @patch('rag_eval.api.routes.upload.generate_image_preview')
-    @patch('rag_eval.api.routes.upload.upload_document_to_storage')
-    @patch('rag_eval.api.routes.upload.doc_service')
-    @patch('rag_eval.api.routes.upload.index_chunks')
-    @patch('rag_eval.api.routes.upload.generate_embeddings')
-    @patch('rag_eval.api.routes.upload.chunk_text')
-    @patch('rag_eval.api.routes.upload.ingest_document')
-    @patch('rag_eval.api.routes.upload.generate_id')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.generate_image_preview')
+    @patch('src.api.routes.upload.upload_document_to_storage')
+    @patch('src.api.routes.upload.doc_service')
+    @patch('src.api.routes.upload.index_chunks')
+    @patch('src.api.routes.upload.generate_embeddings')
+    @patch('src.api.routes.upload.chunk_text')
+    @patch('src.api.routes.upload.ingest_document')
+    @patch('src.api.routes.upload.generate_id')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_pipeline_with_real_sample_document(
         self,
@@ -257,8 +257,8 @@ class TestEndToEndUploadPipeline:
 class TestEndToEndQueryPipeline:
     """End-to-end tests for complete query pipeline"""
     
-    @patch('rag_eval.api.routes.query.run_rag')
-    @patch('rag_eval.api.routes.query.config')
+    @patch('src.api.routes.query.run_rag')
+    @patch('src.api.routes.query.config')
     @pytest.mark.asyncio
     async def test_query_pipeline_complete_flow(
         self,
@@ -293,14 +293,14 @@ class TestEndToEndQueryPipeline:
         assert call_args[0][0].text == request.text
         assert call_args[1]['prompt_version'] == request.prompt_version
     
-    @patch('rag_eval.services.rag.pipeline.generate_query_embedding')
-    @patch('rag_eval.services.rag.pipeline.retrieve_chunks')
-    @patch('rag_eval.services.rag.pipeline.generate_answer')
-    @patch('rag_eval.services.rag.pipeline.log_query')
-    @patch('rag_eval.services.rag.pipeline.log_retrieval')
-    @patch('rag_eval.services.rag.pipeline.log_model_answer')
-    @patch('rag_eval.services.rag.pipeline.DatabaseConnection')
-    @patch('rag_eval.services.rag.pipeline.QueryExecutor')
+    @patch('src.services.rag.pipeline.generate_query_embedding')
+    @patch('src.services.rag.pipeline.retrieve_chunks')
+    @patch('src.services.rag.pipeline.generate_answer')
+    @patch('src.services.rag.pipeline.log_query')
+    @patch('src.services.rag.pipeline.log_retrieval')
+    @patch('src.services.rag.pipeline.log_model_answer')
+    @patch('src.services.rag.pipeline.DatabaseConnection')
+    @patch('src.services.rag.pipeline.QueryExecutor')
     def test_query_pipeline_internal_flow(
         self,
         mock_query_executor_class,
@@ -355,8 +355,8 @@ class TestEndToEndQueryPipeline:
 class TestEndToEndPromptVersions:
     """Test query pipeline with multiple prompt versions"""
     
-    @patch('rag_eval.api.routes.query.run_rag')
-    @patch('rag_eval.api.routes.query.config')
+    @patch('src.api.routes.query.run_rag')
+    @patch('src.api.routes.query.config')
     @pytest.mark.asyncio
     async def test_query_with_v1_prompt(
         self,
@@ -387,8 +387,8 @@ class TestEndToEndPromptVersions:
         call_args = mock_run_rag.call_args
         assert call_args[1]['prompt_version'] == "v1"
     
-    @patch('rag_eval.api.routes.query.run_rag')
-    @patch('rag_eval.api.routes.query.config')
+    @patch('src.api.routes.query.run_rag')
+    @patch('src.api.routes.query.config')
     @pytest.mark.asyncio
     async def test_query_with_v2_prompt(
         self,
@@ -423,12 +423,12 @@ class TestEndToEndPromptVersions:
 class TestEndToEndErrorScenarios:
     """Test error scenarios in end-to-end pipelines"""
     
-    @patch('rag_eval.api.routes.upload.generate_image_preview')
-    @patch('rag_eval.api.routes.upload.upload_document_to_storage')
-    @patch('rag_eval.api.routes.upload.doc_service')
-    @patch('rag_eval.api.routes.upload.ingest_document')
-    @patch('rag_eval.api.routes.upload.generate_id')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.generate_image_preview')
+    @patch('src.api.routes.upload.upload_document_to_storage')
+    @patch('src.api.routes.upload.doc_service')
+    @patch('src.api.routes.upload.ingest_document')
+    @patch('src.api.routes.upload.generate_id')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_invalid_document(
         self,
@@ -463,8 +463,8 @@ class TestEndToEndErrorScenarios:
         assert exc_info.value.status_code == 400
         assert "No text could be extracted" in exc_info.value.detail
     
-    @patch('rag_eval.api.routes.query.run_rag')
-    @patch('rag_eval.api.routes.query.config')
+    @patch('src.api.routes.query.run_rag')
+    @patch('src.api.routes.query.config')
     @pytest.mark.asyncio
     async def test_query_invalid_query(
         self,
@@ -487,8 +487,8 @@ class TestEndToEndErrorScenarios:
         assert exc_info.value.status_code == 500
         assert "Invalid query text" in exc_info.value.detail
     
-    @patch('rag_eval.api.routes.query.run_rag')
-    @patch('rag_eval.api.routes.query.config')
+    @patch('src.api.routes.query.run_rag')
+    @patch('src.api.routes.query.config')
     @pytest.mark.asyncio
     async def test_query_missing_prompt_version(
         self,
@@ -511,9 +511,9 @@ class TestEndToEndErrorScenarios:
         assert exc_info.value.status_code == 500
         assert "not found" in exc_info.value.detail.lower()
     
-    @patch('rag_eval.api.routes.upload.ingest_document')
-    @patch('rag_eval.api.routes.upload.generate_id')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.ingest_document')
+    @patch('src.api.routes.upload.generate_id')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_azure_service_failure(
         self,
@@ -541,8 +541,8 @@ class TestEndToEndErrorScenarios:
         assert exc_info.value.status_code == 500
         assert "Upload processing failed" in exc_info.value.detail
     
-    @patch('rag_eval.api.routes.query.run_rag')
-    @patch('rag_eval.api.routes.query.config')
+    @patch('src.api.routes.query.run_rag')
+    @patch('src.api.routes.query.config')
     @pytest.mark.asyncio
     async def test_query_azure_service_failure(
         self,
@@ -569,14 +569,14 @@ class TestEndToEndErrorScenarios:
 class TestEndToEndIntegration:
     """Integration tests for complete system"""
     
-    @patch('rag_eval.api.routes.upload.index_chunks')
-    @patch('rag_eval.api.routes.upload.generate_embeddings')
-    @patch('rag_eval.api.routes.upload.chunk_text')
-    @patch('rag_eval.api.routes.upload.ingest_document')
-    @patch('rag_eval.api.routes.upload.generate_id')
-    @patch('rag_eval.api.routes.upload.config')
-    @patch('rag_eval.api.routes.query.run_rag')
-    @patch('rag_eval.api.routes.query.config')
+    @patch('src.api.routes.upload.index_chunks')
+    @patch('src.api.routes.upload.generate_embeddings')
+    @patch('src.api.routes.upload.chunk_text')
+    @patch('src.api.routes.upload.ingest_document')
+    @patch('src.api.routes.upload.generate_id')
+    @patch('src.api.routes.upload.config')
+    @patch('src.api.routes.query.run_rag')
+    @patch('src.api.routes.query.config')
     @pytest.mark.asyncio
     async def test_upload_then_query_flow(
         self,

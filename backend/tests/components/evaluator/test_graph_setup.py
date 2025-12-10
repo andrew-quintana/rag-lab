@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 from typing import List
 
-from rag_eval.services.evaluator.graph_base import (
+from src.services.evaluator.graph_base import (
     JudgeEvaluationState,
     validate_initial_state,
     get_config_from_state,
@@ -16,8 +16,8 @@ from tests.components.evaluator.test_graph import (
     hallucination_node,
     should_continue,
 )
-from rag_eval.core.config import Config
-from rag_eval.core.interfaces import RetrievalResult
+from src.core.config import Config
+from src.core.interfaces import RetrievalResult
 
 
 class TestLangGraphImport:

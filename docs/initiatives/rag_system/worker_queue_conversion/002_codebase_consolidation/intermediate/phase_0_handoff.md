@@ -17,7 +17,7 @@ Phase 0 successfully updated all foundational cursor rules files to reflect the 
 
 **Updates Completed**:
 - ✅ Added worker-queue architecture layer description
-- ✅ Documented worker infrastructure (`rag_eval/services/workers/`)
+- ✅ Documented worker infrastructure (`src/services/workers/`)
 - ✅ Updated layer boundaries to include Azure Functions as worker execution layer
 - ✅ Documented queue-based communication patterns
 - ✅ Updated development workflow to include local Azure Functions development with Azurite
@@ -134,7 +134,7 @@ No concerns identified. All updates have been validated and are consistent.
 ### Recommended Before Phase 1:
 1. Review current function entry point import structure
 2. Review current build script (`infra/azure/azure_functions/build.sh`)
-3. Verify duplicate code location (`infra/azure/azure_functions/backend/rag_eval/`)
+3. Verify duplicate code location (`infra/azure/azure_functions/backend/src/`)
 
 ---
 

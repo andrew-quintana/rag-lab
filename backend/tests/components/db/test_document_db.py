@@ -8,10 +8,10 @@ import json
 
 logging.disable(logging.CRITICAL)
 
-from rag_eval.core.exceptions import DatabaseError
-from rag_eval.db.connection import DatabaseConnection
-from rag_eval.db.documents import DocumentService
-from rag_eval.db.models import Document
+from src.core.exceptions import DatabaseError
+from src.db.connection import DatabaseConnection
+from src.db.documents import DocumentService
+from src.db.models import Document
 
 
 @pytest.fixture
@@ -31,7 +31,7 @@ def mock_query_executor():
 @pytest.fixture
 def document_service(mock_db_conn, mock_query_executor):
     """Create a document service with mocked dependencies"""
-    with patch('rag_eval.db.documents.QueryExecutor', return_value=mock_query_executor):
+    with patch('src.db.documents.QueryExecutor', return_value=mock_query_executor):
         service = DocumentService(mock_db_conn)
         service.executor = mock_query_executor
         return service

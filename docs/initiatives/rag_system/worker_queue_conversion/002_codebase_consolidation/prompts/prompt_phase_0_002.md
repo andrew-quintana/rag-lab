@@ -35,7 +35,7 @@ Execute Phase 0 of Initiative 002: Update foundational cursor rules files to ref
 
 **Required Updates**:
 - [ ] Add worker-queue architecture layer description
-- [ ] Document worker infrastructure (`rag_eval/services/workers/`)
+- [ ] Document worker infrastructure (`src/services/workers/`)
 - [ ] Update layer boundaries to include Azure Functions as worker execution layer
 - [ ] Document queue-based communication patterns
 - [ ] Update development workflow to include local Azure Functions development with Azurite

@@ -12,10 +12,10 @@ from unittest.mock import Mock, patch
 
 logging.disable(logging.CRITICAL)
 
-from rag_eval.core.exceptions import AzureServiceError, DatabaseError, ValidationError
-from rag_eval.services.workers.embedding_worker import embedding_worker
-from rag_eval.services.workers.queue_client import QueueMessage, ProcessingStage
-from rag_eval.core.interfaces import Chunk
+from src.core.exceptions import AzureServiceError, DatabaseError, ValidationError
+from src.services.workers.embedding_worker import embedding_worker
+from src.services.workers.queue_client import QueueMessage, ProcessingStage
+from src.core.interfaces import Chunk
 
 
 @pytest.fixture
@@ -32,7 +32,7 @@ def mock_config():
 @pytest.fixture
 def actual_chunks():
     """Create actual chunks for testing"""
-    from rag_eval.services.rag.chunking import chunk_text_fixed_size
+    from src.services.rag.chunking import chunk_text_fixed_size
     text = """HEALTHGUARD SELECT PPO PLAN
 2025 Medicare Evidence of Coverage
 
@@ -85,24 +85,24 @@ class TestEmbeddingWorkerMessageParsing:
     
     def test_valid_message(self, valid_message_dict, context_with_config, mock_config, actual_chunks, actual_embeddings):
         """Test embedding worker with valid message"""
-        with patch('rag_eval.services.workers.embedding_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.embedding_worker.load_chunks', return_value=actual_chunks), \
-             patch('rag_eval.services.workers.embedding_worker.generate_embeddings', return_value=actual_embeddings), \
-             patch('rag_eval.services.workers.embedding_worker.persist_embeddings'), \
-             patch('rag_eval.services.workers.embedding_worker.update_document_status'), \
-             patch('rag_eval.services.workers.embedding_worker.enqueue_message'):
+        with patch('src.services.workers.embedding_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.embedding_worker.load_chunks', return_value=actual_chunks), \
+             patch('src.services.workers.embedding_worker.generate_embeddings', return_value=actual_embeddings), \
+             patch('src.services.workers.embedding_worker.persist_embeddings'), \
+             patch('src.services.workers.embedding_worker.update_document_status'), \
+             patch('src.services.workers.embedding_worker.enqueue_message'):
             
             embedding_worker(valid_message_dict, context_with_config)
             
             # Verify chunks were loaded
-            from rag_eval.services.workers.embedding_worker import load_chunks
+            from src.services.workers.embedding_worker import load_chunks
             load_chunks.assert_called_once_with(
                 valid_message_dict["document_id"],
                 mock_config
             )
             
             # Verify embeddings were generated
-            from rag_eval.services.workers.embedding_worker import generate_embeddings
+            from src.services.workers.embedding_worker import generate_embeddings
             generate_embeddings.assert_called_once_with(actual_chunks, mock_config)
     
     def test_invalid_message(self, context_with_config):
@@ -118,8 +118,8 @@ class TestEmbeddingWorkerIdempotency:
     
     def test_skip_if_already_embedded(self, valid_message_dict, context_with_config):
         """Test that worker skips processing if document is already embedded"""
-        with patch('rag_eval.services.workers.embedding_worker.should_process_document', return_value=False), \
-             patch('rag_eval.services.workers.embedding_worker.load_chunks') as mock_load:
+        with patch('src.services.workers.embedding_worker.should_process_document', return_value=False), \
+             patch('src.services.workers.embedding_worker.load_chunks') as mock_load:
             
             embedding_worker(valid_message_dict, context_with_config)
             
@@ -132,12 +132,12 @@ class TestEmbeddingWorkerLoad:
     
     def test_load_chunks_success(self, valid_message_dict, context_with_config, mock_config, actual_chunks, actual_embeddings):
         """Test successful loading of chunks"""
-        with patch('rag_eval.services.workers.embedding_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.embedding_worker.load_chunks', return_value=actual_chunks) as mock_load, \
-             patch('rag_eval.services.workers.embedding_worker.generate_embeddings', return_value=actual_embeddings), \
-             patch('rag_eval.services.workers.embedding_worker.persist_embeddings'), \
-             patch('rag_eval.services.workers.embedding_worker.update_document_status'), \
-             patch('rag_eval.services.workers.embedding_worker.enqueue_message'):
+        with patch('src.services.workers.embedding_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.embedding_worker.load_chunks', return_value=actual_chunks) as mock_load, \
+             patch('src.services.workers.embedding_worker.generate_embeddings', return_value=actual_embeddings), \
+             patch('src.services.workers.embedding_worker.persist_embeddings'), \
+             patch('src.services.workers.embedding_worker.update_document_status'), \
+             patch('src.services.workers.embedding_worker.enqueue_message'):
             
             embedding_worker(valid_message_dict, context_with_config)
             
@@ -148,9 +148,9 @@ class TestEmbeddingWorkerLoad:
     
     def test_load_no_chunks(self, valid_message_dict, context_with_config):
         """Test handling of no chunks found"""
-        with patch('rag_eval.services.workers.embedding_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.embedding_worker.load_chunks', return_value=[]), \
-             patch('rag_eval.services.workers.embedding_worker.update_document_status'):
+        with patch('src.services.workers.embedding_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.embedding_worker.load_chunks', return_value=[]), \
+             patch('src.services.workers.embedding_worker.update_document_status'):
             
             # The worker raises ValueError when no chunks found
             with pytest.raises((ValueError, AzureServiceError)):
@@ -158,9 +158,9 @@ class TestEmbeddingWorkerLoad:
     
     def test_load_failure(self, valid_message_dict, context_with_config):
         """Test handling of load failure"""
-        with patch('rag_eval.services.workers.embedding_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.embedding_worker.load_chunks') as mock_load, \
-             patch('rag_eval.services.workers.embedding_worker.update_document_status'):
+        with patch('src.services.workers.embedding_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.embedding_worker.load_chunks') as mock_load, \
+             patch('src.services.workers.embedding_worker.update_document_status'):
             
             mock_load.side_effect = DatabaseError("Database connection failed")
             
@@ -173,12 +173,12 @@ class TestEmbeddingWorkerProcess:
     
     def test_embedding_generation_success(self, valid_message_dict, context_with_config, mock_config, actual_chunks, actual_embeddings):
         """Test successful embedding generation"""
-        with patch('rag_eval.services.workers.embedding_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.embedding_worker.load_chunks', return_value=actual_chunks), \
-             patch('rag_eval.services.workers.embedding_worker.generate_embeddings', return_value=actual_embeddings) as mock_generate, \
-             patch('rag_eval.services.workers.embedding_worker.persist_embeddings'), \
-             patch('rag_eval.services.workers.embedding_worker.update_document_status'), \
-             patch('rag_eval.services.workers.embedding_worker.enqueue_message'):
+        with patch('src.services.workers.embedding_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.embedding_worker.load_chunks', return_value=actual_chunks), \
+             patch('src.services.workers.embedding_worker.generate_embeddings', return_value=actual_embeddings) as mock_generate, \
+             patch('src.services.workers.embedding_worker.persist_embeddings'), \
+             patch('src.services.workers.embedding_worker.update_document_status'), \
+             patch('src.services.workers.embedding_worker.enqueue_message'):
             
             embedding_worker(valid_message_dict, context_with_config)
             
@@ -187,9 +187,9 @@ class TestEmbeddingWorkerProcess:
     
     def test_embedding_generation_retry(self, valid_message_dict, context_with_config, mock_config, actual_chunks, actual_embeddings):
         """Test retry logic on embedding generation failure"""
-        with patch('rag_eval.services.workers.embedding_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.embedding_worker.load_chunks', return_value=actual_chunks), \
-             patch('rag_eval.services.workers.embedding_worker.generate_embeddings') as mock_generate:
+        with patch('src.services.workers.embedding_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.embedding_worker.load_chunks', return_value=actual_chunks), \
+             patch('src.services.workers.embedding_worker.generate_embeddings') as mock_generate:
             
             # First two calls fail, third succeeds
             mock_generate.side_effect = [
@@ -198,9 +198,9 @@ class TestEmbeddingWorkerProcess:
                 actual_embeddings
             ]
             
-            with patch('rag_eval.services.workers.embedding_worker.persist_embeddings'), \
-                 patch('rag_eval.services.workers.embedding_worker.update_document_status'), \
-                 patch('rag_eval.services.workers.embedding_worker.enqueue_message'):
+            with patch('src.services.workers.embedding_worker.persist_embeddings'), \
+                 patch('src.services.workers.embedding_worker.update_document_status'), \
+                 patch('src.services.workers.embedding_worker.enqueue_message'):
                 
                 embedding_worker(valid_message_dict, context_with_config)
                 
@@ -209,10 +209,10 @@ class TestEmbeddingWorkerProcess:
     
     def test_embedding_generation_failure(self, valid_message_dict, context_with_config, mock_config, actual_chunks):
         """Test handling of embedding generation failure"""
-        with patch('rag_eval.services.workers.embedding_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.embedding_worker.load_chunks', return_value=actual_chunks), \
-             patch('rag_eval.services.workers.embedding_worker.generate_embeddings') as mock_generate, \
-             patch('rag_eval.services.workers.embedding_worker.update_document_status'):
+        with patch('src.services.workers.embedding_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.embedding_worker.load_chunks', return_value=actual_chunks), \
+             patch('src.services.workers.embedding_worker.generate_embeddings') as mock_generate, \
+             patch('src.services.workers.embedding_worker.update_document_status'):
             
             mock_generate.side_effect = AzureServiceError("API key invalid")
             
@@ -225,12 +225,12 @@ class TestEmbeddingWorkerPersistence:
     
     def test_persist_embeddings_success(self, valid_message_dict, context_with_config, mock_config, actual_chunks, actual_embeddings):
         """Test successful persistence of embeddings"""
-        with patch('rag_eval.services.workers.embedding_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.embedding_worker.load_chunks', return_value=actual_chunks), \
-             patch('rag_eval.services.workers.embedding_worker.generate_embeddings', return_value=actual_embeddings), \
-             patch('rag_eval.services.workers.embedding_worker.persist_embeddings') as mock_persist, \
-             patch('rag_eval.services.workers.embedding_worker.update_document_status'), \
-             patch('rag_eval.services.workers.embedding_worker.enqueue_message'):
+        with patch('src.services.workers.embedding_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.embedding_worker.load_chunks', return_value=actual_chunks), \
+             patch('src.services.workers.embedding_worker.generate_embeddings', return_value=actual_embeddings), \
+             patch('src.services.workers.embedding_worker.persist_embeddings') as mock_persist, \
+             patch('src.services.workers.embedding_worker.update_document_status'), \
+             patch('src.services.workers.embedding_worker.enqueue_message'):
             
             embedding_worker(valid_message_dict, context_with_config)
             
@@ -244,11 +244,11 @@ class TestEmbeddingWorkerPersistence:
     
     def test_persist_failure(self, valid_message_dict, context_with_config, mock_config, actual_chunks, actual_embeddings):
         """Test persistence failure handling"""
-        with patch('rag_eval.services.workers.embedding_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.embedding_worker.load_chunks', return_value=actual_chunks), \
-             patch('rag_eval.services.workers.embedding_worker.generate_embeddings', return_value=actual_embeddings), \
-             patch('rag_eval.services.workers.embedding_worker.persist_embeddings') as mock_persist, \
-             patch('rag_eval.services.workers.embedding_worker.update_document_status'):
+        with patch('src.services.workers.embedding_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.embedding_worker.load_chunks', return_value=actual_chunks), \
+             patch('src.services.workers.embedding_worker.generate_embeddings', return_value=actual_embeddings), \
+             patch('src.services.workers.embedding_worker.persist_embeddings') as mock_persist, \
+             patch('src.services.workers.embedding_worker.update_document_status'):
             
             mock_persist.side_effect = DatabaseError("Database connection failed")
             
@@ -261,12 +261,12 @@ class TestEmbeddingWorkerEnqueue:
     
     def test_enqueue_to_indexing_queue(self, valid_message_dict, context_with_config, mock_config, actual_chunks, actual_embeddings):
         """Test successful enqueue to indexing queue"""
-        with patch('rag_eval.services.workers.embedding_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.embedding_worker.load_chunks', return_value=actual_chunks), \
-             patch('rag_eval.services.workers.embedding_worker.generate_embeddings', return_value=actual_embeddings), \
-             patch('rag_eval.services.workers.embedding_worker.persist_embeddings'), \
-             patch('rag_eval.services.workers.embedding_worker.update_document_status'), \
-             patch('rag_eval.services.workers.embedding_worker.enqueue_message') as mock_enqueue:
+        with patch('src.services.workers.embedding_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.embedding_worker.load_chunks', return_value=actual_chunks), \
+             patch('src.services.workers.embedding_worker.generate_embeddings', return_value=actual_embeddings), \
+             patch('src.services.workers.embedding_worker.persist_embeddings'), \
+             patch('src.services.workers.embedding_worker.update_document_status'), \
+             patch('src.services.workers.embedding_worker.enqueue_message') as mock_enqueue:
             
             embedding_worker(valid_message_dict, context_with_config)
             

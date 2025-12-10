@@ -3,13 +3,13 @@
 import pytest
 from typing import List, Dict, Any, Optional
 
-from rag_eval.core.interfaces import (
+from src.core.interfaces import (
     JudgeEvaluationResult,
     MetaEvaluationResult,
     RetrievalResult,
     JudgePerformanceMetrics
 )
-from rag_eval.services.evaluator.meta_eval import (
+from src.services.evaluator.meta_eval import (
     meta_evaluate_judge,
     calculate_judge_metrics,
     _validate_correctness,

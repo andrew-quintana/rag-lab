@@ -159,7 +159,7 @@ pytest tests/integration/test_phase5_performance.py -v -m integration -m perform
 **Known Issues to Address**:
 - [ ] **FM-001**: Batch result persistence query error (if still present)
   - [ ] Review error: `DatabaseError: Query failed: tuple index out of range`
-  - [ ] Fix in `rag_eval/services/workers/persistence.py:575` in `get_completed_batches()`
+  - [ ] Fix in `src/services/workers/persistence.py:575` in `get_completed_batches()`
   - [ ] Test fix locally
   - [ ] Verify fix in cloud
 - [ ] **FM-005**: Azure Functions queue trigger issue (if still present)
@@ -278,7 +278,7 @@ pytest tests/integration/test_phase5_performance.py -v -m integration -m perform
   - [ ] Verify development workflow matches consolidated deployment process
   - [ ] Update if any inaccuracies are found
 - [ ] **Re-validate `.cursor/rules/scoping_document.md`**
-  - [ ] Verify codebase structure diagram reflects consolidated structure (no duplicate backend/rag_eval/)
+  - [ ] Verify codebase structure diagram reflects consolidated structure (no duplicate backend/src/)
   - [ ] Verify deployment process description matches simplified build script
   - [ ] Verify configuration management section reflects consolidated approach
   - [ ] Update if any inaccuracies are found

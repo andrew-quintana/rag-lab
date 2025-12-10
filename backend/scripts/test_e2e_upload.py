@@ -21,9 +21,9 @@ import json
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from rag_eval.core.config import Config
-from rag_eval.db.connection import DatabaseConnection
-from rag_eval.db.documents import DocumentService
+from src.core.config import Config
+from src.db.connection import DatabaseConnection
+from src.db.documents import DocumentService
 
 def test_e2e_upload(pdf_path: str, api_base_url: str = "http://localhost:8000"):
     """Test end-to-end upload flow via API"""

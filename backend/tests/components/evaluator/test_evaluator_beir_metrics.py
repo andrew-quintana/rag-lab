@@ -4,8 +4,8 @@ import pytest
 import math
 from typing import List
 
-from rag_eval.core.interfaces import RetrievalResult, BEIRMetricsResult
-from rag_eval.services.evaluator.beir_metrics import (
+from src.core.interfaces import RetrievalResult, BEIRMetricsResult
+from src.services.evaluator.beir_metrics import (
     compute_beir_metrics,
     _compute_recall_at_k,
     _compute_precision_at_k,

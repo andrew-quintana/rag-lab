@@ -7,10 +7,10 @@ import os
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from rag_eval.core.config import Config
-from rag_eval.db.connection import DatabaseConnection
-from rag_eval.db.documents import DocumentService
-from rag_eval.services.rag.search import delete_chunks_by_document_id
+from src.core.config import Config
+from src.db.connection import DatabaseConnection
+from src.db.documents import DocumentService
+from src.services.rag.search import delete_chunks_by_document_id
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
 

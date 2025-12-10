@@ -7,10 +7,10 @@ from unittest.mock import Mock, patch, MagicMock
 # Disable logging during tests to avoid potential hangs
 logging.disable(logging.CRITICAL)
 
-from rag_eval.core.exceptions import AzureServiceError
-from rag_eval.core.config import Config
-from rag_eval.core.interfaces import Chunk
-from rag_eval.services.rag.chunking import (
+from src.core.exceptions import AzureServiceError
+from src.core.config import Config
+from src.core.interfaces import Chunk
+from src.services.rag.chunking import (
     chunk_text_fixed_size,
     chunk_text
 )
@@ -195,7 +195,7 @@ class TestChunkText:
         """Sample text for testing"""
         return "This is a sample document. " * 100
     
-    @patch('rag_eval.services.rag.chunking.chunk_text_fixed_size')
+    @patch('src.services.rag.chunking.chunk_text_fixed_size')
     def test_chunk_text_default_behavior(self, mock_fixed_size, mock_config, sample_text):
         """Test that default behavior uses fixed-size chunking"""
         mock_fixed_size.return_value = [
@@ -211,7 +211,7 @@ class TestChunkText:
     
     # LLM chunking option test removed - focusing only on fixed-size chunking
     
-    @patch('rag_eval.services.rag.chunking.chunk_text_fixed_size')
+    @patch('src.services.rag.chunking.chunk_text_fixed_size')
     def test_chunk_text_custom_parameters(self, mock_fixed_size, mock_config, sample_text):
         """Test that custom chunk_size and overlap are passed correctly"""
         mock_fixed_size.return_value = []
@@ -222,7 +222,7 @@ class TestChunkText:
         # Verify parameters were passed
         mock_fixed_size.assert_called_once_with(sample_text, "doc_123", 500, 100)
     
-    @patch('rag_eval.services.rag.chunking.chunk_text_fixed_size')
+    @patch('src.services.rag.chunking.chunk_text_fixed_size')
     def test_chunk_text_no_document_id(self, mock_fixed_size, mock_config, sample_text):
         """Test chunking without document_id"""
         mock_fixed_size.return_value = []

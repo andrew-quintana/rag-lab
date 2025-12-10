@@ -10,16 +10,16 @@ from datetime import datetime
 # Disable logging during tests to avoid potential hangs
 logging.disable(logging.CRITICAL)
 
-from rag_eval.core.exceptions import AzureServiceError, ValidationError
-from rag_eval.core.config import Config
-from rag_eval.api.routes.upload import router, handle_upload, UploadResponse
-from rag_eval.api.routes.documents import (
+from src.core.exceptions import AzureServiceError, ValidationError
+from src.core.config import Config
+from src.api.routes.upload import router, handle_upload, UploadResponse
+from src.api.routes.documents import (
     get_document_status,
     delete_document,
     DocumentStatusResponse,
     DeleteDocumentResponse
 )
-from rag_eval.services.workers.queue_client import QueueMessage, SourceStorage, ProcessingStage
+from src.services.workers.queue_client import QueueMessage, SourceStorage, ProcessingStage
 
 
 @pytest.fixture
@@ -60,12 +60,12 @@ def mock_upload_file(sample_file_content):
 class TestUploadEndpointUnit:
     """Unit tests for upload endpoint handler (asynchronous)"""
     
-    @patch('rag_eval.api.routes.upload.enqueue_message')
-    @patch('rag_eval.api.routes.upload.doc_service')
-    @patch('rag_eval.api.routes.upload.generate_image_preview')
-    @patch('rag_eval.api.routes.upload.upload_document_to_storage')
-    @patch('rag_eval.api.routes.upload.generate_id')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.enqueue_message')
+    @patch('src.api.routes.upload.doc_service')
+    @patch('src.api.routes.upload.generate_image_preview')
+    @patch('src.api.routes.upload.upload_document_to_storage')
+    @patch('src.api.routes.upload.generate_id')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_enqueues_message(
         self,
@@ -115,12 +115,12 @@ class TestUploadEndpointUnit:
         assert message.metadata is not None
         assert message.metadata["mime_type"] == "application/pdf"
     
-    @patch('rag_eval.api.routes.upload.enqueue_message')
-    @patch('rag_eval.api.routes.upload.doc_service')
-    @patch('rag_eval.api.routes.upload.generate_image_preview')
-    @patch('rag_eval.api.routes.upload.upload_document_to_storage')
-    @patch('rag_eval.api.routes.upload.generate_id')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.enqueue_message')
+    @patch('src.api.routes.upload.doc_service')
+    @patch('src.api.routes.upload.generate_image_preview')
+    @patch('src.api.routes.upload.upload_document_to_storage')
+    @patch('src.api.routes.upload.generate_id')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_returns_immediately(
         self,
@@ -153,12 +153,12 @@ class TestUploadEndpointUnit:
         mock_enqueue_message.assert_called_once()
         # Verify no synchronous processing happened - message was enqueued instead
     
-    @patch('rag_eval.api.routes.upload.enqueue_message')
-    @patch('rag_eval.api.routes.upload.doc_service')
-    @patch('rag_eval.api.routes.upload.generate_image_preview')
-    @patch('rag_eval.api.routes.upload.upload_document_to_storage')
-    @patch('rag_eval.api.routes.upload.generate_id')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.enqueue_message')
+    @patch('src.api.routes.upload.doc_service')
+    @patch('src.api.routes.upload.generate_image_preview')
+    @patch('src.api.routes.upload.upload_document_to_storage')
+    @patch('src.api.routes.upload.generate_id')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_creates_document_with_uploaded_status(
         self,
@@ -190,12 +190,12 @@ class TestUploadEndpointUnit:
         assert document.status == "uploaded"
         assert document.id == "doc_789"
     
-    @patch('rag_eval.api.routes.upload.enqueue_message')
-    @patch('rag_eval.api.routes.upload.doc_service')
-    @patch('rag_eval.api.routes.upload.generate_image_preview')
-    @patch('rag_eval.api.routes.upload.upload_document_to_storage')
-    @patch('rag_eval.api.routes.upload.generate_id')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.enqueue_message')
+    @patch('src.api.routes.upload.doc_service')
+    @patch('src.api.routes.upload.generate_image_preview')
+    @patch('src.api.routes.upload.upload_document_to_storage')
+    @patch('src.api.routes.upload.generate_id')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_handles_storage_error(
         self,
@@ -221,12 +221,12 @@ class TestUploadEndpointUnit:
         assert exc_info.value.status_code == 500
         assert "Upload processing failed" in exc_info.value.detail
     
-    @patch('rag_eval.api.routes.upload.enqueue_message')
-    @patch('rag_eval.api.routes.upload.doc_service')
-    @patch('rag_eval.api.routes.upload.generate_image_preview')
-    @patch('rag_eval.api.routes.upload.upload_document_to_storage')
-    @patch('rag_eval.api.routes.upload.generate_id')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.enqueue_message')
+    @patch('src.api.routes.upload.doc_service')
+    @patch('src.api.routes.upload.generate_image_preview')
+    @patch('src.api.routes.upload.upload_document_to_storage')
+    @patch('src.api.routes.upload.generate_id')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_handles_enqueue_error(
         self,
@@ -259,8 +259,8 @@ class TestUploadEndpointUnit:
 class TestStatusEndpoint:
     """Tests for document status query endpoint"""
     
-    @patch('rag_eval.api.routes.documents.QueryExecutor')
-    @patch('rag_eval.api.routes.documents.doc_service')
+    @patch('src.api.routes.documents.QueryExecutor')
+    @patch('src.api.routes.documents.doc_service')
     @pytest.mark.asyncio
     async def test_get_status_returns_correct_status(
         self,
@@ -269,7 +269,7 @@ class TestStatusEndpoint:
     ):
         """Test status query endpoint returns correct status"""
         # Setup mocks
-        from rag_eval.db.models import Document
+        from src.db.models import Document
         document = Document(
             id="doc_123",
             filename="test.pdf",
@@ -301,8 +301,8 @@ class TestStatusEndpoint:
         assert result.parsed_at is not None
         assert result.chunked_at is None
     
-    @patch('rag_eval.api.routes.documents.QueryExecutor')
-    @patch('rag_eval.api.routes.documents.doc_service')
+    @patch('src.api.routes.documents.QueryExecutor')
+    @patch('src.api.routes.documents.doc_service')
     @pytest.mark.asyncio
     async def test_get_status_returns_error_details_for_failed_status(
         self,
@@ -311,7 +311,7 @@ class TestStatusEndpoint:
     ):
         """Test status endpoint returns error details for failed status"""
         # Setup mocks
-        from rag_eval.db.models import Document
+        from src.db.models import Document
         document = Document(
             id="doc_123",
             filename="test.pdf",
@@ -340,7 +340,7 @@ class TestStatusEndpoint:
         assert result.status == "failed_parsing"
         assert result.error_details == "Document Intelligence API error"
     
-    @patch('rag_eval.api.routes.documents.doc_service')
+    @patch('src.api.routes.documents.doc_service')
     @pytest.mark.asyncio
     async def test_get_status_returns_404_for_missing_document(
         self,
@@ -361,10 +361,10 @@ class TestStatusEndpoint:
 class TestDeleteEndpoint:
     """Tests for document deletion endpoint"""
     
-    @patch('rag_eval.api.routes.documents.delete_chunks_from_db')
-    @patch('rag_eval.api.routes.documents.delete_chunks_from_ai_search')
-    @patch('rag_eval.api.routes.documents.delete_document_from_storage')
-    @patch('rag_eval.api.routes.documents.doc_service')
+    @patch('src.api.routes.documents.delete_chunks_from_db')
+    @patch('src.api.routes.documents.delete_chunks_from_ai_search')
+    @patch('src.api.routes.documents.delete_document_from_storage')
+    @patch('src.api.routes.documents.doc_service')
     @pytest.mark.asyncio
     async def test_delete_removes_chunks_from_both_systems(
         self,
@@ -375,7 +375,7 @@ class TestDeleteEndpoint:
     ):
         """Test delete endpoint removes chunks from both chunks table and Azure AI Search"""
         # Setup mocks
-        from rag_eval.db.models import Document
+        from src.db.models import Document
         document = Document(
             id="doc_123",
             filename="test.pdf",
@@ -405,10 +405,10 @@ class TestDeleteEndpoint:
         mock_delete_storage.assert_called_once()
         mock_doc_service.delete_document.assert_called_once_with("doc_123")
     
-    @patch('rag_eval.api.routes.documents.delete_chunks_from_db')
-    @patch('rag_eval.api.routes.documents.delete_chunks_from_ai_search')
-    @patch('rag_eval.api.routes.documents.delete_document_from_storage')
-    @patch('rag_eval.api.routes.documents.doc_service')
+    @patch('src.api.routes.documents.delete_chunks_from_db')
+    @patch('src.api.routes.documents.delete_chunks_from_ai_search')
+    @patch('src.api.routes.documents.delete_document_from_storage')
+    @patch('src.api.routes.documents.doc_service')
     @pytest.mark.asyncio
     async def test_delete_graceful_degradation(
         self,
@@ -419,7 +419,7 @@ class TestDeleteEndpoint:
     ):
         """Test delete endpoint continues with other deletions if one fails"""
         # Setup mocks
-        from rag_eval.db.models import Document
+        from src.db.models import Document
         document = Document(
             id="doc_123",
             filename="test.pdf",
@@ -445,7 +445,7 @@ class TestDeleteEndpoint:
         mock_delete_storage.assert_called_once()
         mock_doc_service.delete_document.assert_called_once()
     
-    @patch('rag_eval.api.routes.documents.doc_service')
+    @patch('src.api.routes.documents.doc_service')
     @pytest.mark.asyncio
     async def test_delete_returns_404_for_missing_document(
         self,

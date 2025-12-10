@@ -15,10 +15,10 @@ import json
 
 logging.disable(logging.CRITICAL)
 
-from rag_eval.core.exceptions import DatabaseError
-from rag_eval.core.interfaces import Chunk
-from rag_eval.services.workers import persistence
-from rag_eval.services.rag.chunking import chunk_text_fixed_size
+from src.core.exceptions import DatabaseError
+from src.core.interfaces import Chunk
+from src.services.workers import persistence
+from src.services.rag.chunking import chunk_text_fixed_size
 
 
 @pytest.fixture
@@ -170,8 +170,8 @@ def sample_embeddings(actual_embeddings):
 class TestLoadExtractedText:
     """Tests for load_extracted_text function"""
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_load_extracted_text_success(self, mock_executor_class, mock_db_class, mock_config, actual_extracted_text):
         """Test successful loading of extracted text using actual extracted text from file"""
         # Setup mocks
@@ -194,8 +194,8 @@ class TestLoadExtractedText:
         assert "SELECT extracted_text" in call_args[0][0]
         assert call_args[0][1] == ("doc_123",)
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_load_extracted_text_not_found(self, mock_executor_class, mock_db_class, mock_config):
         """Test loading extracted text when document not found"""
         mock_db = Mock()
@@ -208,8 +208,8 @@ class TestLoadExtractedText:
         with pytest.raises(ValueError, match="Document doc_123 not found"):
             persistence.load_extracted_text("doc_123", mock_config)
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_load_extracted_text_null(self, mock_executor_class, mock_db_class, mock_config):
         """Test loading extracted text when text is null"""
         mock_db = Mock()
@@ -227,8 +227,8 @@ class TestLoadExtractedText:
         with pytest.raises(ValueError, match="document_id cannot be empty"):
             persistence.load_extracted_text("", mock_config)
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_load_extracted_text_database_error(self, mock_executor_class, mock_db_class, mock_config):
         """Test database error handling"""
         mock_db = Mock()
@@ -245,8 +245,8 @@ class TestLoadExtractedText:
 class TestPersistExtractedText:
     """Tests for persist_extracted_text function"""
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_persist_extracted_text_success(self, mock_executor_class, mock_db_class, mock_config, actual_extracted_text):
         """Test successful persistence of extracted text using actual extracted text from file"""
         mock_db = Mock()
@@ -269,8 +269,8 @@ class TestPersistExtractedText:
         with pytest.raises(ValueError, match="document_id cannot be empty"):
             persistence.persist_extracted_text("", "text", mock_config)
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_persist_extracted_text_database_error(self, mock_executor_class, mock_db_class, mock_config):
         """Test database error handling"""
         mock_db = Mock()
@@ -287,8 +287,8 @@ class TestPersistExtractedText:
 class TestLoadChunks:
     """Tests for load_chunks function"""
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_load_chunks_success(self, mock_executor_class, mock_db_class, mock_config, actual_chunks):
         """Test successful loading of chunks using actual chunks from file"""
         mock_db = Mock()
@@ -316,8 +316,8 @@ class TestLoadChunks:
         assert result[0].text == actual_chunks[0].text
         assert len(result[0].text) > 0  # Verify we have actual text
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_load_chunks_empty_result(self, mock_executor_class, mock_db_class, mock_config):
         """Test loading chunks when no chunks exist"""
         mock_db = Mock()
@@ -332,8 +332,8 @@ class TestLoadChunks:
         # Assert
         assert result == []
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_load_chunks_null_metadata(self, mock_executor_class, mock_db_class, mock_config):
         """Test loading chunks with null metadata"""
         mock_db = Mock()
@@ -365,8 +365,8 @@ class TestLoadChunks:
 class TestPersistChunks:
     """Tests for persist_chunks function"""
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_persist_chunks_success(self, mock_executor_class, mock_db_class, mock_config, sample_chunks):
         """Test successful persistence of chunks"""
         mock_db = Mock()
@@ -380,8 +380,8 @@ class TestPersistChunks:
         # Assert - should delete existing and insert new chunks
         assert mock_executor.execute_insert.call_count == 3  # 1 delete + 2 inserts
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_persist_chunks_empty_list(self, mock_executor_class, mock_db_class, mock_config):
         """Test persistence with empty chunks list"""
         mock_db = Mock()
@@ -404,8 +404,8 @@ class TestPersistChunks:
 class TestLoadEmbeddings:
     """Tests for load_embeddings function"""
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_load_embeddings_success(self, mock_executor_class, mock_db_class, mock_config, actual_embeddings):
         """Test successful loading of embeddings using actual embeddings"""
         mock_db = Mock()
@@ -429,8 +429,8 @@ class TestLoadEmbeddings:
         assert result[0] == test_embeddings[0]
         assert result[1] == test_embeddings[1]
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_load_embeddings_not_found(self, mock_executor_class, mock_db_class, mock_config):
         """Test loading embeddings when none exist"""
         mock_db = Mock()
@@ -443,8 +443,8 @@ class TestLoadEmbeddings:
         with pytest.raises(ValueError, match="Embeddings not found"):
             persistence.load_embeddings("doc_123", mock_config)
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_load_embeddings_null_embedding(self, mock_executor_class, mock_db_class, mock_config):
         """Test loading embeddings when embedding is null"""
         mock_db = Mock()
@@ -466,8 +466,8 @@ class TestLoadEmbeddings:
 class TestPersistEmbeddings:
     """Tests for persist_embeddings function"""
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_persist_embeddings_success(self, mock_executor_class, mock_db_class, mock_config, sample_chunks, sample_embeddings):
         """Test successful persistence of embeddings"""
         mock_db = Mock()
@@ -481,8 +481,8 @@ class TestPersistEmbeddings:
         # Assert - should update each chunk's embedding
         assert mock_executor.execute_insert.call_count == 2
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_persist_embeddings_length_mismatch(self, mock_executor_class, mock_db_class, mock_config, sample_chunks):
         """Test persistence with length mismatch"""
         mock_db = Mock()
@@ -494,8 +494,8 @@ class TestPersistEmbeddings:
         with pytest.raises(ValueError, match="length mismatch"):
             persistence.persist_embeddings("doc_123", sample_chunks, [[0.1, 0.2]], mock_config)
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_persist_embeddings_empty_list(self, mock_executor_class, mock_db_class, mock_config):
         """Test persistence with empty chunks/embeddings"""
         mock_db = Mock()
@@ -518,8 +518,8 @@ class TestPersistEmbeddings:
 class TestUpdateDocumentStatus:
     """Tests for update_document_status function"""
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_update_status_with_timestamp(self, mock_executor_class, mock_db_class, mock_config):
         """Test updating status with timestamp field"""
         mock_db = Mock()
@@ -537,8 +537,8 @@ class TestUpdateDocumentStatus:
         assert "parsed_at" in call_args[0][0]
         assert call_args[0][1] == ("parsed", "doc_123")
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_update_status_without_timestamp(self, mock_executor_class, mock_db_class, mock_config):
         """Test updating status without timestamp field"""
         mock_db = Mock()
@@ -569,8 +569,8 @@ class TestUpdateDocumentStatus:
 class TestCheckDocumentStatus:
     """Tests for check_document_status function"""
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_check_status_success(self, mock_executor_class, mock_db_class, mock_config):
         """Test successful status check"""
         mock_db = Mock()
@@ -585,8 +585,8 @@ class TestCheckDocumentStatus:
         # Assert
         assert result == "parsed"
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_check_status_not_found(self, mock_executor_class, mock_db_class, mock_config):
         """Test status check when document not found"""
         mock_db = Mock()
@@ -608,7 +608,7 @@ class TestCheckDocumentStatus:
 class TestShouldProcessDocument:
     """Tests for should_process_document function (idempotency checks)"""
     
-    @patch('rag_eval.services.workers.persistence.check_document_status')
+    @patch('src.services.workers.persistence.check_document_status')
     def test_should_process_before_target(self, mock_check_status, mock_config):
         """Test should process when current status is before target"""
         mock_check_status.return_value = "uploaded"
@@ -619,7 +619,7 @@ class TestShouldProcessDocument:
         # Assert
         assert result is True
     
-    @patch('rag_eval.services.workers.persistence.check_document_status')
+    @patch('src.services.workers.persistence.check_document_status')
     def test_should_not_process_at_target(self, mock_check_status, mock_config):
         """Test should not process when current status equals target"""
         mock_check_status.return_value = "parsed"
@@ -630,7 +630,7 @@ class TestShouldProcessDocument:
         # Assert
         assert result is False
     
-    @patch('rag_eval.services.workers.persistence.check_document_status')
+    @patch('src.services.workers.persistence.check_document_status')
     def test_should_not_process_beyond_target(self, mock_check_status, mock_config):
         """Test should not process when current status is beyond target"""
         mock_check_status.return_value = "indexed"
@@ -655,8 +655,8 @@ class TestShouldProcessDocument:
 class TestDeleteChunksByDocumentId:
     """Tests for delete_chunks_by_document_id function"""
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_delete_chunks_success(self, mock_executor_class, mock_db_class, mock_config):
         """Test successful deletion of chunks"""
         mock_db = Mock()
@@ -672,8 +672,8 @@ class TestDeleteChunksByDocumentId:
         assert result == 5
         assert mock_executor.execute_insert.call_count == 1  # Delete query
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_delete_chunks_no_chunks(self, mock_executor_class, mock_db_class, mock_config):
         """Test deletion when no chunks exist"""
         mock_db = Mock()
@@ -693,8 +693,8 @@ class TestDeleteChunksByDocumentId:
         with pytest.raises(ValueError, match="document_id cannot be empty"):
             persistence.delete_chunks_by_document_id("", mock_config)
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_delete_chunks_database_error(self, mock_executor_class, mock_db_class, mock_config):
         """Test database error handling"""
         mock_db = Mock()
@@ -711,8 +711,8 @@ class TestDeleteChunksByDocumentId:
 class TestEdgeCases:
     """Tests for edge cases and error handling"""
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_large_extracted_text(self, mock_executor_class, mock_db_class, mock_config, actual_extracted_text):
         """Test persistence with large extracted text from actual file"""
         # Use actual extracted text (which should be substantial)
@@ -733,15 +733,15 @@ class TestEdgeCases:
         mock_executor.execute_insert.assert_called_once()
         assert len(large_text) > 1000  # Verify we're testing with substantial text
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_many_chunks(self, mock_executor_class, mock_db_class, mock_config, actual_chunks):
         """Test persistence with many chunks from actual file"""
         # Use actual chunks - if we don't have enough, extend them
         many_chunks = actual_chunks
         if len(many_chunks) < 20:
             # Extend with more chunks from the same text
-            from rag_eval.services.rag.chunking import chunk_text_fixed_size
+            from src.services.rag.chunking import chunk_text_fixed_size
             extended_text = actual_chunks[0].text * 10  # Repeat text to get more chunks
             additional_chunks = chunk_text_fixed_size(
                 text=extended_text,
@@ -764,8 +764,8 @@ class TestEdgeCases:
         assert mock_executor.execute_insert.call_count == expected_calls
         assert len(many_chunks) > 0  # Verify we're using actual chunks
     
-    @patch('rag_eval.services.workers.persistence.DatabaseConnection')
-    @patch('rag_eval.services.workers.persistence.QueryExecutor')
+    @patch('src.services.workers.persistence.DatabaseConnection')
+    @patch('src.services.workers.persistence.QueryExecutor')
     def test_embeddings_already_list(self, mock_executor_class, mock_db_class, mock_config):
         """Test loading embeddings when they're already lists (not JSON strings)"""
         mock_db = Mock()

@@ -11,8 +11,8 @@ if Azure Storage is not available.
 
 import pytest
 import os
-from rag_eval.core.config import Config
-from rag_eval.services.workers.queue_client import (
+from src.core.config import Config
+from src.services.workers.queue_client import (
     QueueMessage,
     enqueue_message,
     dequeue_message,

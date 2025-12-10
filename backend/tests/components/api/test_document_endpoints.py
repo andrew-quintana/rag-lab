@@ -7,7 +7,7 @@ from datetime import datetime
 
 logging.disable(logging.CRITICAL)
 
-from rag_eval.api.routes.documents import (
+from src.api.routes.documents import (
     list_documents,
     get_document,
     download_document,
@@ -16,7 +16,7 @@ from rag_eval.api.routes.documents import (
     DocumentResponse,
     DocumentListResponse
 )
-from rag_eval.db.models import Document
+from src.db.models import Document
 
 
 @pytest.fixture
@@ -39,7 +39,7 @@ def sample_document():
 class TestDocumentEndpoints:
     """Tests for document API endpoints"""
     
-    @patch('rag_eval.api.routes.documents.doc_service')
+    @patch('src.api.routes.documents.doc_service')
     @pytest.mark.asyncio
     async def test_list_documents(self, mock_doc_service, sample_document):
         """Test listing documents"""
@@ -65,7 +65,7 @@ class TestDocumentEndpoints:
         assert response.total == 1
         assert response.documents[0].document_id == "test-doc-123"
     
-    @patch('rag_eval.api.routes.documents.doc_service')
+    @patch('src.api.routes.documents.doc_service')
     @pytest.mark.asyncio
     async def test_list_documents_with_filters(self, mock_doc_service, sample_document):
         """Test listing documents with filters"""
@@ -93,7 +93,7 @@ class TestDocumentEndpoints:
         assert call_kwargs["file_type"] == "application/pdf"
         assert call_kwargs["status"] == "uploaded"
     
-    @patch('rag_eval.api.routes.documents.doc_service')
+    @patch('src.api.routes.documents.doc_service')
     @pytest.mark.asyncio
     async def test_get_document(self, mock_doc_service, sample_document):
         """Test getting a document by ID"""
@@ -105,7 +105,7 @@ class TestDocumentEndpoints:
         assert response.document_id == "test-doc-123"
         assert response.filename == "test.pdf"
     
-    @patch('rag_eval.api.routes.documents.doc_service')
+    @patch('src.api.routes.documents.doc_service')
     @pytest.mark.asyncio
     async def test_get_document_not_found(self, mock_doc_service):
         """Test getting a non-existent document"""
@@ -117,9 +117,9 @@ class TestDocumentEndpoints:
         
         assert exc_info.value.status_code == 404
     
-    @patch('rag_eval.api.routes.documents.download_document_from_storage')
-    @patch('rag_eval.api.routes.documents.config')
-    @patch('rag_eval.api.routes.documents.doc_service')
+    @patch('src.api.routes.documents.download_document_from_storage')
+    @patch('src.api.routes.documents.config')
+    @patch('src.api.routes.documents.doc_service')
     @pytest.mark.asyncio
     async def test_download_document(self, mock_doc_service, mock_config, mock_download, sample_document):
         """Test downloading a document"""
@@ -133,8 +133,8 @@ class TestDocumentEndpoints:
         mock_doc_service.get_document.assert_called_once_with("test-doc-123")
         mock_download.assert_called_once_with("test-doc-123", mock_config)
     
-    @patch('rag_eval.api.routes.documents.download_document_from_storage')
-    @patch('rag_eval.api.routes.documents.doc_service')
+    @patch('src.api.routes.documents.download_document_from_storage')
+    @patch('src.api.routes.documents.doc_service')
     @pytest.mark.asyncio
     async def test_get_preview(self, mock_doc_service, mock_download, sample_document):
         """Test getting preview image"""
@@ -147,7 +147,7 @@ class TestDocumentEndpoints:
         assert isinstance(response, Response)
         mock_doc_service.get_document.assert_called_once_with("test-doc-123")
     
-    @patch('rag_eval.api.routes.documents.doc_service')
+    @patch('src.api.routes.documents.doc_service')
     @pytest.mark.asyncio
     async def test_get_preview_not_available(self, mock_doc_service):
         """Test getting preview when not available"""
@@ -167,8 +167,8 @@ class TestDocumentEndpoints:
         
         assert exc_info.value.status_code == 404
     
-    @patch('rag_eval.api.routes.documents.delete_document_from_storage')
-    @patch('rag_eval.api.routes.documents.doc_service')
+    @patch('src.api.routes.documents.delete_document_from_storage')
+    @patch('src.api.routes.documents.doc_service')
     @pytest.mark.asyncio
     async def test_delete_document(self, mock_doc_service, mock_delete_storage, sample_document):
         """Test deleting a document"""
@@ -181,7 +181,7 @@ class TestDocumentEndpoints:
         assert response["document_id"] == "test-doc-123"
         mock_doc_service.delete_document.assert_called_once_with("test-doc-123")
     
-    @patch('rag_eval.api.routes.documents.doc_service')
+    @patch('src.api.routes.documents.doc_service')
     @pytest.mark.asyncio
     async def test_delete_document_not_found(self, mock_doc_service):
         """Test deleting a non-existent document"""
@@ -193,7 +193,7 @@ class TestDocumentEndpoints:
         
         assert exc_info.value.status_code == 404
     
-    @patch('rag_eval.api.routes.documents.doc_service')
+    @patch('src.api.routes.documents.doc_service')
     @pytest.mark.asyncio
     async def test_list_documents_pagination(self, mock_doc_service, sample_document):
         """Test document list pagination"""
@@ -218,7 +218,7 @@ class TestDocumentEndpoints:
         assert call_kwargs["limit"] == 10
         assert call_kwargs["offset"] == 20
     
-    @patch('rag_eval.api.routes.documents.doc_service')
+    @patch('src.api.routes.documents.doc_service')
     @pytest.mark.asyncio
     async def test_list_documents_sorting(self, mock_doc_service, sample_document):
         """Test document list sorting"""

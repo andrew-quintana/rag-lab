@@ -5,10 +5,10 @@ from unittest.mock import Mock, patch, MagicMock
 import json
 from azure.core.exceptions import ResourceNotFoundError, HttpResponseError
 
-from rag_eval.core.exceptions import AzureServiceError
-from rag_eval.core.config import Config
-from rag_eval.core.interfaces import Chunk, Query, RetrievalResult
-from rag_eval.services.rag.search import (
+from src.core.exceptions import AzureServiceError
+from src.core.config import Config
+from src.core.interfaces import Chunk, Query, RetrievalResult
+from src.services.rag.search import (
     index_chunks,
     retrieve_chunks,
     _ensure_index_exists,
@@ -48,7 +48,7 @@ class TestRetryWithBackoff:
             HttpResponseError("Failure 2"),
             "success"
         ])
-        with patch('rag_eval.services.rag.search.time.sleep') as mock_sleep:
+        with patch('src.services.rag.search.time.sleep') as mock_sleep:
             result = _retry_with_backoff(func, max_retries=3, base_delay=1.0)
             assert result == "success"
             # Should sleep with delays: 1.0, 2.0 seconds
@@ -60,7 +60,7 @@ class TestRetryWithBackoff:
 class TestEnsureIndexExists:
     """Tests for idempotent index creation"""
     
-    @patch('rag_eval.services.rag.search.SearchIndexClient')
+    @patch('src.services.rag.search.SearchIndexClient')
     def test_ensure_index_exists_when_index_exists(self, mock_index_client_class):
         """Test that index creation is skipped if index already exists"""
         # Mock index client
@@ -90,7 +90,7 @@ class TestEnsureIndexExists:
         # Verify create_index was NOT called
         mock_index_client.create_index.assert_not_called()
     
-    @patch('rag_eval.services.rag.search.SearchIndexClient')
+    @patch('src.services.rag.search.SearchIndexClient')
     def test_ensure_index_exists_creates_index_when_missing(self, mock_index_client_class):
         """Test that index is created if it doesn't exist"""
         # Mock index client
@@ -236,8 +236,8 @@ class TestIndexChunks:
             index_chunks(chunks, embeddings, config)
         assert "length mismatch" in str(exc_info.value)
     
-    @patch('rag_eval.services.rag.search._ensure_index_exists')
-    @patch('rag_eval.services.rag.search.SearchClient')
+    @patch('src.services.rag.search._ensure_index_exists')
+    @patch('src.services.rag.search.SearchClient')
     def test_index_chunks_success(self, mock_search_client_class, mock_ensure_index):
         """Test successful chunk indexing"""
         # Mock search client
@@ -282,8 +282,8 @@ class TestIndexChunks:
         assert documents[0]["embedding"] == [0.1, 0.2, 0.3]
         assert documents[0]["document_id"] == "doc_1"
     
-    @patch('rag_eval.services.rag.search._ensure_index_exists')
-    @patch('rag_eval.services.rag.search.SearchClient')
+    @patch('src.services.rag.search._ensure_index_exists')
+    @patch('src.services.rag.search.SearchClient')
     def test_index_chunks_with_metadata(self, mock_search_client_class, mock_ensure_index):
         """Test chunk indexing with metadata"""
         # Mock search client
@@ -325,8 +325,8 @@ class TestIndexChunks:
         documents = call_args[1]["documents"]
         assert documents[0]["metadata"] == json.dumps({"page": 1, "section": "intro"})
     
-    @patch('rag_eval.services.rag.search._ensure_index_exists')
-    @patch('rag_eval.services.rag.search.SearchClient')
+    @patch('src.services.rag.search._ensure_index_exists')
+    @patch('src.services.rag.search.SearchClient')
     def test_index_chunks_upload_failure(self, mock_search_client_class, mock_ensure_index):
         """Test that upload failure raises AzureServiceError"""
         # Mock search client
@@ -441,8 +441,8 @@ class TestRetrieveChunks:
             retrieve_chunks(query, top_k=5, config=None)
         assert "Config is required" in str(exc_info.value)
     
-    @patch('rag_eval.services.rag.search.generate_query_embedding')
-    @patch('rag_eval.services.rag.search.SearchClient')
+    @patch('src.services.rag.search.generate_query_embedding')
+    @patch('src.services.rag.search.SearchClient')
     def test_retrieve_chunks_success(self, mock_search_client_class, mock_generate_embedding):
         """Test successful chunk retrieval"""
         # Mock query embedding
@@ -519,8 +519,8 @@ class TestRetrieveChunks:
         # Verify search was called
         mock_search_client.search.assert_called_once()
     
-    @patch('rag_eval.services.rag.search.generate_query_embedding')
-    @patch('rag_eval.services.rag.search.SearchClient')
+    @patch('src.services.rag.search.generate_query_embedding')
+    @patch('src.services.rag.search.SearchClient')
     def test_retrieve_chunks_empty_index(self, mock_search_client_class, mock_generate_embedding):
         """Test that empty index returns empty list"""
         # Mock query embedding
@@ -552,8 +552,8 @@ class TestRetrieveChunks:
         
         assert results == []
     
-    @patch('rag_eval.services.rag.search.generate_query_embedding')
-    @patch('rag_eval.services.rag.search.SearchClient')
+    @patch('src.services.rag.search.generate_query_embedding')
+    @patch('src.services.rag.search.SearchClient')
     def test_retrieve_chunks_index_not_found(self, mock_search_client_class, mock_generate_embedding):
         """Test that missing index returns empty list gracefully"""
         # Mock query embedding
@@ -586,8 +586,8 @@ class TestRetrieveChunks:
         # Should return empty list, not raise error
         assert results == []
     
-    @patch('rag_eval.services.rag.search.generate_query_embedding')
-    @patch('rag_eval.services.rag.search.SearchClient')
+    @patch('src.services.rag.search.generate_query_embedding')
+    @patch('src.services.rag.search.SearchClient')
     def test_retrieve_chunks_reproducibility(self, mock_search_client_class, mock_generate_embedding):
         """Test that same query produces same results (reproducibility)"""
         # Mock query embedding (same for both calls)

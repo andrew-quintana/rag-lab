@@ -31,7 +31,7 @@ if [ -z "$REPO_URL" ]; then
   else
     echo "Error: Repository URL not provided and could not detect from git remote."
     echo "Usage: $0 <repo-url> [branch]"
-    echo "Example: $0 https://github.com/your-org/rag_evaluator.git main"
+    echo "Example: $0 https://github.com/your-org/srcuator.git main"
     exit 1
   fi
 fi
@@ -59,7 +59,7 @@ if [[ "$REPO_URL" == *"github.com"* ]] || [[ "$REPO_URL" == *"github"* ]]; then
   echo "Note: For GitHub, you'll need to complete authorization in Azure Portal."
   echo ""
   echo "The build script is configured via .deployment file in the repository."
-  echo "Azure will automatically use infra/azure/azure_functions/build.sh"
+  echo "Azure will automatically use backend/azure_functions/build.sh"
   echo ""
   
   # Try to configure, but GitHub usually requires Portal authorization
@@ -77,7 +77,7 @@ if [[ "$REPO_URL" == *"github.com"* ]] || [[ "$REPO_URL" == *"github"* ]]; then
     echo "  2. Select 'GitHub' as source"
     echo "  3. Authorize and select repository: $REPO_URL"
     echo "  4. Set branch to: $BRANCH"
-    echo "  5. The build script (infra/azure/azure_functions/build.sh) is configured via .deployment file"
+    echo "  5. The build script (backend/azure_functions/build.sh) is configured via .deployment file"
     echo ""
     echo "Alternatively, you can use the Portal UI to complete the setup."
     exit 0  # Don't fail - Portal setup is expected for GitHub
@@ -151,8 +151,8 @@ if [ -n "$DEPLOYMENT_INFO" ]; then
   echo "$DEPLOYMENT_INFO" | jq -r '{repo: .repoUrl, branch: .branch}' 2>/dev/null || echo "$DEPLOYMENT_INFO"
   echo ""
   echo "Note: Build script is configured via .deployment file:"
-  echo "  - File: infra/azure/azure_functions/.deployment"
-  echo "  - Build script: infra/azure/azure_functions/build.sh"
+  echo "  - File: backend/azure_functions/.deployment"
+  echo "  - Build script: backend/azure_functions/build.sh"
 else
   echo "Could not retrieve deployment info. Check Azure Portal → Deployment Center"
 fi

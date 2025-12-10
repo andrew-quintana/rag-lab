@@ -9,11 +9,11 @@ import uuid
 from datetime import datetime
 from typing import Dict, Any
 
-from rag_eval.core.config import Config
-from rag_eval.db.connection import DatabaseConnection
-from rag_eval.db.queries import QueryExecutor
-from rag_eval.services.evaluator.logging import _serialize_meta_eval_output
-from rag_eval.core.interfaces import MetaEvaluationResult
+from src.core.config import Config
+from src.db.connection import DatabaseConnection
+from src.db.queries import QueryExecutor
+from src.services.evaluator.logging import _serialize_meta_eval_output
+from src.core.interfaces import MetaEvaluationResult
 
 
 def create_test_meta_eval_result() -> Dict[str, Any]:

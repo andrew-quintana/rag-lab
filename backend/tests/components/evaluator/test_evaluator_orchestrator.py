@@ -5,9 +5,9 @@ from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime
 from typing import List
 
-from rag_eval.core.config import Config
-from rag_eval.core.exceptions import AzureServiceError, EvaluationError
-from rag_eval.core.interfaces import (
+from src.core.config import Config
+from src.core.exceptions import AzureServiceError, EvaluationError
+from src.core.interfaces import (
     EvaluationExample,
     EvaluationResult,
     RetrievalResult,
@@ -18,7 +18,7 @@ from rag_eval.core.interfaces import (
     JudgePerformanceMetrics,
     JudgeMetricScores
 )
-from rag_eval.services.evaluator.orchestrator import (
+from src.services.evaluator.orchestrator import (
     evaluate_rag_system,
     _evaluate_single_example
 )
@@ -155,10 +155,10 @@ class TestEvaluateRAGSystem:
                 config=mock_config
             )
     
-    @patch('rag_eval.services.evaluator.orchestrator.compute_beir_metrics')
-    @patch('rag_eval.services.evaluator.orchestrator.meta_evaluate_judge')
-    @patch('rag_eval.services.evaluator.orchestrator.extract_costs')
-    @patch('rag_eval.services.evaluator.orchestrator.evaluate_answer_with_judge')
+    @patch('src.services.evaluator.orchestrator.compute_beir_metrics')
+    @patch('src.services.evaluator.orchestrator.meta_evaluate_judge')
+    @patch('src.services.evaluator.orchestrator.extract_costs')
+    @patch('src.services.evaluator.orchestrator.evaluate_answer_with_judge')
     def test_full_pipeline_execution(
         self,
         mock_evaluate_judge,
@@ -203,10 +203,10 @@ class TestEvaluateRAGSystem:
         # Verify BEIR metrics were computed for each example
         assert mock_beir_metrics.call_count == 2
     
-    @patch('rag_eval.services.evaluator.orchestrator.compute_beir_metrics')
-    @patch('rag_eval.services.evaluator.orchestrator.meta_evaluate_judge')
-    @patch('rag_eval.services.evaluator.orchestrator.extract_costs')
-    @patch('rag_eval.services.evaluator.orchestrator.evaluate_answer_with_judge')
+    @patch('src.services.evaluator.orchestrator.compute_beir_metrics')
+    @patch('src.services.evaluator.orchestrator.meta_evaluate_judge')
+    @patch('src.services.evaluator.orchestrator.extract_costs')
+    @patch('src.services.evaluator.orchestrator.evaluate_answer_with_judge')
     def test_pipeline_with_mocked_rag_components(
         self,
         mock_evaluate_judge,
@@ -253,10 +253,10 @@ class TestEvaluateRAGSystem:
         assert len(results) == 1
         assert results[0].example_id == sample_evaluation_example.example_id
     
-    @patch('rag_eval.services.evaluator.orchestrator.compute_beir_metrics')
-    @patch('rag_eval.services.evaluator.orchestrator.meta_evaluate_judge')
-    @patch('rag_eval.services.evaluator.orchestrator.extract_costs')
-    @patch('rag_eval.services.evaluator.orchestrator.evaluate_answer_with_judge')
+    @patch('src.services.evaluator.orchestrator.compute_beir_metrics')
+    @patch('src.services.evaluator.orchestrator.meta_evaluate_judge')
+    @patch('src.services.evaluator.orchestrator.extract_costs')
+    @patch('src.services.evaluator.orchestrator.evaluate_answer_with_judge')
     def test_pipeline_error_handling_rag_retriever_failure(
         self,
         mock_evaluate_judge,
@@ -290,10 +290,10 @@ class TestEvaluateRAGSystem:
                 config=mock_config
             )
     
-    @patch('rag_eval.services.evaluator.orchestrator.compute_beir_metrics')
-    @patch('rag_eval.services.evaluator.orchestrator.meta_evaluate_judge')
-    @patch('rag_eval.services.evaluator.orchestrator.extract_costs')
-    @patch('rag_eval.services.evaluator.orchestrator.evaluate_answer_with_judge')
+    @patch('src.services.evaluator.orchestrator.compute_beir_metrics')
+    @patch('src.services.evaluator.orchestrator.meta_evaluate_judge')
+    @patch('src.services.evaluator.orchestrator.extract_costs')
+    @patch('src.services.evaluator.orchestrator.evaluate_answer_with_judge')
     def test_pipeline_error_handling_rag_generator_failure(
         self,
         mock_evaluate_judge,
@@ -327,10 +327,10 @@ class TestEvaluateRAGSystem:
                 config=mock_config
             )
     
-    @patch('rag_eval.services.evaluator.orchestrator.compute_beir_metrics')
-    @patch('rag_eval.services.evaluator.orchestrator.meta_evaluate_judge')
-    @patch('rag_eval.services.evaluator.orchestrator.extract_costs')
-    @patch('rag_eval.services.evaluator.orchestrator.evaluate_answer_with_judge')
+    @patch('src.services.evaluator.orchestrator.compute_beir_metrics')
+    @patch('src.services.evaluator.orchestrator.meta_evaluate_judge')
+    @patch('src.services.evaluator.orchestrator.extract_costs')
+    @patch('src.services.evaluator.orchestrator.evaluate_answer_with_judge')
     def test_pipeline_error_handling_judge_failure(
         self,
         mock_evaluate_judge,
@@ -360,10 +360,10 @@ class TestEvaluateRAGSystem:
                 config=mock_config
             )
     
-    @patch('rag_eval.services.evaluator.orchestrator.compute_beir_metrics')
-    @patch('rag_eval.services.evaluator.orchestrator.meta_evaluate_judge')
-    @patch('rag_eval.services.evaluator.orchestrator.extract_costs')
-    @patch('rag_eval.services.evaluator.orchestrator.evaluate_answer_with_judge')
+    @patch('src.services.evaluator.orchestrator.compute_beir_metrics')
+    @patch('src.services.evaluator.orchestrator.meta_evaluate_judge')
+    @patch('src.services.evaluator.orchestrator.extract_costs')
+    @patch('src.services.evaluator.orchestrator.evaluate_answer_with_judge')
     def test_pipeline_partial_failure_continues(
         self,
         mock_evaluate_judge,
@@ -403,10 +403,10 @@ class TestEvaluateRAGSystem:
         assert len(results) == 1
         assert results[0].example_id == "val_001"
     
-    @patch('rag_eval.services.evaluator.orchestrator.compute_beir_metrics')
-    @patch('rag_eval.services.evaluator.orchestrator.meta_evaluate_judge')
-    @patch('rag_eval.services.evaluator.orchestrator.extract_costs')
-    @patch('rag_eval.services.evaluator.orchestrator.evaluate_answer_with_judge')
+    @patch('src.services.evaluator.orchestrator.compute_beir_metrics')
+    @patch('src.services.evaluator.orchestrator.meta_evaluate_judge')
+    @patch('src.services.evaluator.orchestrator.extract_costs')
+    @patch('src.services.evaluator.orchestrator.evaluate_answer_with_judge')
     def test_pipeline_logging_and_observability(
         self,
         mock_evaluate_judge,
@@ -445,10 +445,10 @@ class TestEvaluateRAGSystem:
 class TestEvaluateSingleExample:
     """Test the _evaluate_single_example helper function"""
     
-    @patch('rag_eval.services.evaluator.orchestrator.compute_beir_metrics')
-    @patch('rag_eval.services.evaluator.orchestrator.meta_evaluate_judge')
-    @patch('rag_eval.services.evaluator.orchestrator.extract_costs')
-    @patch('rag_eval.services.evaluator.orchestrator.evaluate_answer_with_judge')
+    @patch('src.services.evaluator.orchestrator.compute_beir_metrics')
+    @patch('src.services.evaluator.orchestrator.meta_evaluate_judge')
+    @patch('src.services.evaluator.orchestrator.extract_costs')
+    @patch('src.services.evaluator.orchestrator.evaluate_answer_with_judge')
     def test_evaluate_single_example_success(
         self,
         mock_evaluate_judge,
@@ -497,10 +497,10 @@ class TestEvaluateSingleExample:
         mock_meta_eval.assert_called_once()
         mock_beir_metrics.assert_called_once()
     
-    @patch('rag_eval.services.evaluator.orchestrator.compute_beir_metrics')
-    @patch('rag_eval.services.evaluator.orchestrator.meta_evaluate_judge')
-    @patch('rag_eval.services.evaluator.orchestrator.extract_costs')
-    @patch('rag_eval.services.evaluator.orchestrator.evaluate_answer_with_judge')
+    @patch('src.services.evaluator.orchestrator.compute_beir_metrics')
+    @patch('src.services.evaluator.orchestrator.meta_evaluate_judge')
+    @patch('src.services.evaluator.orchestrator.extract_costs')
+    @patch('src.services.evaluator.orchestrator.evaluate_answer_with_judge')
     def test_evaluate_single_example_cost_extraction_when_correctness_true(
         self,
         mock_evaluate_judge,
@@ -540,10 +540,10 @@ class TestEvaluateSingleExample:
         # Verify cost extraction was called (twice: model answer and chunks)
         assert mock_extract_costs.call_count == 2
     
-    @patch('rag_eval.services.evaluator.orchestrator.compute_beir_metrics')
-    @patch('rag_eval.services.evaluator.orchestrator.meta_evaluate_judge')
-    @patch('rag_eval.services.evaluator.orchestrator.extract_costs')
-    @patch('rag_eval.services.evaluator.orchestrator.evaluate_answer_with_judge')
+    @patch('src.services.evaluator.orchestrator.compute_beir_metrics')
+    @patch('src.services.evaluator.orchestrator.meta_evaluate_judge')
+    @patch('src.services.evaluator.orchestrator.extract_costs')
+    @patch('src.services.evaluator.orchestrator.evaluate_answer_with_judge')
     def test_evaluate_single_example_no_cost_extraction_when_correctness_false(
         self,
         mock_evaluate_judge,
@@ -586,11 +586,11 @@ class TestEvaluateSingleExample:
 class TestJudgePerformanceMetricsIntegration:
     """Test integration with judge performance metrics calculation"""
     
-    @patch('rag_eval.services.evaluator.orchestrator.compute_beir_metrics')
-    @patch('rag_eval.services.evaluator.orchestrator.meta_evaluate_judge')
-    @patch('rag_eval.services.evaluator.orchestrator.extract_costs')
-    @patch('rag_eval.services.evaluator.orchestrator.evaluate_answer_with_judge')
-    @patch('rag_eval.services.evaluator.orchestrator.calculate_judge_metrics')
+    @patch('src.services.evaluator.orchestrator.compute_beir_metrics')
+    @patch('src.services.evaluator.orchestrator.meta_evaluate_judge')
+    @patch('src.services.evaluator.orchestrator.extract_costs')
+    @patch('src.services.evaluator.orchestrator.evaluate_answer_with_judge')
+    @patch('src.services.evaluator.orchestrator.calculate_judge_metrics')
     def test_judge_metrics_calculation_from_pipeline_results(
         self,
         mock_calculate_metrics,
@@ -647,7 +647,7 @@ class TestJudgePerformanceMetricsIntegration:
         )
         
         # Manually calculate metrics from results
-        from rag_eval.services.evaluator.meta_eval import calculate_judge_metrics
+        from src.services.evaluator.meta_eval import calculate_judge_metrics
         
         evaluation_pairs = [
             (r.judge_output, r.meta_eval_output) for r in results
@@ -661,10 +661,10 @@ class TestJudgePerformanceMetricsIntegration:
         assert metrics.correctness.total_samples == len(results)
         assert metrics.hallucination.total_samples == len(results)
     
-    @patch('rag_eval.services.evaluator.orchestrator.compute_beir_metrics')
-    @patch('rag_eval.services.evaluator.orchestrator.meta_evaluate_judge')
-    @patch('rag_eval.services.evaluator.orchestrator.extract_costs')
-    @patch('rag_eval.services.evaluator.orchestrator.evaluate_answer_with_judge')
+    @patch('src.services.evaluator.orchestrator.compute_beir_metrics')
+    @patch('src.services.evaluator.orchestrator.meta_evaluate_judge')
+    @patch('src.services.evaluator.orchestrator.extract_costs')
+    @patch('src.services.evaluator.orchestrator.evaluate_answer_with_judge')
     def test_judge_metrics_with_mixed_scenarios(
         self,
         mock_evaluate_judge,
@@ -740,7 +740,7 @@ class TestJudgePerformanceMetricsIntegration:
         )
         
         # Calculate metrics
-        from rag_eval.services.evaluator.meta_eval import calculate_judge_metrics
+        from src.services.evaluator.meta_eval import calculate_judge_metrics
         
         evaluation_pairs = [
             (r.judge_output, r.meta_eval_output) for r in results

@@ -9,11 +9,11 @@ from io import BytesIO
 # Disable logging during tests to avoid potential hangs
 logging.disable(logging.CRITICAL)
 
-from rag_eval.core.exceptions import AzureServiceError
-from rag_eval.core.config import Config
-from rag_eval.core.interfaces import Chunk
-from rag_eval.api.routes.upload import router, handle_upload, UploadResponse
-from rag_eval.api.main import app
+from src.core.exceptions import AzureServiceError
+from src.core.config import Config
+from src.core.interfaces import Chunk
+from src.api.routes.upload import router, handle_upload, UploadResponse
+from src.api.main import app
 
 
 @pytest.fixture
@@ -86,15 +86,15 @@ def mock_upload_file(sample_file_content):
 class TestUploadEndpointUnit:
     """Unit tests for upload endpoint handler"""
     
-    @patch('rag_eval.api.routes.upload.doc_service')
-    @patch('rag_eval.api.routes.upload.generate_image_preview')
-    @patch('rag_eval.api.routes.upload.upload_document_to_storage')
-    @patch('rag_eval.api.routes.upload.index_chunks')
-    @patch('rag_eval.api.routes.upload.generate_embeddings')
-    @patch('rag_eval.api.routes.upload.chunk_text')
-    @patch('rag_eval.api.routes.upload.ingest_document')
-    @patch('rag_eval.api.routes.upload.generate_id')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.doc_service')
+    @patch('src.api.routes.upload.generate_image_preview')
+    @patch('src.api.routes.upload.upload_document_to_storage')
+    @patch('src.api.routes.upload.index_chunks')
+    @patch('src.api.routes.upload.generate_embeddings')
+    @patch('src.api.routes.upload.chunk_text')
+    @patch('src.api.routes.upload.ingest_document')
+    @patch('src.api.routes.upload.generate_id')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_success(
         self,
@@ -151,12 +151,12 @@ class TestUploadEndpointUnit:
         assert mock_index_chunks.call_args[0][0] == sample_chunks
         assert mock_index_chunks.call_args[0][1] == sample_embeddings
     
-    @patch('rag_eval.api.routes.upload.doc_service')
-    @patch('rag_eval.api.routes.upload.generate_image_preview')
-    @patch('rag_eval.api.routes.upload.upload_document_to_storage')
-    @patch('rag_eval.api.routes.upload.ingest_document')
-    @patch('rag_eval.api.routes.upload.generate_id')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.doc_service')
+    @patch('src.api.routes.upload.generate_image_preview')
+    @patch('src.api.routes.upload.upload_document_to_storage')
+    @patch('src.api.routes.upload.ingest_document')
+    @patch('src.api.routes.upload.generate_id')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_empty_text_extraction(
         self,
@@ -186,12 +186,12 @@ class TestUploadEndpointUnit:
         assert exc_info.value.status_code == 400
         assert "No text could be extracted" in exc_info.value.detail
     
-    @patch('rag_eval.api.routes.upload.doc_service')
-    @patch('rag_eval.api.routes.upload.generate_image_preview')
-    @patch('rag_eval.api.routes.upload.upload_document_to_storage')
-    @patch('rag_eval.api.routes.upload.ingest_document')
-    @patch('rag_eval.api.routes.upload.generate_id')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.doc_service')
+    @patch('src.api.routes.upload.generate_image_preview')
+    @patch('src.api.routes.upload.upload_document_to_storage')
+    @patch('src.api.routes.upload.ingest_document')
+    @patch('src.api.routes.upload.generate_id')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_whitespace_only_text(
         self,
@@ -221,13 +221,13 @@ class TestUploadEndpointUnit:
         assert exc_info.value.status_code == 400
         assert "No text could be extracted" in exc_info.value.detail
     
-    @patch('rag_eval.api.routes.upload.doc_service')
-    @patch('rag_eval.api.routes.upload.generate_image_preview')
-    @patch('rag_eval.api.routes.upload.upload_document_to_storage')
-    @patch('rag_eval.api.routes.upload.chunk_text')
-    @patch('rag_eval.api.routes.upload.ingest_document')
-    @patch('rag_eval.api.routes.upload.generate_id')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.doc_service')
+    @patch('src.api.routes.upload.generate_image_preview')
+    @patch('src.api.routes.upload.upload_document_to_storage')
+    @patch('src.api.routes.upload.chunk_text')
+    @patch('src.api.routes.upload.ingest_document')
+    @patch('src.api.routes.upload.generate_id')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_no_chunks_created(
         self,
@@ -260,14 +260,14 @@ class TestUploadEndpointUnit:
         assert exc_info.value.status_code == 500
         assert "Failed to create chunks" in exc_info.value.detail
     
-    @patch('rag_eval.api.routes.upload.doc_service')
-    @patch('rag_eval.api.routes.upload.generate_image_preview')
-    @patch('rag_eval.api.routes.upload.upload_document_to_storage')
-    @patch('rag_eval.api.routes.upload.generate_embeddings')
-    @patch('rag_eval.api.routes.upload.chunk_text')
-    @patch('rag_eval.api.routes.upload.ingest_document')
-    @patch('rag_eval.api.routes.upload.generate_id')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.doc_service')
+    @patch('src.api.routes.upload.generate_image_preview')
+    @patch('src.api.routes.upload.upload_document_to_storage')
+    @patch('src.api.routes.upload.generate_embeddings')
+    @patch('src.api.routes.upload.chunk_text')
+    @patch('src.api.routes.upload.ingest_document')
+    @patch('src.api.routes.upload.generate_id')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_embedding_mismatch(
         self,
@@ -304,12 +304,12 @@ class TestUploadEndpointUnit:
         assert "Embedding generation failed" in exc_info.value.detail
         assert "expected 2 embeddings" in exc_info.value.detail
     
-    @patch('rag_eval.api.routes.upload.doc_service')
-    @patch('rag_eval.api.routes.upload.generate_image_preview')
-    @patch('rag_eval.api.routes.upload.upload_document_to_storage')
-    @patch('rag_eval.api.routes.upload.ingest_document')
-    @patch('rag_eval.api.routes.upload.generate_id')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.doc_service')
+    @patch('src.api.routes.upload.generate_image_preview')
+    @patch('src.api.routes.upload.upload_document_to_storage')
+    @patch('src.api.routes.upload.ingest_document')
+    @patch('src.api.routes.upload.generate_id')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_ingestion_error(
         self,
@@ -339,15 +339,15 @@ class TestUploadEndpointUnit:
         assert exc_info.value.status_code == 500
         assert "Upload processing failed" in exc_info.value.detail
     
-    @patch('rag_eval.api.routes.upload.doc_service')
-    @patch('rag_eval.api.routes.upload.generate_image_preview')
-    @patch('rag_eval.api.routes.upload.upload_document_to_storage')
-    @patch('rag_eval.api.routes.upload.index_chunks')
-    @patch('rag_eval.api.routes.upload.generate_embeddings')
-    @patch('rag_eval.api.routes.upload.chunk_text')
-    @patch('rag_eval.api.routes.upload.ingest_document')
-    @patch('rag_eval.api.routes.upload.generate_id')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.doc_service')
+    @patch('src.api.routes.upload.generate_image_preview')
+    @patch('src.api.routes.upload.upload_document_to_storage')
+    @patch('src.api.routes.upload.index_chunks')
+    @patch('src.api.routes.upload.generate_embeddings')
+    @patch('src.api.routes.upload.chunk_text')
+    @patch('src.api.routes.upload.ingest_document')
+    @patch('src.api.routes.upload.generate_id')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_indexing_error(
         self,
@@ -386,8 +386,8 @@ class TestUploadEndpointUnit:
         assert exc_info.value.status_code == 500
         assert "Upload processing failed" in exc_info.value.detail
     
-    @patch('rag_eval.api.routes.upload.generate_id')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.generate_id')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_file_read_error(
         self,
@@ -409,15 +409,15 @@ class TestUploadEndpointUnit:
         assert exc_info.value.status_code == 500
         assert "Upload processing failed" in exc_info.value.detail
     
-    @patch('rag_eval.api.routes.upload.doc_service')
-    @patch('rag_eval.api.routes.upload.generate_image_preview')
-    @patch('rag_eval.api.routes.upload.upload_document_to_storage')
-    @patch('rag_eval.api.routes.upload.index_chunks')
-    @patch('rag_eval.api.routes.upload.generate_embeddings')
-    @patch('rag_eval.api.routes.upload.chunk_text')
-    @patch('rag_eval.api.routes.upload.ingest_document')
-    @patch('rag_eval.api.routes.upload.generate_id')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.doc_service')
+    @patch('src.api.routes.upload.generate_image_preview')
+    @patch('src.api.routes.upload.upload_document_to_storage')
+    @patch('src.api.routes.upload.index_chunks')
+    @patch('src.api.routes.upload.generate_embeddings')
+    @patch('src.api.routes.upload.chunk_text')
+    @patch('src.api.routes.upload.ingest_document')
+    @patch('src.api.routes.upload.generate_id')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_not_implemented_error(
         self,
@@ -458,14 +458,14 @@ class TestUploadEndpointUnit:
 class TestUploadEndpointIntegration:
     """Integration tests for upload endpoint with mocked services"""
     
-    @patch('rag_eval.api.routes.upload.doc_service')
-    @patch('rag_eval.api.routes.upload.generate_image_preview')
-    @patch('rag_eval.api.routes.upload.upload_document_to_storage')
-    @patch('rag_eval.api.routes.upload.index_chunks')
-    @patch('rag_eval.api.routes.upload.generate_embeddings')
-    @patch('rag_eval.api.routes.upload.chunk_text')
-    @patch('rag_eval.api.routes.upload.ingest_document')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.doc_service')
+    @patch('src.api.routes.upload.generate_image_preview')
+    @patch('src.api.routes.upload.upload_document_to_storage')
+    @patch('src.api.routes.upload.index_chunks')
+    @patch('src.api.routes.upload.generate_embeddings')
+    @patch('src.api.routes.upload.chunk_text')
+    @patch('src.api.routes.upload.ingest_document')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_endpoint_integration(
         self,
@@ -517,11 +517,11 @@ class TestUploadEndpointIntegration:
         mock_generate_embeddings.assert_called_once()
         mock_index_chunks.assert_called_once()
     
-    @patch('rag_eval.api.routes.upload.doc_service')
-    @patch('rag_eval.api.routes.upload.generate_image_preview')
-    @patch('rag_eval.api.routes.upload.upload_document_to_storage')
-    @patch('rag_eval.api.routes.upload.ingest_document')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.doc_service')
+    @patch('src.api.routes.upload.generate_image_preview')
+    @patch('src.api.routes.upload.upload_document_to_storage')
+    @patch('src.api.routes.upload.ingest_document')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_endpoint_empty_file(
         self,
@@ -556,14 +556,14 @@ class TestUploadEndpointIntegration:
 class TestUploadEndpointResponseFormat:
     """Tests for upload endpoint response format and validation"""
     
-    @patch('rag_eval.api.routes.upload.doc_service')
-    @patch('rag_eval.api.routes.upload.generate_image_preview')
-    @patch('rag_eval.api.routes.upload.upload_document_to_storage')
-    @patch('rag_eval.api.routes.upload.index_chunks')
-    @patch('rag_eval.api.routes.upload.generate_embeddings')
-    @patch('rag_eval.api.routes.upload.chunk_text')
-    @patch('rag_eval.api.routes.upload.ingest_document')
-    @patch('rag_eval.api.routes.upload.config')
+    @patch('src.api.routes.upload.doc_service')
+    @patch('src.api.routes.upload.generate_image_preview')
+    @patch('src.api.routes.upload.upload_document_to_storage')
+    @patch('src.api.routes.upload.index_chunks')
+    @patch('src.api.routes.upload.generate_embeddings')
+    @patch('src.api.routes.upload.chunk_text')
+    @patch('src.api.routes.upload.ingest_document')
+    @patch('src.api.routes.upload.config')
     @pytest.mark.asyncio
     async def test_upload_response_format(
         self,

@@ -7,7 +7,7 @@
 set -e
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-FUNCTIONS_DIR="$PROJECT_ROOT/infra/azure/azure_functions"
+FUNCTIONS_DIR="$PROJECT_ROOT/backend/azure_functions"
 
 echo "=========================================="
 echo "Starting Local Azure Functions Development"

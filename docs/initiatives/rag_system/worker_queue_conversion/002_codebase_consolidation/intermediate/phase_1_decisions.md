@@ -1,189 +1,242 @@
-# Phase 1 Decisions - Code Duplication Elimination
+# Phase 1 Decisions - Code Duplication Elimination & Structure Reorganization
 
-**Date**: 2025-12-07  
-**Phase**: 1 - Code Duplication Elimination  
+**Date**: 2025-12-09  
+**Phase**: 1 - Code Duplication Elimination & Structure Reorganization  
 **Status**: ✅ Complete
 
 ## Summary
 
-Phase 1 successfully eliminated code duplication by updating Azure Functions to import directly from project root, removing duplicate backend code, and simplifying the build script.
+Phase 1 successfully moved Azure Functions from `infra/azure/azure_functions/` to `backend/azure_functions/` and simplified all function entry points to use direct imports without path manipulation. This establishes a single source of truth for all backend code in one location.
 
 ---
 
-## Decision 1: Path Resolution Approach
+## Decision 1: Move Azure Functions to Backend Directory
 
 ### Issue
-The RFC Section 1.2 example showed adding project root to `sys.path`, but the actual backend code structure is `backend/rag_eval/`, which requires adding the `backend` directory to the path instead.
+Azure Functions were located in `infra/azure/azure_functions/`, requiring complex path manipulation to import from `backend/src/`. This created maintenance overhead and risk of code drift.
 
 ### Decision
-Add `backend` directory to `sys.path` (not project root) to allow direct imports of `rag_eval.*`.
+Move the entire `infra/azure/azure_functions/` directory to `backend/azure_functions/` so functions are alongside `backend/src/` in the same directory.
 
 ### Implementation
-```python
-# Add backend directory to Python path for backend imports
-# This allows importing directly from rag_eval.* (backend/rag_eval/)
-backend_dir = project_root / "backend"
-if str(backend_dir) not in sys.path:
-    sys.path.insert(0, str(backend_dir))
+```bash
+mv infra/azure/azure_functions backend/azure_functions
 ```
 
 ### Rationale
-- The backend code is located at `backend/rag_eval/`
-- Python imports `rag_eval` directly when `backend/` is in `sys.path`
-- This matches the existing import pattern: `from rag_eval.services.workers.ingestion_worker import ingestion_worker`
+- Functions are now in `backend/` alongside `src/`, enabling direct imports
+- No path manipulation needed - Python naturally finds `src` when running from `backend/`
+- Single source of truth: all backend code (workers + functions) in one location
+- Simpler structure: `backend/src/` (source) and `backend/azure_functions/` (functions)
+
+### Files Moved
+- `infra/azure/azure_functions/ingestion-worker/` → `backend/azure_functions/ingestion-worker/`
+- `infra/azure/azure_functions/chunking-worker/` → `backend/azure_functions/chunking-worker/`
+- `infra/azure/azure_functions/embedding-worker/` → `backend/azure_functions/embedding-worker/`
+- `infra/azure/azure_functions/indexing-worker/` → `backend/azure_functions/indexing-worker/`
+- `infra/azure/azure_functions/build.sh` → `backend/azure_functions/build.sh`
+- `infra/azure/azure_functions/host.json` → `backend/azure_functions/host.json`
+- `infra/azure/azure_functions/requirements.txt` → `backend/azure_functions/requirements.txt`
+- `infra/azure/azure_functions/.deployment` → `backend/azure_functions/.deployment`
+- `infra/azure/azure_functions/.funcignore` → `backend/azure_functions/.funcignore`
+- `infra/azure/azure_functions/local.settings.json` → `backend/azure_functions/local.settings.json`
+- `infra/azure/azure_functions/README.md` → `backend/azure_functions/README.md`
+- `infra/azure/azure_functions/README_LOCAL.md` → `backend/azure_functions/README_LOCAL.md`
+
+---
+
+## Decision 2: Simplify Function Entry Points
+
+### Issue
+Function entry points used complex path manipulation:
+- `Path(__file__).parent.parent.parent.parent.parent` to find project root
+- Dotenv loading from project root
+- Adding backend directory to `sys.path`
+
+### Decision
+Remove all path manipulation and use simple direct imports. Functions are now in `backend/azure_functions/` alongside `backend/src/`, so imports work naturally.
+
+### Implementation Pattern
+```python
+"""Azure Function for ingestion worker
+
+This function is triggered by messages in the ingestion-uploads queue.
+It processes documents through the ingestion stage (text extraction).
+"""
+import json
+from src.services.workers.ingestion_worker import ingestion_worker
+from src.core.logging import get_logger
+
+logger = get_logger("azure_functions.ingestion_worker")
+
+def main(queueMessage: str) -> None:
+    """
+    Azure Function entry point for ingestion worker.
+    
+    Args:
+        queueMessage: JSON string from queue trigger
+    """
+    try:
+        # Parse queue message
+        message_dict = json.loads(queueMessage)
+        
+        logger.info(f"Processing ingestion message for document: {message_dict.get('document_id')}")
+        
+        # Call worker function
+        ingestion_worker(message_dict, context=None)
+        
+        logger.info(f"Successfully processed ingestion for document: {message_dict.get('document_id')}")
+    
+    except Exception as e:
+        logger.error(f"Error processing ingestion message: {e}", exc_info=True)
+        raise
+```
+
+### Rationale
+- **No path manipulation**: Functions are in `backend/` alongside `src/`, so Python finds `src` naturally
+- **No dotenv loading**: Azure Functions handle environment variables automatically via `os.environ`
+- **Simple imports**: Direct `from src.services.workers...` imports work without path manipulation
+- **Maintainable**: Clean, simple code that's easy to understand and maintain
 
 ### Files Updated
-- `infra/azure/azure_functions/ingestion-worker/__init__.py`
-- `infra/azure/azure_functions/chunking-worker/__init__.py`
-- `infra/azure/azure_functions/embedding-worker/__init__.py`
-- `infra/azure/azure_functions/indexing-worker/__init__.py`
+- `backend/azure_functions/ingestion-worker/__init__.py`
+- `backend/azure_functions/chunking-worker/__init__.py`
+- `backend/azure_functions/embedding-worker/__init__.py`
+- `backend/azure_functions/indexing-worker/__init__.py`
+
+### Removed Code
+- All `Path(__file__).parent.parent...` path manipulation
+- All dotenv loading code (`load_dotenv`)
+- All `sys.path` manipulation
+- All project root calculation logic
 
 ---
 
-## Decision 2: Dotenv Loading Order
+## Decision 3: Update Build Script for New Location
 
 ### Issue
-Environment variables must be loaded before importing backend code to ensure configuration is available.
+Build script calculated project root as 3 levels up from `infra/azure/azure_functions/build.sh`, but now it's in `backend/azure_functions/build.sh` (2 levels up).
 
 ### Decision
-Load `.env.local` from project root BEFORE path manipulation and imports.
+Update build script path calculation to reflect new location.
 
 ### Implementation
-```python
-# Load .env.local from project root BEFORE importing backend code
-try:
-    from dotenv import load_dotenv
-    project_root = Path(__file__).parent.parent.parent.parent.parent
-    env_file = project_root / ".env.local"
-    if env_file.exists():
-        load_dotenv(env_file, override=True)
-except ImportError:
-    # dotenv not available, continue without loading
-    pass
+```bash
+# Calculate project root
+# Script is in: backend/azure_functions/build.sh
+# Project root is 2 levels up: backend/azure_functions -> backend -> project_root
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+BACKEND_SOURCE="$PROJECT_ROOT/backend/src"
 ```
 
 ### Rationale
-- Environment variables are needed by backend code during import
-- Flexible approach: works with or without `.env.local` file
-- Supports Azure Function App settings (which take precedence via `override=True`)
-
----
-
-## Decision 3: Build Script Simplification
-
-### Issue
-The build script was copying backend code and modifying function entry points during deployment, which is no longer needed.
-
-### Decision
-Simplify build script to only validate prerequisites and document the new deployment structure.
-
-### Implementation
-- Removed all code copying logic
-- Removed path modification logic (sed commands)
-- Added prerequisite validation:
-  - Backend source directory exists
-  - `requirements.txt` exists
-  - All 4 function entry points exist
-  - All function bindings exist
-
-### Rationale
-- Functions now import directly from project root
-- No code copying needed during deployment
-- Build script should validate, not modify code
-- Simpler build process reduces deployment time and complexity
+- Build script still validates prerequisites
+- Path calculation updated for new location
+- No code copying needed (functions import directly from `src`)
 
 ### Files Updated
-- `infra/azure/azure_functions/build.sh`
+- `backend/azure_functions/build.sh`
 
 ---
 
-## Decision 4: Duplicate Code Removal
+## Decision 4: Update Deployment Scripts
 
 ### Issue
-Duplicate backend code existed in `infra/azure/azure_functions/backend/rag_eval/` (1.3MB).
+Multiple deployment and development scripts referenced the old location `infra/azure/azure_functions/`.
 
 ### Decision
-Remove duplicate code directory and update `.gitignore` to prevent accidental commits.
-
-### Implementation
-1. Removed from Git tracking: `git rm -r infra/azure/azure_functions/backend/rag_eval/`
-2. Deleted directory from filesystem
-3. Updated `.gitignore` to ignore `infra/azure/azure_functions/backend/`
-
-### Rationale
-- Single source of truth: all backend code in `backend/rag_eval/`
-- Eliminates code drift risk
-- Reduces repository size
-- Simplifies maintenance
+Update all scripts to reference the new location `backend/azure_functions/`.
 
 ### Files Updated
-- `.gitignore` (added `infra/azure/azure_functions/backend/`)
-- Removed: `infra/azure/azure_functions/backend/rag_eval/` (entire directory, 60+ files)
+- `scripts/deploy_azure_functions.sh` - Updated `FUNCTIONS_DIR`
+- `scripts/setup_git_deployment.sh` - Updated build script path references
+- `scripts/test_functions_local.sh` - Updated `local.settings.json` path
+- `scripts/dev_functions_local.sh` - Updated `FUNCTIONS_DIR`
+
+### Rationale
+- All scripts must reference the correct location
+- Consistent path references across all tooling
+- Prevents confusion and errors
 
 ---
 
-## Deviations from RFC
+## Decision 5: Update Documentation
 
-### RFC Section 1.2 Pattern
-The RFC example showed:
-```python
-# Add project root to path for backend imports
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
+### Issue
+README files in `azure_functions/` directory referenced old paths and outdated build process.
+
+### Decision
+Update README files to reflect new location and simplified build process.
+
+### Files Updated
+- `backend/azure_functions/README.md` - Updated paths and build process description
+- `backend/azure_functions/README_LOCAL.md` - Updated paths and troubleshooting
+
+### Rationale
+- Documentation must match actual implementation
+- Clear instructions for developers
+- Accurate troubleshooting guides
+
+---
+
+## Decision 6: Update .funcignore
+
+### Issue
+`.funcignore` had comments about `backend/` being needed for deployment (from old approach).
+
+### Decision
+Update comments to reflect that no duplicate code directory is needed.
+
+### Implementation
+```gitignore
+# Note: Functions now import directly from backend/src/
+# No duplicate code directory is needed
 ```
 
-**Actual Implementation**:
-```python
-# Add backend directory to Python path for backend imports
-backend_dir = project_root / "backend"
-if str(backend_dir) not in sys.path:
-    sys.path.insert(0, str(backend_dir))
-```
-
-**Rationale**: The backend code structure is `backend/rag_eval/`, so we need to add `backend/` to the path, not the project root. This allows direct imports of `rag_eval.*` as intended.
+### Rationale
+- Clear documentation of new approach
+- Prevents confusion about deployment structure
 
 ---
 
-## Path Resolution Details
+## Verification
 
-### Function Entry Point Location
-- `infra/azure/azure_functions/ingestion-worker/__init__.py`
+### No Duplicate Code
+- ✅ Verified no `backend/azure_functions/backend/src/` directory exists
+- ✅ No duplicate code tracked in Git
+- ✅ Single source of truth: `backend/src/` only
 
-### Path Calculation
-- `__file__` = `infra/azure/azure_functions/ingestion-worker/__init__.py`
-- `Path(__file__).parent` = `infra/azure/azure_functions/ingestion-worker/`
-- `Path(__file__).parent.parent` = `infra/azure/azure_functions/`
-- `Path(__file__).parent.parent.parent` = `infra/azure/`
-- `Path(__file__).parent.parent.parent.parent` = `infra/`
-- `Path(__file__).parent.parent.parent.parent.parent` = project root
+### Build Script
+- ✅ Build script validates prerequisites correctly
+- ✅ Path calculation works for new location
+- ✅ All function entry points validated
 
-### Backend Path
-- `project_root / "backend"` = `backend/` (relative to project root)
-- Adding `backend/` to `sys.path` allows `from rag_eval.*` imports
-
----
-
-## Git Changes
-
-### Files Removed
-- `infra/azure/azure_functions/backend/rag_eval/` (entire directory, 60+ files, 1.3MB)
-
-### Files Modified
-- `infra/azure/azure_functions/ingestion-worker/__init__.py`
-- `infra/azure/azure_functions/chunking-worker/__init__.py`
-- `infra/azure/azure_functions/embedding-worker/__init__.py`
-- `infra/azure/azure_functions/indexing-worker/__init__.py`
-- `infra/azure/azure_functions/build.sh`
-- `.gitignore`
+### Function Entry Points
+- ✅ All 4 functions use simple direct imports
+- ✅ No path manipulation code remains
+- ✅ No dotenv loading code remains
+- ✅ All functions compile successfully
 
 ---
 
-## Next Steps
+## Summary of Changes
 
-Phase 1 is complete. Ready to proceed to Phase 2: Configuration Consolidation.
+### Structure Changes
+- ✅ Azure Functions moved: `infra/azure/azure_functions/` → `backend/azure_functions/`
+- ✅ Empty `infra/azure/` directory remains (can be removed if no longer needed)
+
+### Code Changes
+- ✅ 4 function entry points simplified (removed path manipulation)
+- ✅ Build script updated for new location
+- ✅ 4 deployment scripts updated
+- ✅ 2 README files updated
+- ✅ `.funcignore` comments updated
+
+### No Changes Needed
+- ✅ No duplicate code directory existed (already removed in previous work)
+- ✅ `.gitignore` already configured correctly
 
 ---
 
-**Last Updated**: 2025-12-07  
-**Status**: ✅ Complete
-
+**Last Updated**: 2025-12-09  
+**Status**: ✅ Phase 1 Complete

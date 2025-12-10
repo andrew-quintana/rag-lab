@@ -16,11 +16,11 @@ import os
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from rag_eval.core.config import Config
-from rag_eval.core.logging import get_logger
-from rag_eval.db.connection import DatabaseConnection
-from rag_eval.db.documents import DocumentService
-from rag_eval.services.rag.supabase_storage import (
+from src.core.config import Config
+from src.core.logging import get_logger
+from src.db.connection import DatabaseConnection
+from src.db.documents import DocumentService
+from src.services.rag.supabase_storage import (
     download_document_from_storage,
     generate_image_preview
 )

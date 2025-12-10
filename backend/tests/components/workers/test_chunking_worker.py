@@ -12,10 +12,10 @@ from unittest.mock import Mock, patch
 
 logging.disable(logging.CRITICAL)
 
-from rag_eval.core.exceptions import DatabaseError, ValidationError
-from rag_eval.services.workers.chunking_worker import chunking_worker
-from rag_eval.services.workers.queue_client import QueueMessage, ProcessingStage
-from rag_eval.core.interfaces import Chunk
+from src.core.exceptions import DatabaseError, ValidationError
+from src.services.workers.chunking_worker import chunking_worker
+from src.services.workers.queue_client import QueueMessage, ProcessingStage
+from src.core.interfaces import Chunk
 
 
 @pytest.fixture
@@ -51,7 +51,7 @@ Hospital stays are covered with a daily copayment after the deductible."""
 @pytest.fixture
 def actual_chunks(actual_extracted_text):
     """Create actual chunks from extracted text"""
-    from rag_eval.services.rag.chunking import chunk_text_fixed_size
+    from src.services.rag.chunking import chunk_text_fixed_size
     return chunk_text_fixed_size(
         text=actual_extracted_text,
         document_id="doc_123",
@@ -87,24 +87,24 @@ class TestChunkingWorkerMessageParsing:
     
     def test_valid_message(self, valid_message_dict, context_with_config, mock_config, actual_extracted_text, actual_chunks):
         """Test chunking worker with valid message"""
-        with patch('rag_eval.services.workers.chunking_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.chunking_worker.load_extracted_text', return_value=actual_extracted_text), \
-             patch('rag_eval.services.workers.chunking_worker.chunk_text', return_value=actual_chunks), \
-             patch('rag_eval.services.workers.chunking_worker.persist_chunks'), \
-             patch('rag_eval.services.workers.chunking_worker.update_document_status'), \
-             patch('rag_eval.services.workers.chunking_worker.enqueue_message'):
+        with patch('src.services.workers.chunking_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.chunking_worker.load_extracted_text', return_value=actual_extracted_text), \
+             patch('src.services.workers.chunking_worker.chunk_text', return_value=actual_chunks), \
+             patch('src.services.workers.chunking_worker.persist_chunks'), \
+             patch('src.services.workers.chunking_worker.update_document_status'), \
+             patch('src.services.workers.chunking_worker.enqueue_message'):
             
             chunking_worker(valid_message_dict, context_with_config)
             
             # Verify extracted text was loaded
-            from rag_eval.services.workers.chunking_worker import load_extracted_text
+            from src.services.workers.chunking_worker import load_extracted_text
             load_extracted_text.assert_called_once_with(
                 valid_message_dict["document_id"],
                 mock_config
             )
             
             # Verify chunking was called
-            from rag_eval.services.workers.chunking_worker import chunk_text
+            from src.services.workers.chunking_worker import chunk_text
             chunk_text.assert_called_once()
             call_args = chunk_text.call_args
             # chunk_text is called with keyword arguments
@@ -126,8 +126,8 @@ class TestChunkingWorkerIdempotency:
     
     def test_skip_if_already_chunked(self, valid_message_dict, context_with_config):
         """Test that worker skips processing if document is already chunked"""
-        with patch('rag_eval.services.workers.chunking_worker.should_process_document', return_value=False), \
-             patch('rag_eval.services.workers.chunking_worker.load_extracted_text') as mock_load:
+        with patch('src.services.workers.chunking_worker.should_process_document', return_value=False), \
+             patch('src.services.workers.chunking_worker.load_extracted_text') as mock_load:
             
             chunking_worker(valid_message_dict, context_with_config)
             
@@ -140,12 +140,12 @@ class TestChunkingWorkerLoad:
     
     def test_load_extracted_text_success(self, valid_message_dict, context_with_config, mock_config, actual_extracted_text, actual_chunks):
         """Test successful loading of extracted text"""
-        with patch('rag_eval.services.workers.chunking_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.chunking_worker.load_extracted_text', return_value=actual_extracted_text) as mock_load, \
-             patch('rag_eval.services.workers.chunking_worker.chunk_text', return_value=actual_chunks), \
-             patch('rag_eval.services.workers.chunking_worker.persist_chunks'), \
-             patch('rag_eval.services.workers.chunking_worker.update_document_status'), \
-             patch('rag_eval.services.workers.chunking_worker.enqueue_message'):
+        with patch('src.services.workers.chunking_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.chunking_worker.load_extracted_text', return_value=actual_extracted_text) as mock_load, \
+             patch('src.services.workers.chunking_worker.chunk_text', return_value=actual_chunks), \
+             patch('src.services.workers.chunking_worker.persist_chunks'), \
+             patch('src.services.workers.chunking_worker.update_document_status'), \
+             patch('src.services.workers.chunking_worker.enqueue_message'):
             
             chunking_worker(valid_message_dict, context_with_config)
             
@@ -156,18 +156,18 @@ class TestChunkingWorkerLoad:
     
     def test_load_empty_text(self, valid_message_dict, context_with_config):
         """Test handling of empty extracted text"""
-        with patch('rag_eval.services.workers.chunking_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.chunking_worker.load_extracted_text', return_value=""), \
-             patch('rag_eval.services.workers.chunking_worker.update_document_status'):
+        with patch('src.services.workers.chunking_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.chunking_worker.load_extracted_text', return_value=""), \
+             patch('src.services.workers.chunking_worker.update_document_status'):
             
             with pytest.raises(ValueError, match="Extracted text is empty"):
                 chunking_worker(valid_message_dict, context_with_config)
     
     def test_load_failure(self, valid_message_dict, context_with_config):
         """Test handling of load failure"""
-        with patch('rag_eval.services.workers.chunking_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.chunking_worker.load_extracted_text') as mock_load, \
-             patch('rag_eval.services.workers.chunking_worker.update_document_status'):
+        with patch('src.services.workers.chunking_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.chunking_worker.load_extracted_text') as mock_load, \
+             patch('src.services.workers.chunking_worker.update_document_status'):
             
             mock_load.side_effect = DatabaseError("Database connection failed")
             
@@ -180,12 +180,12 @@ class TestChunkingWorkerProcess:
     
     def test_chunking_success(self, valid_message_dict, context_with_config, mock_config, actual_extracted_text, actual_chunks):
         """Test successful chunking"""
-        with patch('rag_eval.services.workers.chunking_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.chunking_worker.load_extracted_text', return_value=actual_extracted_text), \
-             patch('rag_eval.services.workers.chunking_worker.chunk_text', return_value=actual_chunks) as mock_chunk, \
-             patch('rag_eval.services.workers.chunking_worker.persist_chunks'), \
-             patch('rag_eval.services.workers.chunking_worker.update_document_status'), \
-             patch('rag_eval.services.workers.chunking_worker.enqueue_message'):
+        with patch('src.services.workers.chunking_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.chunking_worker.load_extracted_text', return_value=actual_extracted_text), \
+             patch('src.services.workers.chunking_worker.chunk_text', return_value=actual_chunks) as mock_chunk, \
+             patch('src.services.workers.chunking_worker.persist_chunks'), \
+             patch('src.services.workers.chunking_worker.update_document_status'), \
+             patch('src.services.workers.chunking_worker.enqueue_message'):
             
             chunking_worker(valid_message_dict, context_with_config)
             
@@ -199,10 +199,10 @@ class TestChunkingWorkerProcess:
     
     def test_chunking_failure(self, valid_message_dict, context_with_config, mock_config, actual_extracted_text):
         """Test handling of chunking failure"""
-        with patch('rag_eval.services.workers.chunking_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.chunking_worker.load_extracted_text', return_value=actual_extracted_text), \
-             patch('rag_eval.services.workers.chunking_worker.chunk_text') as mock_chunk, \
-             patch('rag_eval.services.workers.chunking_worker.update_document_status'):
+        with patch('src.services.workers.chunking_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.chunking_worker.load_extracted_text', return_value=actual_extracted_text), \
+             patch('src.services.workers.chunking_worker.chunk_text') as mock_chunk, \
+             patch('src.services.workers.chunking_worker.update_document_status'):
             
             mock_chunk.side_effect = ValueError("Invalid chunking parameters")
             
@@ -215,12 +215,12 @@ class TestChunkingWorkerPersistence:
     
     def test_persist_chunks_success(self, valid_message_dict, context_with_config, mock_config, actual_extracted_text, actual_chunks):
         """Test successful persistence of chunks"""
-        with patch('rag_eval.services.workers.chunking_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.chunking_worker.load_extracted_text', return_value=actual_extracted_text), \
-             patch('rag_eval.services.workers.chunking_worker.chunk_text', return_value=actual_chunks), \
-             patch('rag_eval.services.workers.chunking_worker.persist_chunks') as mock_persist, \
-             patch('rag_eval.services.workers.chunking_worker.update_document_status'), \
-             patch('rag_eval.services.workers.chunking_worker.enqueue_message'):
+        with patch('src.services.workers.chunking_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.chunking_worker.load_extracted_text', return_value=actual_extracted_text), \
+             patch('src.services.workers.chunking_worker.chunk_text', return_value=actual_chunks), \
+             patch('src.services.workers.chunking_worker.persist_chunks') as mock_persist, \
+             patch('src.services.workers.chunking_worker.update_document_status'), \
+             patch('src.services.workers.chunking_worker.enqueue_message'):
             
             chunking_worker(valid_message_dict, context_with_config)
             
@@ -233,11 +233,11 @@ class TestChunkingWorkerPersistence:
     
     def test_persist_failure(self, valid_message_dict, context_with_config, mock_config, actual_extracted_text, actual_chunks):
         """Test persistence failure handling"""
-        with patch('rag_eval.services.workers.chunking_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.chunking_worker.load_extracted_text', return_value=actual_extracted_text), \
-             patch('rag_eval.services.workers.chunking_worker.chunk_text', return_value=actual_chunks), \
-             patch('rag_eval.services.workers.chunking_worker.persist_chunks') as mock_persist, \
-             patch('rag_eval.services.workers.chunking_worker.update_document_status'):
+        with patch('src.services.workers.chunking_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.chunking_worker.load_extracted_text', return_value=actual_extracted_text), \
+             patch('src.services.workers.chunking_worker.chunk_text', return_value=actual_chunks), \
+             patch('src.services.workers.chunking_worker.persist_chunks') as mock_persist, \
+             patch('src.services.workers.chunking_worker.update_document_status'):
             
             mock_persist.side_effect = DatabaseError("Database connection failed")
             
@@ -250,12 +250,12 @@ class TestChunkingWorkerEnqueue:
     
     def test_enqueue_to_embedding_queue(self, valid_message_dict, context_with_config, mock_config, actual_extracted_text, actual_chunks):
         """Test successful enqueue to embedding queue"""
-        with patch('rag_eval.services.workers.chunking_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.chunking_worker.load_extracted_text', return_value=actual_extracted_text), \
-             patch('rag_eval.services.workers.chunking_worker.chunk_text', return_value=actual_chunks), \
-             patch('rag_eval.services.workers.chunking_worker.persist_chunks'), \
-             patch('rag_eval.services.workers.chunking_worker.update_document_status'), \
-             patch('rag_eval.services.workers.chunking_worker.enqueue_message') as mock_enqueue:
+        with patch('src.services.workers.chunking_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.chunking_worker.load_extracted_text', return_value=actual_extracted_text), \
+             patch('src.services.workers.chunking_worker.chunk_text', return_value=actual_chunks), \
+             patch('src.services.workers.chunking_worker.persist_chunks'), \
+             patch('src.services.workers.chunking_worker.update_document_status'), \
+             patch('src.services.workers.chunking_worker.enqueue_message') as mock_enqueue:
             
             chunking_worker(valid_message_dict, context_with_config)
             

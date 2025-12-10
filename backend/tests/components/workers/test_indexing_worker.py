@@ -12,10 +12,10 @@ from unittest.mock import Mock, patch
 
 logging.disable(logging.CRITICAL)
 
-from rag_eval.core.exceptions import AzureServiceError, DatabaseError, ValidationError
-from rag_eval.services.workers.indexing_worker import indexing_worker
-from rag_eval.services.workers.queue_client import QueueMessage, ProcessingStage
-from rag_eval.core.interfaces import Chunk
+from src.core.exceptions import AzureServiceError, DatabaseError, ValidationError
+from src.services.workers.indexing_worker import indexing_worker
+from src.services.workers.queue_client import QueueMessage, ProcessingStage
+from src.core.interfaces import Chunk
 
 
 @pytest.fixture
@@ -32,7 +32,7 @@ def mock_config():
 @pytest.fixture
 def actual_chunks():
     """Create actual chunks for testing"""
-    from rag_eval.services.rag.chunking import chunk_text_fixed_size
+    from src.services.rag.chunking import chunk_text_fixed_size
     text = """HEALTHGUARD SELECT PPO PLAN
 2025 Medicare Evidence of Coverage
 
@@ -85,16 +85,16 @@ class TestIndexingWorkerMessageParsing:
     
     def test_valid_message(self, valid_message_dict, context_with_config, mock_config, actual_chunks, actual_embeddings):
         """Test indexing worker with valid message"""
-        with patch('rag_eval.services.workers.indexing_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.indexing_worker.load_chunks', return_value=actual_chunks), \
-             patch('rag_eval.services.workers.indexing_worker.load_embeddings', return_value=actual_embeddings), \
-             patch('rag_eval.services.workers.indexing_worker.index_chunks'), \
-             patch('rag_eval.services.workers.indexing_worker.update_document_status'):
+        with patch('src.services.workers.indexing_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.indexing_worker.load_chunks', return_value=actual_chunks), \
+             patch('src.services.workers.indexing_worker.load_embeddings', return_value=actual_embeddings), \
+             patch('src.services.workers.indexing_worker.index_chunks'), \
+             patch('src.services.workers.indexing_worker.update_document_status'):
             
             indexing_worker(valid_message_dict, context_with_config)
             
             # Verify chunks and embeddings were loaded
-            from rag_eval.services.workers.indexing_worker import load_chunks, load_embeddings
+            from src.services.workers.indexing_worker import load_chunks, load_embeddings
             load_chunks.assert_called_once_with(
                 valid_message_dict["document_id"],
                 mock_config
@@ -105,7 +105,7 @@ class TestIndexingWorkerMessageParsing:
             )
             
             # Verify indexing was called
-            from rag_eval.services.workers.indexing_worker import index_chunks
+            from src.services.workers.indexing_worker import index_chunks
             index_chunks.assert_called_once_with(actual_chunks, actual_embeddings, mock_config)
     
     def test_invalid_message(self, context_with_config):
@@ -121,9 +121,9 @@ class TestIndexingWorkerIdempotency:
     
     def test_skip_if_already_indexed(self, valid_message_dict, context_with_config):
         """Test that worker skips processing if document is already indexed"""
-        with patch('rag_eval.services.workers.indexing_worker.should_process_document', return_value=False), \
-             patch('rag_eval.services.workers.indexing_worker.load_chunks') as mock_load_chunks, \
-             patch('rag_eval.services.workers.indexing_worker.load_embeddings') as mock_load_embeddings:
+        with patch('src.services.workers.indexing_worker.should_process_document', return_value=False), \
+             patch('src.services.workers.indexing_worker.load_chunks') as mock_load_chunks, \
+             patch('src.services.workers.indexing_worker.load_embeddings') as mock_load_embeddings:
             
             indexing_worker(valid_message_dict, context_with_config)
             
@@ -137,11 +137,11 @@ class TestIndexingWorkerLoad:
     
     def test_load_chunks_and_embeddings_success(self, valid_message_dict, context_with_config, mock_config, actual_chunks, actual_embeddings):
         """Test successful loading of chunks and embeddings"""
-        with patch('rag_eval.services.workers.indexing_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.indexing_worker.load_chunks', return_value=actual_chunks) as mock_load_chunks, \
-             patch('rag_eval.services.workers.indexing_worker.load_embeddings', return_value=actual_embeddings) as mock_load_embeddings, \
-             patch('rag_eval.services.workers.indexing_worker.index_chunks'), \
-             patch('rag_eval.services.workers.indexing_worker.update_document_status'):
+        with patch('src.services.workers.indexing_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.indexing_worker.load_chunks', return_value=actual_chunks) as mock_load_chunks, \
+             patch('src.services.workers.indexing_worker.load_embeddings', return_value=actual_embeddings) as mock_load_embeddings, \
+             patch('src.services.workers.indexing_worker.index_chunks'), \
+             patch('src.services.workers.indexing_worker.update_document_status'):
             
             indexing_worker(valid_message_dict, context_with_config)
             
@@ -156,11 +156,11 @@ class TestIndexingWorkerLoad:
     
     def test_load_no_chunks(self, valid_message_dict, context_with_config):
         """Test handling of no chunks found"""
-        with patch('rag_eval.services.workers.indexing_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.indexing_worker.load_chunks', return_value=[]), \
-             patch('rag_eval.services.workers.indexing_worker.load_embeddings'), \
-             patch('rag_eval.services.workers.indexing_worker.index_chunks'), \
-             patch('rag_eval.services.workers.indexing_worker.update_document_status'):
+        with patch('src.services.workers.indexing_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.indexing_worker.load_chunks', return_value=[]), \
+             patch('src.services.workers.indexing_worker.load_embeddings'), \
+             patch('src.services.workers.indexing_worker.index_chunks'), \
+             patch('src.services.workers.indexing_worker.update_document_status'):
             
             # The worker raises ValueError which gets wrapped in AzureServiceError
             with pytest.raises((ValueError, AzureServiceError)):
@@ -168,11 +168,11 @@ class TestIndexingWorkerLoad:
     
     def test_load_no_embeddings(self, valid_message_dict, context_with_config, actual_chunks):
         """Test handling of no embeddings found"""
-        with patch('rag_eval.services.workers.indexing_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.indexing_worker.load_chunks', return_value=actual_chunks), \
-             patch('rag_eval.services.workers.indexing_worker.load_embeddings', return_value=[]), \
-             patch('rag_eval.services.workers.indexing_worker.index_chunks'), \
-             patch('rag_eval.services.workers.indexing_worker.update_document_status'):
+        with patch('src.services.workers.indexing_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.indexing_worker.load_chunks', return_value=actual_chunks), \
+             patch('src.services.workers.indexing_worker.load_embeddings', return_value=[]), \
+             patch('src.services.workers.indexing_worker.index_chunks'), \
+             patch('src.services.workers.indexing_worker.update_document_status'):
             
             # The worker raises ValueError which gets wrapped in AzureServiceError
             with pytest.raises((ValueError, AzureServiceError)):
@@ -183,11 +183,11 @@ class TestIndexingWorkerLoad:
         # Create a mismatch: return 2 chunks but only 1 embedding
         chunks_with_mismatch = actual_chunks + [actual_chunks[0]] if len(actual_chunks) > 0 else actual_chunks
         
-        with patch('rag_eval.services.workers.indexing_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.indexing_worker.load_chunks', return_value=chunks_with_mismatch), \
-             patch('rag_eval.services.workers.indexing_worker.load_embeddings', return_value=[[0.1] * 1536]), \
-             patch('rag_eval.services.workers.indexing_worker.index_chunks'), \
-             patch('rag_eval.services.workers.indexing_worker.update_document_status'):
+        with patch('src.services.workers.indexing_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.indexing_worker.load_chunks', return_value=chunks_with_mismatch), \
+             patch('src.services.workers.indexing_worker.load_embeddings', return_value=[[0.1] * 1536]), \
+             patch('src.services.workers.indexing_worker.index_chunks'), \
+             patch('src.services.workers.indexing_worker.update_document_status'):
             
             # The worker raises ValueError when count mismatch
             # The worker catches ValueError and re-raises as AzureServiceError in the outer handler
@@ -196,9 +196,9 @@ class TestIndexingWorkerLoad:
     
     def test_load_failure(self, valid_message_dict, context_with_config):
         """Test handling of load failure"""
-        with patch('rag_eval.services.workers.indexing_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.indexing_worker.load_chunks') as mock_load_chunks, \
-             patch('rag_eval.services.workers.indexing_worker.update_document_status'):
+        with patch('src.services.workers.indexing_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.indexing_worker.load_chunks') as mock_load_chunks, \
+             patch('src.services.workers.indexing_worker.update_document_status'):
             
             mock_load_chunks.side_effect = DatabaseError("Database connection failed")
             
@@ -211,11 +211,11 @@ class TestIndexingWorkerProcess:
     
     def test_indexing_success(self, valid_message_dict, context_with_config, mock_config, actual_chunks, actual_embeddings):
         """Test successful indexing"""
-        with patch('rag_eval.services.workers.indexing_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.indexing_worker.load_chunks', return_value=actual_chunks), \
-             patch('rag_eval.services.workers.indexing_worker.load_embeddings', return_value=actual_embeddings), \
-             patch('rag_eval.services.workers.indexing_worker.index_chunks') as mock_index, \
-             patch('rag_eval.services.workers.indexing_worker.update_document_status'):
+        with patch('src.services.workers.indexing_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.indexing_worker.load_chunks', return_value=actual_chunks), \
+             patch('src.services.workers.indexing_worker.load_embeddings', return_value=actual_embeddings), \
+             patch('src.services.workers.indexing_worker.index_chunks') as mock_index, \
+             patch('src.services.workers.indexing_worker.update_document_status'):
             
             indexing_worker(valid_message_dict, context_with_config)
             
@@ -224,10 +224,10 @@ class TestIndexingWorkerProcess:
     
     def test_indexing_retry(self, valid_message_dict, context_with_config, mock_config, actual_chunks, actual_embeddings):
         """Test retry logic on indexing failure"""
-        with patch('rag_eval.services.workers.indexing_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.indexing_worker.load_chunks', return_value=actual_chunks), \
-             patch('rag_eval.services.workers.indexing_worker.load_embeddings', return_value=actual_embeddings), \
-             patch('rag_eval.services.workers.indexing_worker.index_chunks') as mock_index:
+        with patch('src.services.workers.indexing_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.indexing_worker.load_chunks', return_value=actual_chunks), \
+             patch('src.services.workers.indexing_worker.load_embeddings', return_value=actual_embeddings), \
+             patch('src.services.workers.indexing_worker.index_chunks') as mock_index:
             
             # First two calls fail, third succeeds
             mock_index.side_effect = [
@@ -236,7 +236,7 @@ class TestIndexingWorkerProcess:
                 None
             ]
             
-            with patch('rag_eval.services.workers.indexing_worker.update_document_status'):
+            with patch('src.services.workers.indexing_worker.update_document_status'):
                 indexing_worker(valid_message_dict, context_with_config)
                 
                 # Verify retry was attempted
@@ -244,11 +244,11 @@ class TestIndexingWorkerProcess:
     
     def test_indexing_failure(self, valid_message_dict, context_with_config, mock_config, actual_chunks, actual_embeddings):
         """Test handling of indexing failure"""
-        with patch('rag_eval.services.workers.indexing_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.indexing_worker.load_chunks', return_value=actual_chunks), \
-             patch('rag_eval.services.workers.indexing_worker.load_embeddings', return_value=actual_embeddings), \
-             patch('rag_eval.services.workers.indexing_worker.index_chunks') as mock_index, \
-             patch('rag_eval.services.workers.indexing_worker.update_document_status'):
+        with patch('src.services.workers.indexing_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.indexing_worker.load_chunks', return_value=actual_chunks), \
+             patch('src.services.workers.indexing_worker.load_embeddings', return_value=actual_embeddings), \
+             patch('src.services.workers.indexing_worker.index_chunks') as mock_index, \
+             patch('src.services.workers.indexing_worker.update_document_status'):
             
             mock_index.side_effect = AzureServiceError("Index not found")
             
@@ -261,11 +261,11 @@ class TestIndexingWorkerPersistence:
     
     def test_update_status_success(self, valid_message_dict, context_with_config, mock_config, actual_chunks, actual_embeddings):
         """Test successful status update"""
-        with patch('rag_eval.services.workers.indexing_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.indexing_worker.load_chunks', return_value=actual_chunks), \
-             patch('rag_eval.services.workers.indexing_worker.load_embeddings', return_value=actual_embeddings), \
-             patch('rag_eval.services.workers.indexing_worker.index_chunks'), \
-             patch('rag_eval.services.workers.indexing_worker.update_document_status') as mock_update:
+        with patch('src.services.workers.indexing_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.indexing_worker.load_chunks', return_value=actual_chunks), \
+             patch('src.services.workers.indexing_worker.load_embeddings', return_value=actual_embeddings), \
+             patch('src.services.workers.indexing_worker.index_chunks'), \
+             patch('src.services.workers.indexing_worker.update_document_status') as mock_update:
             
             indexing_worker(valid_message_dict, context_with_config)
             
@@ -279,11 +279,11 @@ class TestIndexingWorkerPersistence:
     
     def test_update_status_failure(self, valid_message_dict, context_with_config, mock_config, actual_chunks, actual_embeddings):
         """Test status update failure handling"""
-        with patch('rag_eval.services.workers.indexing_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.indexing_worker.load_chunks', return_value=actual_chunks), \
-             patch('rag_eval.services.workers.indexing_worker.load_embeddings', return_value=actual_embeddings), \
-             patch('rag_eval.services.workers.indexing_worker.index_chunks'), \
-             patch('rag_eval.services.workers.indexing_worker.update_document_status') as mock_update:
+        with patch('src.services.workers.indexing_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.indexing_worker.load_chunks', return_value=actual_chunks), \
+             patch('src.services.workers.indexing_worker.load_embeddings', return_value=actual_embeddings), \
+             patch('src.services.workers.indexing_worker.index_chunks'), \
+             patch('src.services.workers.indexing_worker.update_document_status') as mock_update:
             
             mock_update.side_effect = DatabaseError("Database connection failed")
             

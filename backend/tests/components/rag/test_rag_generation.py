@@ -5,11 +5,11 @@ import requests
 from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime
 
-from rag_eval.core.exceptions import ValidationError, DatabaseError, AzureServiceError
-from rag_eval.core.interfaces import Query, RetrievalResult
-from rag_eval.core.config import Config
-from rag_eval.db.queries import QueryExecutor
-from rag_eval.services.rag.generation import (
+from src.core.exceptions import ValidationError, DatabaseError, AzureServiceError
+from src.core.interfaces import Query, RetrievalResult
+from src.core.config import Config
+from src.db.queries import QueryExecutor
+from src.services.rag.generation import (
     load_prompt_template,
     construct_prompt,
     _prompt_cache,
@@ -467,10 +467,10 @@ class TestConnectionTest:
         """
         import warnings
         
-        from rag_eval.core.config import Config
-        from rag_eval.db.connection import DatabaseConnection
-        from rag_eval.db.queries import QueryExecutor
-        from rag_eval.core.exceptions import DatabaseError, ValidationError
+        from src.core.config import Config
+        from src.db.connection import DatabaseConnection
+        from src.db.queries import QueryExecutor
+        from src.core.exceptions import DatabaseError, ValidationError
         
         config = Config.from_env()
         
@@ -530,11 +530,11 @@ class TestGenerateAnswer:
     
     def setup_method(self):
         """Clear cache before each test"""
-        from rag_eval.services.rag.generation import _prompt_cache
+        from src.services.rag.generation import _prompt_cache
         _prompt_cache.clear()
     
-    @patch('rag_eval.services.rag.generation.requests.post')
-    @patch('rag_eval.services.rag.generation.construct_prompt')
+    @patch('src.services.rag.generation.requests.post')
+    @patch('src.services.rag.generation.construct_prompt')
     def test_generate_answer_success(self, mock_construct_prompt, mock_post):
         """Test successful answer generation"""
         # Mock prompt construction
@@ -571,7 +571,7 @@ class TestGenerateAnswer:
             RetrievalResult(chunk_id="chunk_1", similarity_score=0.9, chunk_text="X is a variable")
         ]
         
-        from rag_eval.services.rag.generation import generate_answer
+        from src.services.rag.generation import generate_answer
         answer = generate_answer(query, chunks, "v1", mock_config, mock_query_executor)
         
         assert answer.text == "X is a variable that represents..."
@@ -587,8 +587,8 @@ class TestGenerateAnswer:
         assert call_args[1]["json"]["temperature"] == 0.1
         assert call_args[1]["json"]["max_tokens"] == 1000
     
-    @patch('rag_eval.services.rag.generation.requests.post')
-    @patch('rag_eval.services.rag.generation.construct_prompt')
+    @patch('src.services.rag.generation.requests.post')
+    @patch('src.services.rag.generation.construct_prompt')
     def test_generate_answer_with_existing_query_id(self, mock_construct_prompt, mock_post):
         """Test answer generation with existing query_id"""
         mock_construct_prompt.return_value = "Answer based on: Context\n\nQuestion: Test?"
@@ -613,13 +613,13 @@ class TestGenerateAnswer:
         query = Query(text="Test query", query_id="existing-query-id")
         chunks = []
         
-        from rag_eval.services.rag.generation import generate_answer
+        from src.services.rag.generation import generate_answer
         answer = generate_answer(query, chunks, "v1", mock_config, mock_query_executor)
         
         assert answer.query_id == "existing-query-id"
     
-    @patch('rag_eval.services.rag.generation.requests.post')
-    @patch('rag_eval.services.rag.generation.construct_prompt')
+    @patch('src.services.rag.generation.requests.post')
+    @patch('src.services.rag.generation.construct_prompt')
     def test_generate_answer_multiple_chunks(self, mock_construct_prompt, mock_post):
         """Test answer generation with multiple retrieved chunks"""
         mock_construct_prompt.return_value = "Answer based on: Context\n\nQuestion: Test?"
@@ -648,13 +648,13 @@ class TestGenerateAnswer:
             RetrievalResult(chunk_id="chunk_3", similarity_score=0.7, chunk_text="Chunk 3"),
         ]
         
-        from rag_eval.services.rag.generation import generate_answer
+        from src.services.rag.generation import generate_answer
         answer = generate_answer(query, chunks, "v1", mock_config, mock_query_executor)
         
         assert answer.retrieved_chunk_ids == ["chunk_1", "chunk_2", "chunk_3"]
     
-    @patch('rag_eval.services.rag.generation.requests.post')
-    @patch('rag_eval.services.rag.generation.construct_prompt')
+    @patch('src.services.rag.generation.requests.post')
+    @patch('src.services.rag.generation.construct_prompt')
     def test_generate_answer_empty_chunks(self, mock_construct_prompt, mock_post):
         """Test answer generation with empty retrieved chunks"""
         mock_construct_prompt.return_value = "Answer based on: (No context retrieved)\n\nQuestion: Test?"
@@ -679,7 +679,7 @@ class TestGenerateAnswer:
         query = Query(text="Test query")
         chunks = []
         
-        from rag_eval.services.rag.generation import generate_answer
+        from src.services.rag.generation import generate_answer
         answer = generate_answer(query, chunks, "v1", mock_config, mock_query_executor)
         
         assert answer.retrieved_chunk_ids == []
@@ -693,7 +693,7 @@ class TestGenerateAnswer:
         query = Query(text="")
         chunks = []
         
-        from rag_eval.services.rag.generation import generate_answer
+        from src.services.rag.generation import generate_answer
         with pytest.raises(ValueError) as exc_info:
             generate_answer(query, chunks, "v1", mock_config, mock_query_executor)
         
@@ -711,7 +711,7 @@ class TestGenerateAnswer:
         query = Query(text="Test query")
         chunks = []
         
-        from rag_eval.services.rag.generation import generate_answer
+        from src.services.rag.generation import generate_answer
         with pytest.raises(ValueError) as exc_info:
             generate_answer(query, chunks, "v1", mock_config, mock_query_executor)
         
@@ -729,7 +729,7 @@ class TestGenerateAnswer:
         query = Query(text="Test query")
         chunks = []
         
-        from rag_eval.services.rag.generation import generate_answer
+        from src.services.rag.generation import generate_answer
         with pytest.raises(ValueError) as exc_info:
             generate_answer(query, chunks, "v1", mock_config, mock_query_executor)
         
@@ -747,14 +747,14 @@ class TestGenerateAnswer:
         query = Query(text="Test query")
         chunks = []
         
-        from rag_eval.services.rag.generation import generate_answer
+        from src.services.rag.generation import generate_answer
         with pytest.raises(ValueError) as exc_info:
             generate_answer(query, chunks, "v1", mock_config, mock_query_executor)
         
         assert "generation model is not configured" in str(exc_info.value)
     
-    @patch('rag_eval.services.rag.generation.requests.post')
-    @patch('rag_eval.services.rag.generation.construct_prompt')
+    @patch('src.services.rag.generation.requests.post')
+    @patch('src.services.rag.generation.construct_prompt')
     def test_generate_answer_api_failure(self, mock_construct_prompt, mock_post):
         """Test that API failures raise AzureServiceError"""
         mock_construct_prompt.return_value = "Test prompt"
@@ -775,7 +775,7 @@ class TestGenerateAnswer:
         query = Query(text="Test query")
         chunks = []
         
-        from rag_eval.services.rag.generation import generate_answer
+        from src.services.rag.generation import generate_answer
         with pytest.raises(AzureServiceError) as exc_info:
             generate_answer(query, chunks, "v1", mock_config, mock_query_executor)
         
@@ -783,8 +783,8 @@ class TestGenerateAnswer:
         # Verify retries were attempted (3 retries + 1 initial = 4 calls)
         assert mock_post.call_count == 4
     
-    @patch('rag_eval.services.rag.generation.requests.post')
-    @patch('rag_eval.services.rag.generation.construct_prompt')
+    @patch('src.services.rag.generation.requests.post')
+    @patch('src.services.rag.generation.construct_prompt')
     def test_generate_answer_invalid_response_missing_choices(self, mock_construct_prompt, mock_post):
         """Test that invalid response (missing choices) raises ValueError"""
         mock_construct_prompt.return_value = "Test prompt"
@@ -807,14 +807,14 @@ class TestGenerateAnswer:
         query = Query(text="Test query")
         chunks = []
         
-        from rag_eval.services.rag.generation import generate_answer
+        from src.services.rag.generation import generate_answer
         with pytest.raises(ValueError) as exc_info:
             generate_answer(query, chunks, "v1", mock_config, mock_query_executor)
         
         assert "missing 'choices' field" in str(exc_info.value)
     
-    @patch('rag_eval.services.rag.generation.requests.post')
-    @patch('rag_eval.services.rag.generation.construct_prompt')
+    @patch('src.services.rag.generation.requests.post')
+    @patch('src.services.rag.generation.construct_prompt')
     def test_generate_answer_invalid_response_missing_content(self, mock_construct_prompt, mock_post):
         """Test that invalid response (missing content) raises ValueError"""
         mock_construct_prompt.return_value = "Test prompt"
@@ -839,14 +839,14 @@ class TestGenerateAnswer:
         query = Query(text="Test query")
         chunks = []
         
-        from rag_eval.services.rag.generation import generate_answer
+        from src.services.rag.generation import generate_answer
         with pytest.raises(ValueError) as exc_info:
             generate_answer(query, chunks, "v1", mock_config, mock_query_executor)
         
         assert "missing 'content' field" in str(exc_info.value)
     
-    @patch('rag_eval.services.rag.generation.requests.post')
-    @patch('rag_eval.services.rag.generation.construct_prompt')
+    @patch('src.services.rag.generation.requests.post')
+    @patch('src.services.rag.generation.construct_prompt')
     def test_generate_answer_empty_response(self, mock_construct_prompt, mock_post):
         """Test that empty response raises ValueError"""
         mock_construct_prompt.return_value = "Test prompt"
@@ -871,16 +871,16 @@ class TestGenerateAnswer:
         query = Query(text="Test query")
         chunks = []
         
-        from rag_eval.services.rag.generation import generate_answer
+        from src.services.rag.generation import generate_answer
         with pytest.raises(ValueError) as exc_info:
             generate_answer(query, chunks, "v1", mock_config, mock_query_executor)
         
         assert "empty" in str(exc_info.value)
     
-    @patch('rag_eval.services.rag.generation.construct_prompt')
+    @patch('src.services.rag.generation.construct_prompt')
     def test_generate_answer_missing_prompt_version(self, mock_construct_prompt):
         """Test that missing prompt version propagates ValidationError"""
-        from rag_eval.core.exceptions import ValidationError
+        from src.core.exceptions import ValidationError
         mock_construct_prompt.side_effect = ValidationError("Prompt version not found")
         
         mock_query_executor = Mock(spec=QueryExecutor)
@@ -893,13 +893,13 @@ class TestGenerateAnswer:
         query = Query(text="Test query")
         chunks = []
         
-        from rag_eval.services.rag.generation import generate_answer
+        from src.services.rag.generation import generate_answer
         with pytest.raises(ValidationError):
             generate_answer(query, chunks, "nonexistent", mock_config, mock_query_executor)
     
-    @patch('rag_eval.services.rag.generation.time.sleep')
-    @patch('rag_eval.services.rag.generation.requests.post')
-    @patch('rag_eval.services.rag.generation.construct_prompt')
+    @patch('src.services.rag.generation.time.sleep')
+    @patch('src.services.rag.generation.requests.post')
+    @patch('src.services.rag.generation.construct_prompt')
     def test_generate_answer_retry_logic(self, mock_construct_prompt, mock_post, mock_sleep):
         """Test retry logic with exponential backoff"""
         mock_construct_prompt.return_value = "Test prompt"
@@ -930,7 +930,7 @@ class TestGenerateAnswer:
         query = Query(text="Test query")
         chunks = []
         
-        from rag_eval.services.rag.generation import generate_answer
+        from src.services.rag.generation import generate_answer
         answer = generate_answer(query, chunks, "v1", mock_config, mock_query_executor)
         
         assert answer.text == "Success after retries"
@@ -940,8 +940,8 @@ class TestGenerateAnswer:
         assert mock_sleep.call_args_list[0][0][0] == 1.0  # First retry: 1 second
         assert mock_sleep.call_args_list[1][0][0] == 2.0  # Second retry: 2 seconds
     
-    @patch('rag_eval.services.rag.generation.requests.post')
-    @patch('rag_eval.services.rag.generation.construct_prompt')
+    @patch('src.services.rag.generation.requests.post')
+    @patch('src.services.rag.generation.construct_prompt')
     def test_generate_answer_different_prompt_versions(self, mock_construct_prompt, mock_post):
         """Test support for multiple prompt versions"""
         mock_construct_prompt.side_effect = [
@@ -970,7 +970,7 @@ class TestGenerateAnswer:
         query = Query(text="Test query")
         chunks = []
         
-        from rag_eval.services.rag.generation import generate_answer
+        from src.services.rag.generation import generate_answer
         
         # Generate with v1
         answer1 = generate_answer(query, chunks, "v1", mock_config, mock_query_executor)
@@ -980,8 +980,8 @@ class TestGenerateAnswer:
         answer2 = generate_answer(query, chunks, "v2", mock_config, mock_query_executor)
         assert answer2.prompt_version == "v2"
     
-    @patch('rag_eval.services.rag.generation.requests.post')
-    @patch('rag_eval.services.rag.generation.construct_prompt')
+    @patch('src.services.rag.generation.requests.post')
+    @patch('src.services.rag.generation.construct_prompt')
     def test_generate_answer_prompt_construction_integration(self, mock_construct_prompt, mock_post):
         """Test that prompt construction is properly integrated"""
         # Verify construct_prompt is called with correct arguments
@@ -1009,7 +1009,7 @@ class TestGenerateAnswer:
             RetrievalResult(chunk_id="1", similarity_score=0.9, chunk_text="X is Y")
         ]
         
-        from rag_eval.services.rag.generation import generate_answer
+        from src.services.rag.generation import generate_answer
         generate_answer(query, chunks, "v1", mock_config, mock_query_executor)
         
         # Verify construct_prompt was called with correct arguments
@@ -1039,11 +1039,11 @@ class TestConnectionTestGeneration:
         """
         import warnings
         
-        from rag_eval.core.config import Config
-        from rag_eval.db.connection import DatabaseConnection
-        from rag_eval.db.queries import QueryExecutor
-        from rag_eval.core.exceptions import AzureServiceError, ValidationError
-        from rag_eval.services.rag.generation import generate_answer
+        from src.core.config import Config
+        from src.db.connection import DatabaseConnection
+        from src.db.queries import QueryExecutor
+        from src.core.exceptions import AzureServiceError, ValidationError
+        from src.services.rag.generation import generate_answer
         
         config = Config.from_env()
         

@@ -89,7 +89,7 @@ All scoping documents and phase prompts have been refactored to reflect the new 
 
 ### After (New Approach)
 - Functions in `backend/azure_functions/`
-- Simple direct imports: `from rag_eval.services.workers.ingestion_worker import ingestion_worker`
+- Simple direct imports: `from src.services.workers.ingestion_worker import ingestion_worker`
 - No path manipulation needed
 - No dotenv loading needed (Azure handles env vars)
 - All backend code in one place

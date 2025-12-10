@@ -5,14 +5,14 @@ import pytest
 from unittest.mock import Mock, patch
 from pathlib import Path
 
-from rag_eval.services.evaluator.cost_extraction import (
+from src.services.evaluator.cost_extraction import (
     extract_costs,
     CostExtractionEvaluator,
 )
-from rag_eval.core.config import Config
-from rag_eval.core.exceptions import AzureServiceError, ValidationError
-from rag_eval.services.shared.llm_providers import AzureFoundryProvider
-from rag_eval.db.queries import QueryExecutor
+from src.core.config import Config
+from src.core.exceptions import AzureServiceError, ValidationError
+from src.services.shared.llm_providers import AzureFoundryProvider
+from src.db.queries import QueryExecutor
 
 
 class TestCostExtractionPrompt:
@@ -20,7 +20,7 @@ class TestCostExtractionPrompt:
     
     def setup_method(self):
         """Clear cache before each test"""
-        from rag_eval.services.rag.generation import _prompt_cache
+        from src.services.rag.generation import _prompt_cache
         _prompt_cache.clear()
     
     def test_load_prompt_template_from_file(self):
@@ -43,7 +43,7 @@ class TestCostExtractionPrompt:
     def test_load_prompt_template_from_database(self):
         """Test that prompt template can be loaded from database"""
         # Clear cache to ensure fresh database query
-        from rag_eval.services.rag.generation import _prompt_cache
+        from src.services.rag.generation import _prompt_cache
         _prompt_cache.clear()
         
         mock_query_executor = Mock(spec=QueryExecutor)
@@ -121,7 +121,7 @@ class TestCostExtractionPrompt:
 class TestCostExtraction:
     """Tests for cost extraction functionality"""
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_extract_time_costs(self, mock_post):
         """Test extraction of time-based costs"""
         mock_response = Mock()
@@ -158,7 +158,7 @@ class TestCostExtraction:
         assert "money" not in result
         assert "steps" not in result
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_extract_money_costs(self, mock_post):
         """Test extraction of money-based costs"""
         mock_response = Mock()
@@ -195,7 +195,7 @@ class TestCostExtraction:
         assert "time" not in result
         assert "steps" not in result
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_extract_steps_costs(self, mock_post):
         """Test extraction of step-based costs"""
         mock_response = Mock()
@@ -232,7 +232,7 @@ class TestCostExtraction:
         assert "time" not in result
         assert "money" not in result
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_extract_mixed_costs(self, mock_post):
         """Test extraction of mixed cost types from same text"""
         mock_response = Mock()
@@ -273,7 +273,7 @@ class TestCostExtraction:
         assert result["steps"] == 5
         assert "reasoning" in result
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_extract_no_cost_information(self, mock_post):
         """Test handling of missing cost information (optional fields)"""
         mock_response = Mock()
@@ -308,7 +308,7 @@ class TestCostExtraction:
         assert "money" not in result
         assert "steps" not in result
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_extract_ambiguous_cost_expressions(self, mock_post):
         """Test edge case: ambiguous cost expressions"""
         mock_response = Mock()
@@ -356,7 +356,7 @@ class TestCostExtraction:
         with pytest.raises(ValueError, match="Text cannot be empty"):
             evaluator.extract_costs("   ")
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_extract_costs_llm_failure(self, mock_post):
         """Test error handling for LLM failures"""
         mock_post.side_effect = Exception("API connection failed")
@@ -375,7 +375,7 @@ class TestCostExtraction:
         with pytest.raises(AzureServiceError):
             evaluator.extract_costs("Test text")
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_extract_costs_missing_reasoning(self, mock_post):
         """Test that missing reasoning field raises ValueError"""
         mock_response = Mock()
@@ -406,7 +406,7 @@ class TestCostExtraction:
         with pytest.raises(ValueError, match="missing 'reasoning' field"):
             evaluator.extract_costs("Test text")
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_extract_costs_null_fields_omitted(self, mock_post):
         """Test that null/None fields are omitted from result"""
         mock_response = Mock()
@@ -443,7 +443,7 @@ class TestCostExtraction:
         assert "time" not in result  # Should be omitted
         assert "steps" not in result  # Should be omitted
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_extract_costs_various_money_formats(self, mock_post):
         """Test extraction of money in various formats"""
         test_cases = [
@@ -485,7 +485,7 @@ class TestCostExtraction:
             assert "money" in result
             assert result["money"] == expected_format
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_extract_costs_various_time_formats(self, mock_post):
         """Test extraction of time in various formats"""
         test_cases = [
@@ -531,7 +531,7 @@ class TestCostExtraction:
 class TestCostExtractionModuleFunction:
     """Tests for module-level extract_costs() function"""
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_module_function_extract_costs(self, mock_post):
         """Test module-level extract_costs() function"""
         mock_response = Mock()

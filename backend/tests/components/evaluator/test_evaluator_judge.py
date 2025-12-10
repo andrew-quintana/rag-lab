@@ -4,20 +4,20 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 from typing import List
 
-from rag_eval.core.config import Config
-from rag_eval.core.exceptions import AzureServiceError
-from rag_eval.core.interfaces import RetrievalResult, JudgeEvaluationResult
-from rag_eval.services.evaluator.judge import (
+from src.core.config import Config
+from src.core.exceptions import AzureServiceError
+from src.core.interfaces import RetrievalResult, JudgeEvaluationResult
+from src.services.evaluator.judge import (
     evaluate_answer_with_judge,
     _construct_reasoning_trace,
     _extract_failure_mode,
     _call_evaluator_with_reasoning
 )
-from rag_eval.services.evaluator.correctness import CorrectnessEvaluator
-from rag_eval.services.evaluator.hallucination import HallucinationEvaluator
-from rag_eval.services.evaluator.risk_direction import RiskDirectionEvaluator
-from rag_eval.services.evaluator.cost_extraction import CostExtractionEvaluator
-from rag_eval.services.evaluator.risk_impact import RiskImpactEvaluator
+from src.services.evaluator.correctness import CorrectnessEvaluator
+from src.services.evaluator.hallucination import HallucinationEvaluator
+from src.services.evaluator.risk_direction import RiskDirectionEvaluator
+from src.services.evaluator.cost_extraction import CostExtractionEvaluator
+from src.services.evaluator.risk_impact import RiskImpactEvaluator
 
 
 @pytest.fixture
@@ -116,8 +116,8 @@ class TestEvaluateAnswerWithJudge:
                 config=mock_config
             )
     
-    @patch('rag_eval.services.evaluator.judge.CorrectnessEvaluator')
-    @patch('rag_eval.services.evaluator.judge.HallucinationEvaluator')
+    @patch('src.services.evaluator.judge.CorrectnessEvaluator')
+    @patch('src.services.evaluator.judge.HallucinationEvaluator')
     def test_correctness_false_path_no_cost_nodes_called(
         self, mock_hallucination_class, mock_correctness_class,
         mock_config, sample_query, sample_retrieved_context,
@@ -165,11 +165,11 @@ class TestEvaluateAnswerWithJudge:
         assert "Not correct" in result.reasoning
         assert "No hallucination" in result.reasoning
     
-    @patch('rag_eval.services.evaluator.judge.RiskImpactEvaluator')
-    @patch('rag_eval.services.evaluator.judge.CostExtractionEvaluator')
-    @patch('rag_eval.services.evaluator.judge.RiskDirectionEvaluator')
-    @patch('rag_eval.services.evaluator.judge.HallucinationEvaluator')
-    @patch('rag_eval.services.evaluator.judge.CorrectnessEvaluator')
+    @patch('src.services.evaluator.judge.RiskImpactEvaluator')
+    @patch('src.services.evaluator.judge.CostExtractionEvaluator')
+    @patch('src.services.evaluator.judge.RiskDirectionEvaluator')
+    @patch('src.services.evaluator.judge.HallucinationEvaluator')
+    @patch('src.services.evaluator.judge.CorrectnessEvaluator')
     def test_correctness_true_path_all_nodes_called(
         self, mock_correctness_class, mock_hallucination_class,
         mock_risk_direction_class, mock_cost_extraction_class, mock_risk_impact_class,
@@ -252,7 +252,7 @@ class TestEvaluateAnswerWithJudge:
         assert "Care avoidance" in result.reasoning
         assert "Low impact" in result.reasoning
     
-    @patch('rag_eval.services.evaluator.judge.CorrectnessEvaluator')
+    @patch('src.services.evaluator.judge.CorrectnessEvaluator')
     def test_llm_failure_propagates(self, mock_correctness_class, mock_config,
                                    sample_query, sample_retrieved_context,
                                    sample_model_answer, sample_reference_answer):
@@ -273,11 +273,11 @@ class TestEvaluateAnswerWithJudge:
                 config=mock_config
             )
     
-    @patch('rag_eval.services.evaluator.judge.RiskImpactEvaluator')
-    @patch('rag_eval.services.evaluator.judge.CostExtractionEvaluator')
-    @patch('rag_eval.services.evaluator.judge.RiskDirectionEvaluator')
-    @patch('rag_eval.services.evaluator.judge.CorrectnessEvaluator')
-    @patch('rag_eval.services.evaluator.judge.HallucinationEvaluator')
+    @patch('src.services.evaluator.judge.RiskImpactEvaluator')
+    @patch('src.services.evaluator.judge.CostExtractionEvaluator')
+    @patch('src.services.evaluator.judge.RiskDirectionEvaluator')
+    @patch('src.services.evaluator.judge.CorrectnessEvaluator')
+    @patch('src.services.evaluator.judge.HallucinationEvaluator')
     def test_output_schema_validation(
         self, mock_hallucination_class, mock_correctness_class,
         mock_risk_direction_class, mock_cost_extraction_class, mock_risk_impact_class,
@@ -485,8 +485,8 @@ class TestCallEvaluatorWithReasoning:
 class TestEdgeCases:
     """Test edge cases"""
     
-    @patch('rag_eval.services.evaluator.judge.CorrectnessEvaluator')
-    @patch('rag_eval.services.evaluator.judge.HallucinationEvaluator')
+    @patch('src.services.evaluator.judge.CorrectnessEvaluator')
+    @patch('src.services.evaluator.judge.HallucinationEvaluator')
     def test_zero_retrieved_chunks_raises_error(
         self, mock_hallucination_class, mock_correctness_class,
         mock_config, sample_query, sample_model_answer, sample_reference_answer
@@ -501,8 +501,8 @@ class TestEdgeCases:
                 config=mock_config
             )
     
-    @patch('rag_eval.services.evaluator.judge.CorrectnessEvaluator')
-    @patch('rag_eval.services.evaluator.judge.HallucinationEvaluator')
+    @patch('src.services.evaluator.judge.CorrectnessEvaluator')
+    @patch('src.services.evaluator.judge.HallucinationEvaluator')
     def test_whitespace_only_inputs_raise_error(
         self, mock_hallucination_class, mock_correctness_class,
         mock_config, sample_retrieved_context
@@ -521,11 +521,11 @@ class TestEdgeCases:
 class TestIntegration:
     """Integration tests with mocked LLM nodes"""
     
-    @patch('rag_eval.services.evaluator.judge.CorrectnessEvaluator')
-    @patch('rag_eval.services.evaluator.judge.HallucinationEvaluator')
-    @patch('rag_eval.services.evaluator.judge.RiskDirectionEvaluator')
-    @patch('rag_eval.services.evaluator.judge.CostExtractionEvaluator')
-    @patch('rag_eval.services.evaluator.judge.RiskImpactEvaluator')
+    @patch('src.services.evaluator.judge.CorrectnessEvaluator')
+    @patch('src.services.evaluator.judge.HallucinationEvaluator')
+    @patch('src.services.evaluator.judge.RiskDirectionEvaluator')
+    @patch('src.services.evaluator.judge.CostExtractionEvaluator')
+    @patch('src.services.evaluator.judge.RiskImpactEvaluator')
     def test_full_orchestration_flow(
         self, mock_impact_class, mock_cost_class, mock_direction_class,
         mock_hallucination_class, mock_correctness_class,

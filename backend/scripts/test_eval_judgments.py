@@ -9,11 +9,11 @@ import uuid
 from datetime import datetime
 from typing import Dict, Any
 
-from rag_eval.core.config import Config
-from rag_eval.db.connection import DatabaseConnection
-from rag_eval.db.queries import QueryExecutor
-from rag_eval.services.evaluator.logging import _serialize_judge_output
-from rag_eval.core.interfaces import JudgeEvaluationResult
+from src.core.config import Config
+from src.db.connection import DatabaseConnection
+from src.db.queries import QueryExecutor
+from src.services.evaluator.logging import _serialize_judge_output
+from src.core.interfaces import JudgeEvaluationResult
 
 
 def create_test_judge_output() -> Dict[str, Any]:

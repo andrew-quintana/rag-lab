@@ -41,7 +41,7 @@ fi
 echo "✓ .env.local exists"
 
 # Check if local.settings.json exists
-if [ ! -f "$PROJECT_ROOT/infra/azure/azure_functions/local.settings.json" ]; then
+if [ ! -f "$PROJECT_ROOT/backend/azure_functions/local.settings.json" ]; then
     echo "Error: local.settings.json not found."
     exit 1
 fi

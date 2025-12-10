@@ -9,10 +9,10 @@ from datetime import datetime, timezone
 # Disable logging during tests
 logging.disable(logging.CRITICAL)
 
-from rag_eval.core.exceptions import AzureServiceError, DatabaseError, ValidationError
-from rag_eval.core.config import Config
-from rag_eval.core.interfaces import ModelAnswer
-from rag_eval.api.routes.query import router, handle_query, QueryRequest, QueryResponse
+from src.core.exceptions import AzureServiceError, DatabaseError, ValidationError
+from src.core.config import Config
+from src.core.interfaces import ModelAnswer
+from src.api.routes.query import router, handle_query, QueryRequest, QueryResponse
 
 
 @pytest.fixture
@@ -60,8 +60,8 @@ def sample_model_answer():
 class TestQueryEndpointUnit:
     """Unit tests for query endpoint handler"""
     
-    @patch('rag_eval.api.routes.query.run_rag')
-    @patch('rag_eval.api.routes.query.config')
+    @patch('src.api.routes.query.run_rag')
+    @patch('src.api.routes.query.config')
     @pytest.mark.asyncio
     async def test_query_success(
         self,
@@ -91,8 +91,8 @@ class TestQueryEndpointUnit:
         assert call_args[0][0].text == sample_query_request.text
         assert call_args[1]['prompt_version'] == sample_query_request.prompt_version
     
-    @patch('rag_eval.api.routes.query.run_rag')
-    @patch('rag_eval.api.routes.query.config')
+    @patch('src.api.routes.query.run_rag')
+    @patch('src.api.routes.query.config')
     @pytest.mark.asyncio
     async def test_query_pipeline_error(
         self,
@@ -113,8 +113,8 @@ class TestQueryEndpointUnit:
         assert exc_info.value.status_code == 500
         assert "Pipeline failed" in exc_info.value.detail
     
-    @patch('rag_eval.api.routes.query.run_rag')
-    @patch('rag_eval.api.routes.query.config')
+    @patch('src.api.routes.query.run_rag')
+    @patch('src.api.routes.query.config')
     @pytest.mark.asyncio
     async def test_query_not_implemented_error(
         self,
@@ -135,8 +135,8 @@ class TestQueryEndpointUnit:
         assert exc_info.value.status_code == 501
         assert "RAG pipeline not yet implemented" in exc_info.value.detail
     
-    @patch('rag_eval.api.routes.query.run_rag')
-    @patch('rag_eval.api.routes.query.config')
+    @patch('src.api.routes.query.run_rag')
+    @patch('src.api.routes.query.config')
     @pytest.mark.asyncio
     async def test_query_validation_error(
         self,
@@ -157,8 +157,8 @@ class TestQueryEndpointUnit:
         assert exc_info.value.status_code == 500
         assert "Invalid prompt version" in exc_info.value.detail
     
-    @patch('rag_eval.api.routes.query.run_rag')
-    @patch('rag_eval.api.routes.query.config')
+    @patch('src.api.routes.query.run_rag')
+    @patch('src.api.routes.query.config')
     @pytest.mark.asyncio
     async def test_query_database_error(
         self,
@@ -179,8 +179,8 @@ class TestQueryEndpointUnit:
         assert exc_info.value.status_code == 500
         assert "Database connection failed" in exc_info.value.detail
     
-    @patch('rag_eval.api.routes.query.run_rag')
-    @patch('rag_eval.api.routes.query.config')
+    @patch('src.api.routes.query.run_rag')
+    @patch('src.api.routes.query.config')
     @pytest.mark.asyncio
     async def test_query_generic_error(
         self,
@@ -201,8 +201,8 @@ class TestQueryEndpointUnit:
         assert exc_info.value.status_code == 500
         assert "Invalid input" in exc_info.value.detail
     
-    @patch('rag_eval.api.routes.query.run_rag')
-    @patch('rag_eval.api.routes.query.config')
+    @patch('src.api.routes.query.run_rag')
+    @patch('src.api.routes.query.config')
     @pytest.mark.asyncio
     async def test_query_different_prompt_version(
         self,
@@ -238,8 +238,8 @@ class TestQueryEndpointUnit:
 class TestQueryEndpointIntegration:
     """Integration tests for query endpoint with mocked pipeline"""
     
-    @patch('rag_eval.api.routes.query.run_rag')
-    @patch('rag_eval.api.routes.query.config')
+    @patch('src.api.routes.query.run_rag')
+    @patch('src.api.routes.query.config')
     @pytest.mark.asyncio
     async def test_query_endpoint_integration(
         self,
@@ -266,8 +266,8 @@ class TestQueryEndpointIntegration:
         # Verify pipeline was called
         mock_run_rag.assert_called_once()
     
-    @patch('rag_eval.api.routes.query.run_rag')
-    @patch('rag_eval.api.routes.query.config')
+    @patch('src.api.routes.query.run_rag')
+    @patch('src.api.routes.query.config')
     @pytest.mark.asyncio
     async def test_query_endpoint_empty_answer(
         self,
@@ -299,8 +299,8 @@ class TestQueryEndpointIntegration:
 class TestQueryEndpointResponseFormat:
     """Tests for query endpoint response format and validation"""
     
-    @patch('rag_eval.api.routes.query.run_rag')
-    @patch('rag_eval.api.routes.query.config')
+    @patch('src.api.routes.query.run_rag')
+    @patch('src.api.routes.query.config')
     @pytest.mark.asyncio
     async def test_query_response_format(
         self,

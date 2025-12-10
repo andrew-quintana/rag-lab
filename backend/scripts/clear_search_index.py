@@ -7,7 +7,7 @@ import os
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from rag_eval.core.config import Config
+from src.core.config import Config
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
 from azure.core.exceptions import ResourceNotFoundError

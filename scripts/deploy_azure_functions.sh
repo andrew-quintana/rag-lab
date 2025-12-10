@@ -5,7 +5,7 @@ set -e
 
 RESOURCE_GROUP="rag-lab"
 FUNCTION_APP_NAME="func-raglab-uploadworkers"
-FUNCTIONS_DIR="infra/azure/azure_functions"
+FUNCTIONS_DIR="backend/azure_functions"
 BACKEND_DIR="backend"
 
 echo "=========================================="
@@ -29,10 +29,10 @@ echo "Creating deployment package in: $TEMP_DIR"
 echo "Copying Azure Functions files..."
 cp -r "$FUNCTIONS_DIR"/* "$TEMP_DIR/"
 
-# Copy backend code (rag_eval package)
+# Copy backend code (src package)
 echo "Copying backend code..."
 mkdir -p "$TEMP_DIR/backend"
-cp -r "$BACKEND_DIR/rag_eval" "$TEMP_DIR/backend/"
+cp -r "$BACKEND_DIR/src" "$TEMP_DIR/backend/"
 
 # Update function __init__.py files to use local backend
 echo "Updating function entry points..."

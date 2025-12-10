@@ -6,14 +6,14 @@ import requests
 from unittest.mock import Mock, patch, MagicMock
 from pathlib import Path
 
-from rag_eval.services.evaluator.correctness import (
+from src.services.evaluator.correctness import (
     classify_correctness,
     CorrectnessEvaluator,
 )
-from rag_eval.core.config import Config
-from rag_eval.core.exceptions import AzureServiceError, ValidationError
-from rag_eval.services.shared.llm_providers import AzureFoundryProvider
-from rag_eval.db.queries import QueryExecutor
+from src.core.config import Config
+from src.core.exceptions import AzureServiceError, ValidationError
+from src.services.shared.llm_providers import AzureFoundryProvider
+from src.db.queries import QueryExecutor
 
 
 class TestCorrectnessPrompt:
@@ -21,7 +21,7 @@ class TestCorrectnessPrompt:
     
     def setup_method(self):
         """Clear cache before each test"""
-        from rag_eval.services.rag.generation import _prompt_cache
+        from src.services.rag.generation import _prompt_cache
         _prompt_cache.clear()
     
     def test_load_prompt_template_from_file(self):
@@ -142,7 +142,7 @@ class TestCorrectnessPrompt:
 class TestCorrectnessAPI:
     """Tests for LLM API calls via provider"""
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_call_llm_success(self, mock_post):
         """Test successful LLM call with valid JSON response"""
         # Mock successful API response
@@ -179,7 +179,7 @@ class TestCorrectnessAPI:
         assert "reasoning" in classification
         mock_post.assert_called_once()
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_parse_json_response_markdown(self, mock_post):
         """Test parsing JSON wrapped in markdown code blocks"""
         mock_response = Mock()
@@ -209,7 +209,7 @@ class TestCorrectnessAPI:
         
         assert classification["correctness_binary"] is False
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_parse_json_response_invalid_json(self, mock_post):
         """Test that invalid JSON response raises ValueError"""
         mock_response = Mock()
@@ -238,7 +238,7 @@ class TestCorrectnessAPI:
         with pytest.raises(ValueError, match="Failed to parse JSON"):
             evaluator._parse_json_response(response)
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_classify_correctness_missing_field(self, mock_post):
         """Test that missing correctness_binary field raises ValueError"""
         mock_response = Mock()
@@ -266,7 +266,7 @@ class TestCorrectnessAPI:
         with pytest.raises(ValueError, match="missing 'correctness_binary' field"):
             evaluator.classify_correctness("query", "answer", "reference")
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_classify_correctness_wrong_type(self, mock_post):
         """Test that non-boolean correctness_binary raises ValueError"""
         mock_response = Mock()
@@ -297,7 +297,7 @@ class TestCorrectnessAPI:
         with pytest.raises(ValueError, match="must be a boolean"):
             evaluator.classify_correctness("query", "answer", "reference")
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_provider_retry_on_failure(self, mock_post):
         """Test that provider retries on failure with exponential backoff"""
         # First two calls fail, third succeeds
@@ -369,8 +369,8 @@ class TestClassifyCorrectness:
         with pytest.raises(ValueError, match="Reference answer cannot be empty"):
             classify_correctness("query", "answer", "   ", config)
     
-    @patch('rag_eval.services.evaluator.correctness.CorrectnessEvaluator._call_llm')
-    @patch('rag_eval.services.evaluator.correctness.CorrectnessEvaluator._construct_prompt')
+    @patch('src.services.evaluator.correctness.CorrectnessEvaluator._call_llm')
+    @patch('src.services.evaluator.correctness.CorrectnessEvaluator._construct_prompt')
     def test_classify_correctness_success_true(self, mock_construct, mock_call_llm):
         """Test successful correctness classification returning True"""
         mock_construct.return_value = "Test prompt"
@@ -395,8 +395,8 @@ class TestClassifyCorrectness:
         mock_construct.assert_called_once()
         mock_call_llm.assert_called_once()
     
-    @patch('rag_eval.services.evaluator.correctness.CorrectnessEvaluator._call_llm')
-    @patch('rag_eval.services.evaluator.correctness.CorrectnessEvaluator._construct_prompt')
+    @patch('src.services.evaluator.correctness.CorrectnessEvaluator._call_llm')
+    @patch('src.services.evaluator.correctness.CorrectnessEvaluator._construct_prompt')
     def test_classify_correctness_success_false(self, mock_construct, mock_call_llm):
         """Test successful correctness classification returning False"""
         mock_construct.return_value = "Test prompt"
@@ -420,8 +420,8 @@ class TestClassifyCorrectness:
         mock_construct.assert_called_once()
         mock_call_llm.assert_called_once()
     
-    @patch('rag_eval.services.evaluator.correctness.CorrectnessEvaluator._call_llm')
-    @patch('rag_eval.services.evaluator.correctness.CorrectnessEvaluator._construct_prompt')
+    @patch('src.services.evaluator.correctness.CorrectnessEvaluator._call_llm')
+    @patch('src.services.evaluator.correctness.CorrectnessEvaluator._construct_prompt')
     def test_classify_correctness_uses_temperature_0_1(self, mock_construct, mock_call_llm):
         """Test that temperature=0.1 is used for reproducibility"""
         mock_construct.return_value = "Test prompt"
@@ -445,8 +445,8 @@ class TestClassifyCorrectness:
         call_args = mock_call_llm.call_args
         assert call_args[1]["temperature"] == 0.1
     
-    @patch('rag_eval.services.evaluator.correctness.CorrectnessEvaluator._call_llm')
-    @patch('rag_eval.services.evaluator.correctness.CorrectnessEvaluator._construct_prompt')
+    @patch('src.services.evaluator.correctness.CorrectnessEvaluator._call_llm')
+    @patch('src.services.evaluator.correctness.CorrectnessEvaluator._construct_prompt')
     def test_classify_correctness_uses_gpt4o_mini(self, mock_construct, mock_call_llm):
         """Test that gpt-4o-mini model is used (via provider)"""
         mock_construct.return_value = "Test prompt"
@@ -470,8 +470,8 @@ class TestClassifyCorrectness:
         mock_construct.assert_called_once()
         mock_call_llm.assert_called_once()
     
-    @patch('rag_eval.services.evaluator.correctness.CorrectnessEvaluator._call_llm')
-    @patch('rag_eval.services.evaluator.correctness.CorrectnessEvaluator._construct_prompt')
+    @patch('src.services.evaluator.correctness.CorrectnessEvaluator._call_llm')
+    @patch('src.services.evaluator.correctness.CorrectnessEvaluator._construct_prompt')
     def test_classify_correctness_handles_azure_error(self, mock_construct, mock_call_llm):
         """Test that AzureServiceError is raised on API failure"""
         mock_construct.return_value = "Test prompt"
@@ -489,8 +489,8 @@ class TestClassifyCorrectness:
                 config=config
             )
     
-    @patch('rag_eval.services.evaluator.correctness.CorrectnessEvaluator._call_llm')
-    @patch('rag_eval.services.evaluator.correctness.CorrectnessEvaluator._construct_prompt')
+    @patch('src.services.evaluator.correctness.CorrectnessEvaluator._call_llm')
+    @patch('src.services.evaluator.correctness.CorrectnessEvaluator._construct_prompt')
     def test_classify_correctness_handles_value_error(self, mock_construct, mock_call_llm):
         """Test that ValueError is raised on invalid response"""
         mock_construct.return_value = "Test prompt"
@@ -511,14 +511,14 @@ class TestClassifyCorrectness:
     def test_classify_correctness_default_config(self):
         """Test that Config.from_env() is used when config is None"""
         # Patch Config in both correctness and base_evaluator modules
-        with patch('rag_eval.services.evaluator.base_evaluator.Config') as mock_config_class:
+        with patch('src.services.evaluator.base_evaluator.Config') as mock_config_class:
             mock_config = Mock()
             mock_config.azure_ai_foundry_endpoint = "https://test.endpoint"
             mock_config.azure_ai_foundry_api_key = "test-key"
             mock_config_class.from_env.return_value = mock_config
             
-            with patch('rag_eval.services.evaluator.correctness.CorrectnessEvaluator._construct_prompt') as mock_construct:
-                with patch('rag_eval.services.evaluator.correctness.CorrectnessEvaluator._call_llm') as mock_call_llm:
+            with patch('src.services.evaluator.correctness.CorrectnessEvaluator._construct_prompt') as mock_construct:
+                with patch('src.services.evaluator.correctness.CorrectnessEvaluator._call_llm') as mock_call_llm:
                     mock_construct.return_value = "Test prompt"
                     mock_call_llm.return_value = json.dumps({
                         "correctness_binary": True,

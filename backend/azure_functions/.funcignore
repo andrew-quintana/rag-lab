@@ -1,0 +1,23 @@
+.git*
+.vscode
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+*.md
+!README.md
+.env
+.env.local
+*.log
+# Note: Functions now import directly from backend/src/
+# No duplicate code directory is needed
+

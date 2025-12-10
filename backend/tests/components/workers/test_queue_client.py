@@ -12,8 +12,8 @@ import json
 
 logging.disable(logging.CRITICAL)
 
-from rag_eval.core.exceptions import AzureServiceError, ValidationError
-from rag_eval.services.workers.queue_client import (
+from src.core.exceptions import AzureServiceError, ValidationError
+from src.services.workers.queue_client import (
     QueueMessage,
     SourceStorage,
     ProcessingStage,
@@ -202,7 +202,7 @@ def test_serialize_deserialize_roundtrip(valid_queue_message):
 
 # Queue Operations Tests
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_enqueue_message_success(mock_queue_service, mock_config, valid_queue_message):
     """Test successfully enqueuing a message"""
     # Setup mocks
@@ -218,7 +218,7 @@ def test_enqueue_message_success(mock_queue_service, mock_config, valid_queue_me
     mock_queue_client.send_message.assert_called_once()
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_enqueue_message_queue_already_exists(mock_queue_service, mock_config, valid_queue_message):
     """Test enqueuing when queue already exists"""
     # Setup mocks
@@ -237,7 +237,7 @@ def test_enqueue_message_queue_already_exists(mock_queue_service, mock_config, v
     mock_queue_client.send_message.assert_called_once()
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_enqueue_message_no_connection_string(mock_queue_service, valid_queue_message):
     """Test enqueuing with missing connection string"""
     config = Mock()
@@ -247,7 +247,7 @@ def test_enqueue_message_no_connection_string(mock_queue_service, valid_queue_me
         enqueue_message("test-queue", valid_queue_message, config)
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_dequeue_message_success(mock_queue_service, mock_config, valid_message_dict):
     """Test successfully dequeuing a message"""
     # Setup mocks
@@ -271,7 +271,7 @@ def test_dequeue_message_success(mock_queue_service, mock_config, valid_message_
     mock_queue_client.receive_messages.assert_called_once()
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_dequeue_message_empty_queue(mock_queue_service, mock_config):
     """Test dequeuing from empty queue"""
     # Setup mocks
@@ -286,7 +286,7 @@ def test_dequeue_message_empty_queue(mock_queue_service, mock_config):
     assert message is None
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_dequeue_message_invalid_format(mock_queue_service, mock_config):
     """Test dequeuing message with invalid format"""
     # Setup mocks
@@ -305,7 +305,7 @@ def test_dequeue_message_invalid_format(mock_queue_service, mock_config):
     assert message is None
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_peek_message_success(mock_queue_service, mock_config, valid_message_dict):
     """Test successfully peeking at a message"""
     # Setup mocks
@@ -327,7 +327,7 @@ def test_peek_message_success(mock_queue_service, mock_config, valid_message_dic
     mock_queue_client.peek_messages.assert_called_once()
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_peek_message_empty_queue(mock_queue_service, mock_config):
     """Test peeking at empty queue"""
     # Setup mocks
@@ -342,7 +342,7 @@ def test_peek_message_empty_queue(mock_queue_service, mock_config):
     assert message is None
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_delete_message_success(mock_queue_service, mock_config):
     """Test successfully deleting a message"""
     # Setup mocks
@@ -366,7 +366,7 @@ def test_delete_message_empty_pop_receipt(mock_config):
         delete_message("test-queue", "msg-123", "", mock_config)
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_send_to_dead_letter_success(mock_queue_service, mock_config, valid_queue_message):
     """Test successfully sending message to dead-letter queue"""
     # Setup mocks
@@ -387,7 +387,7 @@ def test_send_to_dead_letter_success(mock_queue_service, mock_config, valid_queu
     assert "dead_lettered_at" in message_dict["metadata"]
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_get_queue_length_success(mock_queue_service, mock_config):
     """Test successfully getting queue length"""
     # Setup mocks
@@ -405,7 +405,7 @@ def test_get_queue_length_success(mock_queue_service, mock_config):
     mock_queue_client.get_queue_properties.assert_called_once()
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_get_queue_length_not_found(mock_queue_service, mock_config):
     """Test getting length of non-existent queue"""
     # Setup mocks
@@ -421,7 +421,7 @@ def test_get_queue_length_not_found(mock_queue_service, mock_config):
     assert length == 0
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_dequeue_message_with_receipt_success(mock_queue_service, mock_config, valid_message_dict):
     """Test dequeuing message with receipt"""
     # Setup mocks
@@ -446,7 +446,7 @@ def test_dequeue_message_with_receipt_success(mock_queue_service, mock_config, v
     assert pop_receipt == "receipt-123"
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_dequeue_message_with_receipt_empty_queue(mock_queue_service, mock_config):
     """Test dequeuing with receipt from empty queue"""
     # Setup mocks
@@ -533,7 +533,7 @@ def test_queue_message_both_storage_types():
         assert message.source_storage == storage
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_enqueue_message_connection_error(mock_queue_service, mock_config, valid_queue_message):
     """Test enqueuing when connection fails"""
     # Setup mocks to raise connection error
@@ -543,7 +543,7 @@ def test_enqueue_message_connection_error(mock_queue_service, mock_config, valid
         enqueue_message("test-queue", valid_queue_message, mock_config)
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_dequeue_message_connection_error(mock_queue_service, mock_config):
     """Test dequeuing when connection fails"""
     # Setup mocks to raise connection error
@@ -565,7 +565,7 @@ def test_dequeue_message_empty_queue_name(mock_config):
         dequeue_message("", mock_config)
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_enqueue_message_queue_creation_error(mock_queue_service, mock_config, valid_queue_message):
     """Test enqueuing when queue creation fails with non-QueueAlreadyExists error"""
     # Setup mocks
@@ -581,7 +581,7 @@ def test_enqueue_message_queue_creation_error(mock_queue_service, mock_config, v
         enqueue_message("test-queue", valid_queue_message, mock_config)
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_peek_message_invalid_format(mock_queue_service, mock_config):
     """Test peeking message with invalid format"""
     # Setup mocks
@@ -600,7 +600,7 @@ def test_peek_message_invalid_format(mock_queue_service, mock_config):
     assert message is None
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_peek_message_connection_error(mock_queue_service, mock_config):
     """Test peeking when connection fails"""
     # Setup mocks to raise connection error
@@ -610,7 +610,7 @@ def test_peek_message_connection_error(mock_queue_service, mock_config):
         peek_message("test-queue", mock_config)
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_delete_message_error(mock_queue_service, mock_config):
     """Test deleting message when delete fails with non-ResourceNotFoundError"""
     # Setup mocks
@@ -624,7 +624,7 @@ def test_delete_message_error(mock_queue_service, mock_config):
         delete_message("test-queue", "msg-123", "receipt-123", mock_config)
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_send_to_dead_letter_error(mock_queue_service, mock_config, valid_queue_message):
     """Test sending to dead-letter queue when enqueue fails"""
     # Setup mocks to raise error during enqueue
@@ -634,7 +634,7 @@ def test_send_to_dead_letter_error(mock_queue_service, mock_config, valid_queue_
         send_to_dead_letter("ingestion-dead-letter", valid_queue_message, "Test reason", mock_config)
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_get_queue_length_error(mock_queue_service, mock_config):
     """Test getting queue length when query fails with non-ResourceNotFoundError"""
     # Setup mocks
@@ -648,7 +648,7 @@ def test_get_queue_length_error(mock_queue_service, mock_config):
         get_queue_length("test-queue", mock_config)
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_dequeue_message_with_receipt_invalid_format(mock_queue_service, mock_config):
     """Test dequeuing with receipt when message has invalid format"""
     # Setup mocks
@@ -667,7 +667,7 @@ def test_dequeue_message_with_receipt_invalid_format(mock_queue_service, mock_co
     assert result is None
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_dequeue_message_with_receipt_connection_error(mock_queue_service, mock_config):
     """Test dequeuing with receipt when connection fails"""
     # Setup mocks to raise connection error
@@ -677,7 +677,7 @@ def test_dequeue_message_with_receipt_connection_error(mock_queue_service, mock_
         dequeue_message_with_receipt("test-queue", mock_config)
 
 
-@patch('rag_eval.services.workers.queue_client.QueueServiceClient')
+@patch('src.services.workers.queue_client.QueueServiceClient')
 def test_dequeue_message_with_receipt_not_found(mock_queue_service, mock_config):
     """Test dequeuing with receipt when queue not found"""
     # Setup mocks
@@ -695,7 +695,7 @@ def test_dequeue_message_with_receipt_not_found(mock_queue_service, mock_config)
 def test_serialize_message_error(valid_queue_message):
     """Test serialization error handling"""
     # Mock asdict to raise exception
-    with patch('rag_eval.services.workers.queue_client.asdict', side_effect=Exception("Serialization failed")):
+    with patch('src.services.workers.queue_client.asdict', side_effect=Exception("Serialization failed")):
         with pytest.raises(ValidationError, match="Failed to serialize message"):
             serialize_message(valid_queue_message)
 
@@ -712,7 +712,7 @@ def test_validate_message_other_error():
     """Test validation with other exception types"""
     # Create a message dict that will cause an unexpected error
     # by mocking QueueMessage to raise an unexpected exception
-    with patch('rag_eval.services.workers.queue_client.QueueMessage', side_effect=Exception("Unexpected error")):
+    with patch('src.services.workers.queue_client.QueueMessage', side_effect=Exception("Unexpected error")):
         with pytest.raises(ValidationError, match="Failed to validate message"):
             validate_message({
                 "document_id": "doc-123",
@@ -734,7 +734,7 @@ def test_send_to_dead_letter_with_none_metadata(mock_config):
         metadata=None
     )
     
-    with patch('rag_eval.services.workers.queue_client.enqueue_message') as mock_enqueue:
+    with patch('src.services.workers.queue_client.enqueue_message') as mock_enqueue:
         send_to_dead_letter("ingestion-dead-letter", message, "Test reason", mock_config)
         
         # Verify metadata was set

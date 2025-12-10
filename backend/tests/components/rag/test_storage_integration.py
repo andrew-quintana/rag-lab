@@ -12,8 +12,8 @@ if Supabase is not available.
 import pytest
 import os
 from pathlib import Path
-from rag_eval.core.config import Config
-from rag_eval.services.rag.supabase_storage import (
+from src.core.config import Config
+from src.services.rag.supabase_storage import (
     upload_document_to_storage,
     download_document_from_storage,
     delete_document_from_storage,

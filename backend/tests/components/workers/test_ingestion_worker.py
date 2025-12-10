@@ -13,13 +13,13 @@ from pathlib import Path
 
 logging.disable(logging.CRITICAL)
 
-from rag_eval.core.exceptions import (
+from src.core.exceptions import (
     AzureServiceError,
     DatabaseError,
     ValidationError,
 )
-from rag_eval.services.workers.ingestion_worker import ingestion_worker
-from rag_eval.services.workers.queue_client import QueueMessage, SourceStorage, ProcessingStage
+from src.services.workers.ingestion_worker import ingestion_worker
+from src.services.workers.queue_client import QueueMessage, SourceStorage, ProcessingStage
 
 
 @pytest.fixture
@@ -103,11 +103,11 @@ class TestIngestionWorkerMessageParsing:
     def test_valid_message_supabase(self, valid_message_dict, context_with_config, mock_config, sample_pdf_content, actual_extracted_text):
         """Test ingestion worker with valid Supabase message (batch processing)"""
         # Mock batch processing functions
-        with patch('rag_eval.services.workers.ingestion_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
-             patch('rag_eval.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
-             patch('rag_eval.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
+        with patch('src.services.workers.ingestion_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
+             patch('src.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
+             patch('src.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
                  "num_pages": 0,
                  "num_batches_total": 0,
                  "last_successful_page": 0,
@@ -119,35 +119,35 @@ class TestIngestionWorkerMessageParsing:
                  "parsing_completed_at": None,
                  "errors": []
              }), \
-             patch('rag_eval.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
-             patch('rag_eval.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text), \
-             patch('rag_eval.services.workers.ingestion_worker.persist_batch_result'), \
-             patch('rag_eval.services.workers.ingestion_worker.delete_batch_chunk'), \
-             patch('rag_eval.services.workers.ingestion_worker.update_ingestion_metadata'), \
-             patch('rag_eval.services.workers.ingestion_worker.persist_extracted_text'), \
-             patch('rag_eval.services.workers.ingestion_worker.update_document_status'), \
-             patch('rag_eval.services.workers.ingestion_worker.enqueue_message'):
+             patch('src.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
+             patch('src.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text), \
+             patch('src.services.workers.ingestion_worker.persist_batch_result'), \
+             patch('src.services.workers.ingestion_worker.delete_batch_chunk'), \
+             patch('src.services.workers.ingestion_worker.update_ingestion_metadata'), \
+             patch('src.services.workers.ingestion_worker.persist_extracted_text'), \
+             patch('src.services.workers.ingestion_worker.update_document_status'), \
+             patch('src.services.workers.ingestion_worker.enqueue_message'):
             
             ingestion_worker(valid_message_dict, context_with_config)
             
             # Verify file download was called
-            from rag_eval.services.workers.ingestion_worker import download_document_from_storage
+            from src.services.workers.ingestion_worker import download_document_from_storage
             download_document_from_storage.assert_called_once_with(
                 valid_message_dict["document_id"],
                 mock_config
             )
             
             # Verify page count was detected
-            from rag_eval.services.workers.ingestion_worker import get_pdf_page_count
+            from src.services.workers.ingestion_worker import get_pdf_page_count
             get_pdf_page_count.assert_called_once_with(sample_pdf_content)
             
             # Verify batch extraction was called
-            from rag_eval.services.workers.ingestion_worker import extract_text_from_batch
+            from src.services.workers.ingestion_worker import extract_text_from_batch
             extract_text_from_batch.assert_called_once()
             
             # Verify persistence was called
-            from rag_eval.services.workers.ingestion_worker import persist_extracted_text
+            from src.services.workers.ingestion_worker import persist_extracted_text
             persist_extracted_text.assert_called_once_with(
                 valid_message_dict["document_id"],
                 actual_extracted_text,
@@ -155,7 +155,7 @@ class TestIngestionWorkerMessageParsing:
             )
             
             # Verify status update was called
-            from rag_eval.services.workers.ingestion_worker import update_document_status
+            from src.services.workers.ingestion_worker import update_document_status
             update_document_status.assert_called_once_with(
                 valid_message_dict["document_id"],
                 "parsed",
@@ -164,7 +164,7 @@ class TestIngestionWorkerMessageParsing:
             )
             
             # Verify enqueue was called
-            from rag_eval.services.workers.ingestion_worker import enqueue_message
+            from src.services.workers.ingestion_worker import enqueue_message
             enqueue_message.assert_called_once()
             call_args = enqueue_message.call_args
             assert call_args[0][0] == "ingestion-chunking"
@@ -182,11 +182,11 @@ class TestIngestionWorkerMessageParsing:
         }
         context = {"config": mock_config}
         
-        with patch('rag_eval.services.workers.ingestion_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.ingestion_worker.download_document_from_blob', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
-             patch('rag_eval.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
-             patch('rag_eval.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
+        with patch('src.services.workers.ingestion_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.ingestion_worker.download_document_from_blob', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
+             patch('src.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
+             patch('src.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
                  "num_pages": 0,
                  "num_batches_total": 0,
                  "last_successful_page": 0,
@@ -198,20 +198,20 @@ class TestIngestionWorkerMessageParsing:
                  "parsing_completed_at": None,
                  "errors": []
              }), \
-             patch('rag_eval.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
-             patch('rag_eval.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text), \
-             patch('rag_eval.services.workers.ingestion_worker.persist_batch_result'), \
-             patch('rag_eval.services.workers.ingestion_worker.delete_batch_chunk'), \
-             patch('rag_eval.services.workers.ingestion_worker.update_ingestion_metadata'), \
-             patch('rag_eval.services.workers.ingestion_worker.persist_extracted_text'), \
-             patch('rag_eval.services.workers.ingestion_worker.update_document_status'), \
-             patch('rag_eval.services.workers.ingestion_worker.enqueue_message'):
+             patch('src.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
+             patch('src.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text), \
+             patch('src.services.workers.ingestion_worker.persist_batch_result'), \
+             patch('src.services.workers.ingestion_worker.delete_batch_chunk'), \
+             patch('src.services.workers.ingestion_worker.update_ingestion_metadata'), \
+             patch('src.services.workers.ingestion_worker.persist_extracted_text'), \
+             patch('src.services.workers.ingestion_worker.update_document_status'), \
+             patch('src.services.workers.ingestion_worker.enqueue_message'):
             
             ingestion_worker(message_dict, context)
             
             # Verify Azure Blob download was called
-            from rag_eval.services.workers.ingestion_worker import download_document_from_blob
+            from src.services.workers.ingestion_worker import download_document_from_blob
             download_document_from_blob.assert_called_once_with(
                 message_dict["document_id"],
                 mock_config
@@ -246,8 +246,8 @@ class TestIngestionWorkerIdempotency:
     
     def test_skip_if_already_parsed(self, valid_message_dict, context_with_config):
         """Test that worker skips processing if document is already parsed"""
-        with patch('rag_eval.services.workers.ingestion_worker.should_process_document', return_value=False), \
-             patch('rag_eval.services.workers.ingestion_worker.download_document_from_storage') as mock_download:
+        with patch('src.services.workers.ingestion_worker.should_process_document', return_value=False), \
+             patch('src.services.workers.ingestion_worker.download_document_from_storage') as mock_download:
             
             ingestion_worker(valid_message_dict, context_with_config)
             
@@ -260,11 +260,11 @@ class TestIngestionWorkerFileDownload:
     
     def test_download_from_supabase_success(self, valid_message_dict, context_with_config, mock_config, sample_pdf_content, actual_extracted_text):
         """Test successful file download from Supabase (batch processing)"""
-        with patch('rag_eval.services.workers.ingestion_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
-             patch('rag_eval.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
-             patch('rag_eval.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
+        with patch('src.services.workers.ingestion_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
+             patch('src.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
+             patch('src.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
                  "num_pages": 0,
                  "num_batches_total": 0,
                  "last_successful_page": 0,
@@ -276,20 +276,20 @@ class TestIngestionWorkerFileDownload:
                  "parsing_completed_at": None,
                  "errors": []
              }), \
-             patch('rag_eval.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
-             patch('rag_eval.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text), \
-             patch('rag_eval.services.workers.ingestion_worker.persist_batch_result'), \
-             patch('rag_eval.services.workers.ingestion_worker.delete_batch_chunk'), \
-             patch('rag_eval.services.workers.ingestion_worker.update_ingestion_metadata'), \
-             patch('rag_eval.services.workers.ingestion_worker.persist_extracted_text'), \
-             patch('rag_eval.services.workers.ingestion_worker.update_document_status'), \
-             patch('rag_eval.services.workers.ingestion_worker.enqueue_message'):
+             patch('src.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
+             patch('src.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text), \
+             patch('src.services.workers.ingestion_worker.persist_batch_result'), \
+             patch('src.services.workers.ingestion_worker.delete_batch_chunk'), \
+             patch('src.services.workers.ingestion_worker.update_ingestion_metadata'), \
+             patch('src.services.workers.ingestion_worker.persist_extracted_text'), \
+             patch('src.services.workers.ingestion_worker.update_document_status'), \
+             patch('src.services.workers.ingestion_worker.enqueue_message'):
             
             ingestion_worker(valid_message_dict, context_with_config)
             
             # Verify download was called with correct parameters
-            from rag_eval.services.workers.ingestion_worker import download_document_from_storage
+            from src.services.workers.ingestion_worker import download_document_from_storage
             download_document_from_storage.assert_called_once_with(
                 valid_message_dict["document_id"],
                 mock_config
@@ -297,8 +297,8 @@ class TestIngestionWorkerFileDownload:
     
     def test_download_failure_retry(self, valid_message_dict, context_with_config, mock_config, sample_pdf_content, actual_extracted_text):
         """Test retry logic on download failure (batch processing)"""
-        with patch('rag_eval.services.workers.ingestion_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.ingestion_worker.download_document_from_storage') as mock_download:
+        with patch('src.services.workers.ingestion_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.ingestion_worker.download_document_from_storage') as mock_download:
             
             # First two calls fail, third succeeds
             mock_download.side_effect = [
@@ -307,9 +307,9 @@ class TestIngestionWorkerFileDownload:
                 sample_pdf_content
             ]
             
-            with patch('rag_eval.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
-                 patch('rag_eval.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
-                 patch('rag_eval.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
+            with patch('src.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
+                 patch('src.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
+                 patch('src.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
                      "num_pages": 0,
                      "num_batches_total": 0,
                      "last_successful_page": 0,
@@ -321,15 +321,15 @@ class TestIngestionWorkerFileDownload:
                      "parsing_completed_at": None,
                      "errors": []
                  }), \
-                 patch('rag_eval.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
-                 patch('rag_eval.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
-                 patch('rag_eval.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text), \
-                 patch('rag_eval.services.workers.ingestion_worker.persist_batch_result'), \
-                 patch('rag_eval.services.workers.ingestion_worker.delete_batch_chunk'), \
-                 patch('rag_eval.services.workers.ingestion_worker.update_ingestion_metadata'), \
-                 patch('rag_eval.services.workers.ingestion_worker.persist_extracted_text'), \
-                 patch('rag_eval.services.workers.ingestion_worker.update_document_status'), \
-                 patch('rag_eval.services.workers.ingestion_worker.enqueue_message'):
+                 patch('src.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
+                 patch('src.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
+                 patch('src.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text), \
+                 patch('src.services.workers.ingestion_worker.persist_batch_result'), \
+                 patch('src.services.workers.ingestion_worker.delete_batch_chunk'), \
+                 patch('src.services.workers.ingestion_worker.update_ingestion_metadata'), \
+                 patch('src.services.workers.ingestion_worker.persist_extracted_text'), \
+                 patch('src.services.workers.ingestion_worker.update_document_status'), \
+                 patch('src.services.workers.ingestion_worker.enqueue_message'):
                 
                 ingestion_worker(valid_message_dict, context_with_config)
                 
@@ -338,10 +338,10 @@ class TestIngestionWorkerFileDownload:
     
     def test_download_failure_max_retries(self, valid_message_dict, context_with_config):
         """Test dead-letter handling after max retries"""
-        with patch('rag_eval.services.workers.ingestion_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.ingestion_worker.download_document_from_storage') as mock_download, \
-             patch('rag_eval.services.workers.ingestion_worker.send_to_dead_letter') as mock_dead_letter, \
-             patch('rag_eval.services.workers.ingestion_worker.update_document_status'):
+        with patch('src.services.workers.ingestion_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.ingestion_worker.download_document_from_storage') as mock_download, \
+             patch('src.services.workers.ingestion_worker.send_to_dead_letter') as mock_dead_letter, \
+             patch('src.services.workers.ingestion_worker.update_document_status'):
             
             # All retries fail
             mock_download.side_effect = AzureServiceError("File not found")
@@ -361,11 +361,11 @@ class TestIngestionWorkerTextExtraction:
     
     def test_extraction_success(self, valid_message_dict, context_with_config, mock_config, sample_pdf_content, actual_extracted_text):
         """Test successful batch text extraction"""
-        with patch('rag_eval.services.workers.ingestion_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
-             patch('rag_eval.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
-             patch('rag_eval.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
+        with patch('src.services.workers.ingestion_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
+             patch('src.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
+             patch('src.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
                  "num_pages": 0,
                  "num_batches_total": 0,
                  "last_successful_page": 0,
@@ -377,15 +377,15 @@ class TestIngestionWorkerTextExtraction:
                  "parsing_completed_at": None,
                  "errors": []
              }), \
-             patch('rag_eval.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
-             patch('rag_eval.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text) as mock_extract, \
-             patch('rag_eval.services.workers.ingestion_worker.persist_batch_result'), \
-             patch('rag_eval.services.workers.ingestion_worker.delete_batch_chunk'), \
-             patch('rag_eval.services.workers.ingestion_worker.update_ingestion_metadata'), \
-             patch('rag_eval.services.workers.ingestion_worker.persist_extracted_text'), \
-             patch('rag_eval.services.workers.ingestion_worker.update_document_status'), \
-             patch('rag_eval.services.workers.ingestion_worker.enqueue_message'):
+             patch('src.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
+             patch('src.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text) as mock_extract, \
+             patch('src.services.workers.ingestion_worker.persist_batch_result'), \
+             patch('src.services.workers.ingestion_worker.delete_batch_chunk'), \
+             patch('src.services.workers.ingestion_worker.update_ingestion_metadata'), \
+             patch('src.services.workers.ingestion_worker.persist_extracted_text'), \
+             patch('src.services.workers.ingestion_worker.update_document_status'), \
+             patch('src.services.workers.ingestion_worker.enqueue_message'):
             
             ingestion_worker(valid_message_dict, context_with_config)
             
@@ -398,11 +398,11 @@ class TestIngestionWorkerTextExtraction:
     
     def test_extraction_failure_retry(self, valid_message_dict, context_with_config, mock_config, sample_pdf_content, actual_extracted_text):
         """Test retry logic on batch extraction failure"""
-        with patch('rag_eval.services.workers.ingestion_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
-             patch('rag_eval.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
-             patch('rag_eval.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
+        with patch('src.services.workers.ingestion_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
+             patch('src.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
+             patch('src.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
                  "num_pages": 0,
                  "num_batches_total": 0,
                  "last_successful_page": 0,
@@ -414,9 +414,9 @@ class TestIngestionWorkerTextExtraction:
                  "parsing_completed_at": None,
                  "errors": []
              }), \
-             patch('rag_eval.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
-             patch('rag_eval.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.extract_text_from_batch') as mock_extract:
+             patch('src.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
+             patch('src.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.extract_text_from_batch') as mock_extract:
             
             # First two calls fail, third succeeds
             mock_extract.side_effect = [
@@ -425,12 +425,12 @@ class TestIngestionWorkerTextExtraction:
                 actual_extracted_text
             ]
             
-            with patch('rag_eval.services.workers.ingestion_worker.persist_batch_result'), \
-                 patch('rag_eval.services.workers.ingestion_worker.delete_batch_chunk'), \
-                 patch('rag_eval.services.workers.ingestion_worker.update_ingestion_metadata'), \
-                 patch('rag_eval.services.workers.ingestion_worker.persist_extracted_text'), \
-                 patch('rag_eval.services.workers.ingestion_worker.update_document_status'), \
-                 patch('rag_eval.services.workers.ingestion_worker.enqueue_message'):
+            with patch('src.services.workers.ingestion_worker.persist_batch_result'), \
+                 patch('src.services.workers.ingestion_worker.delete_batch_chunk'), \
+                 patch('src.services.workers.ingestion_worker.update_ingestion_metadata'), \
+                 patch('src.services.workers.ingestion_worker.persist_extracted_text'), \
+                 patch('src.services.workers.ingestion_worker.update_document_status'), \
+                 patch('src.services.workers.ingestion_worker.enqueue_message'):
                 
                 ingestion_worker(valid_message_dict, context_with_config)
                 
@@ -443,11 +443,11 @@ class TestIngestionWorkerPersistence:
     
     def test_persist_extracted_text_success(self, valid_message_dict, context_with_config, mock_config, sample_pdf_content, actual_extracted_text):
         """Test successful persistence of extracted text (batch processing)"""
-        with patch('rag_eval.services.workers.ingestion_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
-             patch('rag_eval.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
-             patch('rag_eval.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
+        with patch('src.services.workers.ingestion_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
+             patch('src.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
+             patch('src.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
                  "num_pages": 0,
                  "num_batches_total": 0,
                  "last_successful_page": 0,
@@ -459,15 +459,15 @@ class TestIngestionWorkerPersistence:
                  "parsing_completed_at": None,
                  "errors": []
              }), \
-             patch('rag_eval.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
-             patch('rag_eval.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text), \
-             patch('rag_eval.services.workers.ingestion_worker.persist_batch_result'), \
-             patch('rag_eval.services.workers.ingestion_worker.delete_batch_chunk'), \
-             patch('rag_eval.services.workers.ingestion_worker.update_ingestion_metadata'), \
-             patch('rag_eval.services.workers.ingestion_worker.persist_extracted_text') as mock_persist, \
-             patch('rag_eval.services.workers.ingestion_worker.update_document_status'), \
-             patch('rag_eval.services.workers.ingestion_worker.enqueue_message'):
+             patch('src.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
+             patch('src.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text), \
+             patch('src.services.workers.ingestion_worker.persist_batch_result'), \
+             patch('src.services.workers.ingestion_worker.delete_batch_chunk'), \
+             patch('src.services.workers.ingestion_worker.update_ingestion_metadata'), \
+             patch('src.services.workers.ingestion_worker.persist_extracted_text') as mock_persist, \
+             patch('src.services.workers.ingestion_worker.update_document_status'), \
+             patch('src.services.workers.ingestion_worker.enqueue_message'):
             
             ingestion_worker(valid_message_dict, context_with_config)
             
@@ -480,11 +480,11 @@ class TestIngestionWorkerPersistence:
     
     def test_persist_failure(self, valid_message_dict, context_with_config, mock_config, sample_pdf_content, actual_extracted_text):
         """Test persistence failure handling (batch processing)"""
-        with patch('rag_eval.services.workers.ingestion_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
-             patch('rag_eval.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
-             patch('rag_eval.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
+        with patch('src.services.workers.ingestion_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
+             patch('src.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
+             patch('src.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
                  "num_pages": 0,
                  "num_batches_total": 0,
                  "last_successful_page": 0,
@@ -496,13 +496,13 @@ class TestIngestionWorkerPersistence:
                  "parsing_completed_at": None,
                  "errors": []
              }), \
-             patch('rag_eval.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
-             patch('rag_eval.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text), \
-             patch('rag_eval.services.workers.ingestion_worker.persist_batch_result'), \
-             patch('rag_eval.services.workers.ingestion_worker.delete_batch_chunk'), \
-             patch('rag_eval.services.workers.ingestion_worker.update_ingestion_metadata'), \
-             patch('rag_eval.services.workers.ingestion_worker.persist_extracted_text') as mock_persist:
+             patch('src.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
+             patch('src.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text), \
+             patch('src.services.workers.ingestion_worker.persist_batch_result'), \
+             patch('src.services.workers.ingestion_worker.delete_batch_chunk'), \
+             patch('src.services.workers.ingestion_worker.update_ingestion_metadata'), \
+             patch('src.services.workers.ingestion_worker.persist_extracted_text') as mock_persist:
             
             mock_persist.side_effect = DatabaseError("Database connection failed")
             
@@ -515,11 +515,11 @@ class TestIngestionWorkerEnqueue:
     
     def test_enqueue_to_chunking_queue(self, valid_message_dict, context_with_config, mock_config, sample_pdf_content, actual_extracted_text):
         """Test successful enqueue to chunking queue (batch processing)"""
-        with patch('rag_eval.services.workers.ingestion_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
-             patch('rag_eval.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
-             patch('rag_eval.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
+        with patch('src.services.workers.ingestion_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
+             patch('src.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
+             patch('src.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
                  "num_pages": 0,
                  "num_batches_total": 0,
                  "last_successful_page": 0,
@@ -531,15 +531,15 @@ class TestIngestionWorkerEnqueue:
                  "parsing_completed_at": None,
                  "errors": []
              }), \
-             patch('rag_eval.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
-             patch('rag_eval.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text), \
-             patch('rag_eval.services.workers.ingestion_worker.persist_batch_result'), \
-             patch('rag_eval.services.workers.ingestion_worker.delete_batch_chunk'), \
-             patch('rag_eval.services.workers.ingestion_worker.update_ingestion_metadata'), \
-             patch('rag_eval.services.workers.ingestion_worker.persist_extracted_text'), \
-             patch('rag_eval.services.workers.ingestion_worker.update_document_status'), \
-             patch('rag_eval.services.workers.ingestion_worker.enqueue_message') as mock_enqueue:
+             patch('src.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
+             patch('src.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text), \
+             patch('src.services.workers.ingestion_worker.persist_batch_result'), \
+             patch('src.services.workers.ingestion_worker.delete_batch_chunk'), \
+             patch('src.services.workers.ingestion_worker.update_ingestion_metadata'), \
+             patch('src.services.workers.ingestion_worker.persist_extracted_text'), \
+             patch('src.services.workers.ingestion_worker.update_document_status'), \
+             patch('src.services.workers.ingestion_worker.enqueue_message') as mock_enqueue:
             
             ingestion_worker(valid_message_dict, context_with_config)
             
@@ -556,11 +556,11 @@ class TestIngestionWorkerEnqueue:
     
     def test_enqueue_failure(self, valid_message_dict, context_with_config, mock_config, sample_pdf_content, actual_extracted_text):
         """Test enqueue failure handling (batch processing)"""
-        with patch('rag_eval.services.workers.ingestion_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
-             patch('rag_eval.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
-             patch('rag_eval.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
+        with patch('src.services.workers.ingestion_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.get_pdf_page_count', return_value=2), \
+             patch('src.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3)]), \
+             patch('src.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
                  "num_pages": 0,
                  "num_batches_total": 0,
                  "last_successful_page": 0,
@@ -572,15 +572,15 @@ class TestIngestionWorkerEnqueue:
                  "parsing_completed_at": None,
                  "errors": []
              }), \
-             patch('rag_eval.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
-             patch('rag_eval.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text), \
-             patch('rag_eval.services.workers.ingestion_worker.persist_batch_result'), \
-             patch('rag_eval.services.workers.ingestion_worker.delete_batch_chunk'), \
-             patch('rag_eval.services.workers.ingestion_worker.update_ingestion_metadata'), \
-             patch('rag_eval.services.workers.ingestion_worker.persist_extracted_text'), \
-             patch('rag_eval.services.workers.ingestion_worker.update_document_status'), \
-             patch('rag_eval.services.workers.ingestion_worker.enqueue_message') as mock_enqueue:
+             patch('src.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
+             patch('src.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text), \
+             patch('src.services.workers.ingestion_worker.persist_batch_result'), \
+             patch('src.services.workers.ingestion_worker.delete_batch_chunk'), \
+             patch('src.services.workers.ingestion_worker.update_ingestion_metadata'), \
+             patch('src.services.workers.ingestion_worker.persist_extracted_text'), \
+             patch('src.services.workers.ingestion_worker.update_document_status'), \
+             patch('src.services.workers.ingestion_worker.enqueue_message') as mock_enqueue:
             
             mock_enqueue.side_effect = AzureServiceError("Queue connection failed")
             
@@ -588,7 +588,7 @@ class TestIngestionWorkerEnqueue:
                 ingestion_worker(valid_message_dict, context_with_config)
             
             # Verify status was updated to indicate partial failure
-            from rag_eval.services.workers.ingestion_worker import update_document_status
+            from src.services.workers.ingestion_worker import update_document_status
             update_document_status.assert_called()
             # Check that status was updated to failed_chunking_enqueue
             status_calls = [call for call in update_document_status.call_args_list if call[0][1] == "failed_chunking_enqueue"]
@@ -603,11 +603,11 @@ class TestIngestionWorkerBatchProcessing:
         # Create a mock PDF that exceeds 50MB
         large_pdf = b"x" * (51 * 1024 * 1024)  # 51MB
         
-        with patch('rag_eval.services.workers.ingestion_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.ingestion_worker.download_document_from_storage', return_value=large_pdf), \
-             patch('rag_eval.services.workers.ingestion_worker.send_to_dead_letter') as mock_dlq, \
-             patch('rag_eval.services.workers.ingestion_worker.update_document_status'), \
-             patch('rag_eval.services.workers.ingestion_worker.update_ingestion_metadata'):
+        with patch('src.services.workers.ingestion_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.ingestion_worker.download_document_from_storage', return_value=large_pdf), \
+             patch('src.services.workers.ingestion_worker.send_to_dead_letter') as mock_dlq, \
+             patch('src.services.workers.ingestion_worker.update_document_status'), \
+             patch('src.services.workers.ingestion_worker.update_ingestion_metadata'):
             
             with pytest.raises(AzureServiceError, match="exceeds 50MB"):
                 ingestion_worker(valid_message_dict, context_with_config)
@@ -620,11 +620,11 @@ class TestIngestionWorkerBatchProcessing:
         # Simulate that batch 0 is already completed
         completed_batches = {0}
         
-        with patch('rag_eval.services.workers.ingestion_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.get_pdf_page_count', return_value=4), \
-             patch('rag_eval.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3), (3, 5)]), \
-             patch('rag_eval.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
+        with patch('src.services.workers.ingestion_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.get_pdf_page_count', return_value=4), \
+             patch('src.services.workers.ingestion_worker.generate_page_batches', return_value=[(1, 3), (3, 5)]), \
+             patch('src.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
                  "num_pages": 4,
                  "num_batches_total": 2,
                  "last_successful_page": 2,
@@ -636,16 +636,16 @@ class TestIngestionWorkerBatchProcessing:
                  "parsing_completed_at": None,
                  "errors": []
              }), \
-             patch('rag_eval.services.workers.ingestion_worker.get_completed_batches', return_value=completed_batches), \
-             patch('rag_eval.services.workers.ingestion_worker.load_batch_result', return_value=actual_extracted_text), \
-             patch('rag_eval.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text) as mock_extract, \
-             patch('rag_eval.services.workers.ingestion_worker.persist_batch_result'), \
-             patch('rag_eval.services.workers.ingestion_worker.delete_batch_chunk'), \
-             patch('rag_eval.services.workers.ingestion_worker.update_ingestion_metadata'), \
-             patch('rag_eval.services.workers.ingestion_worker.persist_extracted_text'), \
-             patch('rag_eval.services.workers.ingestion_worker.update_document_status'), \
-             patch('rag_eval.services.workers.ingestion_worker.enqueue_message'):
+             patch('src.services.workers.ingestion_worker.get_completed_batches', return_value=completed_batches), \
+             patch('src.services.workers.ingestion_worker.load_batch_result', return_value=actual_extracted_text), \
+             patch('src.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text) as mock_extract, \
+             patch('src.services.workers.ingestion_worker.persist_batch_result'), \
+             patch('src.services.workers.ingestion_worker.delete_batch_chunk'), \
+             patch('src.services.workers.ingestion_worker.update_ingestion_metadata'), \
+             patch('src.services.workers.ingestion_worker.persist_extracted_text'), \
+             patch('src.services.workers.ingestion_worker.update_document_status'), \
+             patch('src.services.workers.ingestion_worker.enqueue_message'):
             
             ingestion_worker(valid_message_dict, context_with_config)
             
@@ -657,11 +657,11 @@ class TestIngestionWorkerBatchProcessing:
         """Test that batch size can be configured via metadata"""
         valid_message_dict["metadata"] = {"batch_size": 5}
         
-        with patch('rag_eval.services.workers.ingestion_worker.should_process_document', return_value=True), \
-             patch('rag_eval.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.get_pdf_page_count', return_value=10), \
-             patch('rag_eval.services.workers.ingestion_worker.generate_page_batches') as mock_generate, \
-             patch('rag_eval.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
+        with patch('src.services.workers.ingestion_worker.should_process_document', return_value=True), \
+             patch('src.services.workers.ingestion_worker.download_document_from_storage', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.get_pdf_page_count', return_value=10), \
+             patch('src.services.workers.ingestion_worker.generate_page_batches') as mock_generate, \
+             patch('src.services.workers.ingestion_worker.get_ingestion_metadata', return_value={
                  "num_pages": 0,
                  "num_batches_total": 0,
                  "last_successful_page": 0,
@@ -673,15 +673,15 @@ class TestIngestionWorkerBatchProcessing:
                  "parsing_completed_at": None,
                  "errors": []
              }), \
-             patch('rag_eval.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
-             patch('rag_eval.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
-             patch('rag_eval.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text), \
-             patch('rag_eval.services.workers.ingestion_worker.persist_batch_result'), \
-             patch('rag_eval.services.workers.ingestion_worker.delete_batch_chunk'), \
-             patch('rag_eval.services.workers.ingestion_worker.update_ingestion_metadata'), \
-             patch('rag_eval.services.workers.ingestion_worker.persist_extracted_text'), \
-             patch('rag_eval.services.workers.ingestion_worker.update_document_status'), \
-             patch('rag_eval.services.workers.ingestion_worker.enqueue_message'):
+             patch('src.services.workers.ingestion_worker.get_completed_batches', return_value=set()), \
+             patch('src.services.workers.ingestion_worker.slice_pdf_to_batch', return_value=sample_pdf_content), \
+             patch('src.services.workers.ingestion_worker.extract_text_from_batch', return_value=actual_extracted_text), \
+             patch('src.services.workers.ingestion_worker.persist_batch_result'), \
+             patch('src.services.workers.ingestion_worker.delete_batch_chunk'), \
+             patch('src.services.workers.ingestion_worker.update_ingestion_metadata'), \
+             patch('src.services.workers.ingestion_worker.persist_extracted_text'), \
+             patch('src.services.workers.ingestion_worker.update_document_status'), \
+             patch('src.services.workers.ingestion_worker.enqueue_message'):
             
             ingestion_worker(valid_message_dict, context_with_config)
             

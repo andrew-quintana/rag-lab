@@ -5,14 +5,14 @@ import pytest
 from unittest.mock import Mock, patch
 from pathlib import Path
 
-from rag_eval.services.evaluator.risk_impact import (
+from src.services.evaluator.risk_impact import (
     calculate_risk_impact,
     RiskImpactEvaluator,
 )
-from rag_eval.core.config import Config
-from rag_eval.core.exceptions import AzureServiceError, ValidationError
-from rag_eval.services.shared.llm_providers import AzureFoundryProvider
-from rag_eval.db.queries import QueryExecutor
+from src.core.config import Config
+from src.core.exceptions import AzureServiceError, ValidationError
+from src.services.shared.llm_providers import AzureFoundryProvider
+from src.db.queries import QueryExecutor
 
 
 class TestRiskImpactPrompt:
@@ -20,7 +20,7 @@ class TestRiskImpactPrompt:
     
     def setup_method(self):
         """Clear cache before each test"""
-        from rag_eval.services.rag.generation import _prompt_cache
+        from src.services.rag.generation import _prompt_cache
         _prompt_cache.clear()
     
     def test_load_prompt_template_from_file(self):
@@ -38,7 +38,7 @@ class TestRiskImpactPrompt:
     def test_load_prompt_template_from_database(self):
         """Test that prompt template can be loaded from database"""
         # Clear cache to ensure fresh database query
-        from rag_eval.services.rag.generation import _prompt_cache
+        from src.services.rag.generation import _prompt_cache
         _prompt_cache.clear()
         
         mock_query_executor = Mock(spec=QueryExecutor)
@@ -134,7 +134,7 @@ class TestRiskImpactPrompt:
 class TestRiskImpact:
     """Tests for risk impact calculation functionality"""
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_calculate_impact_time_based_costs(self, mock_post):
         """Test impact calculation for time-based costs"""
         mock_response = Mock()
@@ -171,7 +171,7 @@ class TestRiskImpact:
         assert 0 <= result <= 3
         assert result == 2.0
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_calculate_impact_money_based_costs(self, mock_post):
         """Test impact calculation for money-based costs"""
         mock_response = Mock()
@@ -208,7 +208,7 @@ class TestRiskImpact:
         assert 0 <= result <= 3
         assert result == 3.0
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_calculate_impact_step_based_costs(self, mock_post):
         """Test impact calculation for step-based costs"""
         mock_response = Mock()
@@ -245,7 +245,7 @@ class TestRiskImpact:
         assert 0 <= result <= 3
         assert result == 1.5
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_calculate_impact_mixed_resource_types(self, mock_post):
         """Test impact calculation for mixed resource types"""
         mock_response = Mock()
@@ -282,7 +282,7 @@ class TestRiskImpact:
         assert 0 <= result <= 3
         assert result == 2.5
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_calculate_impact_zero_impact(self, mock_post):
         """Test edge case: zero impact scenarios"""
         mock_response = Mock()
@@ -318,7 +318,7 @@ class TestRiskImpact:
         assert isinstance(result, float)
         assert result == 0.0
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_calculate_impact_maximum_impact(self, mock_post):
         """Test edge case: maximum impact scenarios"""
         mock_response = Mock()
@@ -354,7 +354,7 @@ class TestRiskImpact:
         assert isinstance(result, float)
         assert result == 3.0
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_calculate_impact_range_validation(self, mock_post):
         """Test that impact is validated to be in range [0, 3]"""
         # Test with value below 0
@@ -421,7 +421,7 @@ class TestRiskImpact:
         with pytest.raises(ValueError, match="must be a non-empty dictionary"):
             evaluator.calculate_risk_impact({"money": 100}, "not a dict")
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_calculate_impact_llm_failure(self, mock_post):
         """Test error handling for LLM failures"""
         mock_post.side_effect = Exception("LLM API error")
@@ -441,7 +441,7 @@ class TestRiskImpact:
         with pytest.raises(AzureServiceError):
             evaluator.calculate_risk_impact({"money": 100}, {"money": 50})
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_calculate_impact_missing_field(self, mock_post):
         """Test error handling for missing risk_impact field in response"""
         mock_response = Mock()
@@ -472,7 +472,7 @@ class TestRiskImpact:
         with pytest.raises(ValueError, match="missing 'risk_impact' field"):
             evaluator.calculate_risk_impact({"money": 100}, {"money": 50})
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_calculate_impact_invalid_type(self, mock_post):
         """Test error handling for invalid risk_impact type"""
         mock_response = Mock()
@@ -508,7 +508,7 @@ class TestRiskImpact:
 class TestRiskImpactModuleFunction:
     """Tests for module-level calculate_risk_impact function"""
     
-    @patch('rag_eval.services.shared.llm_providers.requests.post')
+    @patch('src.services.shared.llm_providers.requests.post')
     def test_module_function(self, mock_post):
         """Test module-level calculate_risk_impact function"""
         mock_response = Mock()

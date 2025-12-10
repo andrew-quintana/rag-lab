@@ -5,12 +5,12 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime, timezone
 
-from rag_eval.core.exceptions import DatabaseError
-from rag_eval.core.interfaces import Query, ModelAnswer, RetrievalResult
-from rag_eval.core.config import Config
-from rag_eval.db.connection import DatabaseConnection
-from rag_eval.db.queries import QueryExecutor
-from rag_eval.services.rag.logging import log_query, log_retrieval, log_model_answer
+from src.core.exceptions import DatabaseError
+from src.core.interfaces import Query, ModelAnswer, RetrievalResult
+from src.core.config import Config
+from src.db.connection import DatabaseConnection
+from src.db.queries import QueryExecutor
+from src.services.rag.logging import log_query, log_retrieval, log_model_answer
 
 
 @pytest.fixture
@@ -99,7 +99,7 @@ class TestLogQuery:
         assert params[1] == "What is the coverage limit?"
         assert isinstance(params[2], datetime)
     
-    @patch('rag_eval.services.rag.logging.generate_id')
+    @patch('src.services.rag.logging.generate_id')
     def test_log_query_generates_id_if_missing(self, mock_generate_id, mock_query_executor, sample_query_no_id):
         """Test that query_id is generated if missing"""
         mock_generate_id.return_value = "generated_query_456"
@@ -132,7 +132,7 @@ class TestLogQuery:
     
     def test_log_query_uses_current_timestamp_if_missing(self, mock_query_executor, sample_query_no_id):
         """Test that current timestamp is used if not provided"""
-        with patch('rag_eval.services.rag.logging.datetime') as mock_datetime:
+        with patch('src.services.rag.logging.datetime') as mock_datetime:
             mock_now = datetime(2025, 1, 27, 12, 0, 0, tzinfo=timezone.utc)
             mock_datetime.now.return_value = mock_now
             mock_datetime.side_effect = lambda *args, **kw: datetime(*args, **kw)
@@ -258,7 +258,7 @@ class TestLogModelAnswer:
         assert params[4] == ["chunk_1", "chunk_2", "chunk_3"]
         assert isinstance(params[5], datetime)
     
-    @patch('rag_eval.services.rag.logging.generate_id')
+    @patch('src.services.rag.logging.generate_id')
     def test_log_model_answer_generates_id_if_missing(self, mock_generate_id, mock_query_executor, sample_model_answer):
         """Test that answer_id is generated if missing"""
         mock_generate_id.return_value = "generated_answer_789"
@@ -336,7 +336,7 @@ class TestLogModelAnswer:
             timestamp=None
         )
         
-        with patch('rag_eval.services.rag.logging.datetime') as mock_datetime:
+        with patch('src.services.rag.logging.datetime') as mock_datetime:
             mock_now = datetime(2025, 1, 27, 12, 0, 0, tzinfo=timezone.utc)
             mock_datetime.now.return_value = mock_now
             mock_datetime.side_effect = lambda *args, **kw: datetime(*args, **kw)

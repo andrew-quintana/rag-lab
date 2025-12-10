@@ -17,14 +17,14 @@ from pathlib import Path
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
-from rag_eval.core.config import Config
-from rag_eval.db.queries import QueryExecutor
-from rag_eval.services.rag.generation import load_prompt_template
+from src.core.config import Config
+from src.db.queries import QueryExecutor
+from src.services.rag.generation import load_prompt_template
 
 
 def read_prompt_file(filename: str) -> str:
     """Read prompt from markdown file"""
-    prompt_path = backend_dir / "rag_eval" / "prompts" / "evaluation" / filename
+    prompt_path = backend_dir / "src" / "prompts" / "evaluation" / filename
     with open(prompt_path, 'r', encoding='utf-8') as f:
         return f.read().strip()
 

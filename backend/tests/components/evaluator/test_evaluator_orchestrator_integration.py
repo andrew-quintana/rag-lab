@@ -12,19 +12,19 @@ import pytest
 from unittest.mock import Mock
 from typing import List
 
-from rag_eval.core.config import Config
-from rag_eval.core.interfaces import (
+from src.core.config import Config
+from src.core.interfaces import (
     EvaluationExample,
     EvaluationResult,
     RetrievalResult,
     ModelAnswer,
     Query
 )
-from rag_eval.services.evaluator.orchestrator import evaluate_rag_system
-from rag_eval.services.rag.search import retrieve_chunks
-from rag_eval.services.rag.generation import generate_answer
-from rag_eval.db.connection import DatabaseConnection
-from rag_eval.db.queries import QueryExecutor
+from src.services.evaluator.orchestrator import evaluate_rag_system
+from src.services.rag.search import retrieve_chunks
+from src.services.rag.generation import generate_answer
+from src.db.connection import DatabaseConnection
+from src.db.queries import QueryExecutor
 
 
 # Adapter functions to convert between orchestrator interface and RAG system interface
@@ -300,7 +300,7 @@ class TestOrchestratorIntegration:
         self
     ):
         """Test judge performance metrics calculation with real pipeline results"""
-        from rag_eval.services.evaluator.meta_eval import calculate_judge_metrics
+        from src.services.evaluator.meta_eval import calculate_judge_metrics
         
         config = Config.from_env()
         
@@ -419,8 +419,8 @@ class TestOrchestratorConnection:
     )
     def test_azure_ai_foundry_judge_connection(self):
         """Test connection to Azure AI Foundry for judge evaluation"""
-        from rag_eval.services.evaluator.judge import evaluate_answer_with_judge
-        from rag_eval.core.interfaces import RetrievalResult
+        from src.services.evaluator.judge import evaluate_answer_with_judge
+        from src.core.interfaces import RetrievalResult
         
         config = Config.from_env()
         
