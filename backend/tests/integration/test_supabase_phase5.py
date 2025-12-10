@@ -33,19 +33,7 @@ from src.services.workers.persistence import (
 )
 from src.core.interfaces import Chunk
 
-
-@pytest.fixture(scope="module")
-def config():
-    """Load configuration from environment"""
-    return Config.from_env()
-
-
-@pytest.fixture(scope="module")
-def db_conn(config):
-    """Create database connection"""
-    if not config.database_url:
-        pytest.skip("DATABASE_URL not set - skipping integration tests")
-    return DatabaseConnection(config)
+# Note: config and db_conn fixtures are now in conftest.py
 
 
 @pytest.fixture

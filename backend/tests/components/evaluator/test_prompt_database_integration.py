@@ -14,14 +14,13 @@ from src.services.evaluator.correctness import CorrectnessEvaluator
 from src.services.evaluator.hallucination import HallucinationEvaluator
 from src.services.evaluator.risk_direction import RiskDirectionEvaluator
 
+# Note: config and db_conn fixtures are now in conftest.py
+
 
 @pytest.fixture(scope="module")
-def query_executor():
+def query_executor(db_conn):
     """Create QueryExecutor for database operations"""
     try:
-        from src.db.connection import DatabaseConnection
-        config = Config.from_env()
-        db_conn = DatabaseConnection(config)
         return QueryExecutor(db_conn)
     except Exception as e:
         pytest.skip(f"Database not available: {e}")

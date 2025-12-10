@@ -1,5 +1,6 @@
 #!/bin/bash
 # Run Phase 5 integration tests against local Azure Functions
+# This script runs tests marked with @pytest.mark.local against local resources (Azurite, local Supabase)
 
 set -e
 
@@ -23,12 +24,12 @@ if ! (cd "$PROJECT_ROOT/infra/supabase" && supabase status >/dev/null 2>&1); the
 fi
 echo "✓ Supabase is running"
 
-# Check if Azurite is running
+# Check if Azurite is running, start if not
 if ! lsof -Pi :10000 -sTCP:LISTEN -t >/dev/null 2>&1; then
-    echo "Error: Azurite is not running."
-    echo "Please start it first:"
-    echo "  ./scripts/start_azurite.sh"
-    exit 1
+    echo "⚠ Azurite is not running. Starting Azurite..."
+    "$PROJECT_ROOT/scripts/start_azurite.sh"
+    # Wait a moment for Azurite to start
+    sleep 2
 fi
 echo "✓ Azurite is running"
 
@@ -103,10 +104,10 @@ export AZURE_STORAGE_QUEUES_CONNECTION_STRING="UseDevelopmentStorage=true"
 export AZURE_STORAGE_CONNECTION_STRING="UseDevelopmentStorage=true"
 
 # Run tests with local marker
-echo "Running tests marked with @pytest.mark.local..."
-pytest tests/integration/test_phase5_e2e_pipeline.py \
+echo "Running tests marked with @pytest.mark.local and @pytest.mark.integration..."
+pytest tests/integration/ \
     -v \
-    -m "local" \
+    -m "local and integration" \
     --tb=short \
     "$@"
 

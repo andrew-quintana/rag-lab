@@ -26,6 +26,9 @@ python_functions = ["test_*"]
 pythonpath = ["."]  # Ensures pytest can find src package
 markers = [
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
+    "local: marks tests that run against local resources (Azurite, local Supabase)",
+    "cloud: marks tests that run against cloud resources (Azure Functions, cloud Supabase)",
+    "performance: marks tests as performance tests (throughput, latency validation)",
 ]
 filterwarnings = [
     "ignore::PendingDeprecationWarning:starlette.formparsers",

@@ -33,33 +33,7 @@ from src.services.workers.persistence import (
 )
 from src.services.rag.supabase_storage import upload_document_to_storage
 
-
-def _is_local_development(config) -> bool:
-    """Check if running in local development mode (Azurite)"""
-    import os
-    connection_string = config.azure_blob_connection_string or os.getenv("AZURE_STORAGE_QUEUES_CONNECTION_STRING", "")
-    return connection_string == "UseDevelopmentStorage=true"
-
-
-@pytest.fixture(scope="module")
-def config():
-    """Load configuration from environment"""
-    return Config.from_env()
-
-
-@pytest.fixture(scope="module")
-def is_local():
-    """Check if running in local development mode"""
-    config_obj = Config.from_env()
-    return _is_local_development(config_obj)
-
-
-@pytest.fixture(scope="module")
-def db_conn(config):
-    """Create database connection"""
-    if not config.database_url:
-        pytest.skip("DATABASE_URL not set - skipping integration tests")
-    return DatabaseConnection(config)
+# Note: config, db_conn, and is_local fixtures are now in conftest.py
 
 
 @pytest.fixture

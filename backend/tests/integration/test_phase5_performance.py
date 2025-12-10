@@ -25,11 +25,7 @@ from src.services.workers.queue_client import (
 )
 from src.services.workers.persistence import check_document_status
 
-
-@pytest.fixture(scope="module")
-def config():
-    """Load configuration from environment"""
-    return Config.from_env()
+# Note: config fixture is now in conftest.py
 
 
 @pytest.fixture
