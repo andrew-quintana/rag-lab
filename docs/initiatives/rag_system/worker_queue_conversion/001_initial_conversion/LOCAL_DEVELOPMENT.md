@@ -59,7 +59,7 @@ supabase start
 
 ### Step 2: Verify local.settings.json
 
-The `local.settings.json` file should already exist in `infra/azure/azure_functions/` with:
+The `local.settings.json` file should already exist in `backend/azure_functions/` with:
 
 ```json
 {
@@ -72,7 +72,7 @@ The `local.settings.json` file should already exist in `infra/azure/azure_functi
 }
 ```
 
-**Critical**: This file contains ONLY Azurite connection strings. All other environment variables are loaded from `.env.local` via `python-dotenv` in the function entry points.
+**Critical**: This file contains ONLY Azurite connection strings and runtime settings. All other environment variables are loaded from `.env.local` (if it exists) via `Config.from_env()` in the backend code.
 
 ### Step 3: Start Local Services
 
@@ -98,7 +98,7 @@ supabase start
 ./scripts/start_azurite.sh
 
 # Terminal 3: Start Functions
-cd infra/azure/azure_functions
+cd backend/azure_functions
 func start
 ```
 
@@ -106,18 +106,23 @@ func start
 
 ### How It Works
 
-1. **Function Entry Points** (`__init__.py` files):
-   - Load `.env.local` from project root using `python-dotenv`
-   - This happens BEFORE importing backend code
-   - Path: 5 levels up from function `__init__.py` to project root
+1. **Azure Functions Runtime**:
+   - Reads `local.settings.json` for Azurite connection strings
+   - Makes variables available via `os.environ`
 
 2. **Backend Code**:
-   - Uses `Config.from_env()` which also loads from `.env.local`
-   - Variables are available via `os.getenv()` after dotenv loading
+   - Uses `Config.from_env()` to load configuration
+   - `Config.from_env()` checks for `.env.local` in project root (optional)
+   - If `.env.local` exists, loads it (using `override=True` to respect precedence)
+   - If `.env.local` doesn't exist, uses system environment variables
+   - Variables are available via `os.getenv()` after loading
 
-3. **local.settings.json**:
-   - Contains ONLY Azurite connection string
-   - Azure Functions runtime reads this for queue triggers
+3. **Configuration Precedence**:
+   - Azure Function App settings (cloud) > `.env.local` (local) > system environment > test fixtures
+   - `local.settings.json` contains ONLY Azurite/runtime settings
+   - Application configuration goes in `.env.local` or Azure Function App settings
+
+**Note**: Function entry points use simple direct imports. Configuration loading is handled by `Config.from_env()` when workers need it.
 
 ### Required Variables in `.env.local`
 
@@ -165,7 +170,7 @@ AZURE_BLOB_CONTAINER_NAME=
 
 3. **Start Functions**:
    ```bash
-   cd infra/azure/azure_functions
+   cd backend/azure_functions
    func start
    ```
 
@@ -255,7 +260,7 @@ queue.send_message('{"document_id": "test-123", ...}')
 
 1. **Check local.settings.json exists**:
    ```bash
-   ls infra/azure/azure_functions/local.settings.json
+   ls backend/azure_functions/local.settings.json
    ```
 
 2. **Check .env.local exists**:
@@ -273,9 +278,10 @@ queue.send_message('{"document_id": "test-123", ...}')
 ### Import Errors
 
 If you see import errors:
-1. Verify backend code is accessible (check `backend/` directory in `infra/azure/azure_functions/`)
+1. Verify backend code is accessible (functions are in `backend/azure_functions/` and import from `src/`)
 2. Check Python path includes backend directory
 3. Verify all dependencies are installed in function environment
+4. Functions should use simple direct imports: `from src.services.workers...`
 
 ### Queue Connection Errors
 
@@ -309,15 +315,21 @@ If you see import errors:
 ### Environment Variables Not Loading
 
 1. **Check .env.local path**:
-   Functions load from project root (5 levels up from `__init__.py`)
+   `.env.local` should be in project root (same directory as `backend/`)
 
 2. **Verify dotenv is installed**:
    ```bash
    pip list | grep python-dotenv
    ```
 
-3. **Check function entry point**:
-   Verify dotenv loading code is BEFORE backend imports
+3. **Check configuration loading**:
+   - `Config.from_env()` loads `.env.local` if it exists
+   - Workers call `Config.from_env()` when they need configuration
+   - Run validation script: `python scripts/validate_config.py --local`
+
+4. **Verify configuration precedence**:
+   - Azure Function App settings (cloud) > `.env.local` (local) > system environment
+   - `local.settings.json` contains only Azurite/runtime settings
 
 ## Differences from Cloud
 
@@ -352,7 +364,9 @@ After local testing passes:
 
 ## Related Documentation
 
-- [Environment Variables Reference](../../../../setup/environment_variables.md)
+- [Configuration Guide](../../002_codebase_consolidation/notes/deployment/configuration_guide.md) - Complete configuration strategy and precedence
+- [Azure Function App Settings](../../002_codebase_consolidation/notes/deployment/azure_function_app_settings.md) - Required Azure settings
+- [Environment Variables Reference](../../../../setup/environment_variables.md) - Complete variable reference
 - [Phase 5 Testing Guide](phase_5_testing.md)
 - [Azure Functions Deployment](phase_5_azure_functions_deployment.md)
 

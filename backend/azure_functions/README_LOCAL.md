@@ -51,16 +51,18 @@ pytest tests/integration/test_phase5_e2e_pipeline.py -v -m local
 
 ## File Locations
 
-- **Environment variables**: `.env.local` (project root)
-- **Function settings**: `backend/azure_functions/local.settings.json`
+- **Environment variables**: `.env.local` (project root, optional)
+- **Function settings**: `backend/azure_functions/local.settings.json` (Azurite/runtime only)
 - **Function code**: `backend/azure_functions/*-worker/__init__.py`
+- **Configuration guide**: `docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/notes/deployment/configuration_guide.md`
 
 ## Common Issues
 
 ### Functions won't start
-- Check `local.settings.json` exists
-- Check `.env.local` exists
+- Check `local.settings.json` exists (contains only Azurite/runtime settings)
+- Check `.env.local` exists (optional - functions can use system environment variables)
 - Check Azurite is running: `lsof -i :10000`
+- Validate configuration: `python scripts/validate_config.py --local`
 
 ### Import errors
 - Verify functions are in `backend/azure_functions/` (alongside `backend/src/`)
@@ -70,7 +72,16 @@ pytest tests/integration/test_phase5_e2e_pipeline.py -v -m local
 - Restart Azurite: `./scripts/stop_azurite.sh && ./scripts/start_azurite.sh`
 - Verify connection string is `UseDevelopmentStorage=true`
 
+## Configuration
+
+Configuration loading follows a clear precedence order:
+1. Azure Function App settings (cloud) - highest precedence
+2. `.env.local` (local) - optional, loaded if exists
+3. System environment variables - fallback
+
+See [Configuration Guide](../../../docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/notes/deployment/configuration_guide.md) for complete details.
+
 ## Full Documentation
 
-See [LOCAL_DEVELOPMENT.md](../../../../docs/initiatives/rag_system/worker_queue_conversion/LOCAL_DEVELOPMENT.md) for complete guide.
+See [LOCAL_DEVELOPMENT.md](../../../../docs/initiatives/rag_system/worker_queue_conversion/001_initial_conversion/LOCAL_DEVELOPMENT.md) for complete guide.
 
