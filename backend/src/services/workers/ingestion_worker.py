@@ -285,10 +285,16 @@ def ingestion_worker(queue_message: dict, context: Optional[Any] = None) -> None
         
         # Get completed batches for resumability
         completed_batches = get_completed_batches(document_id, config)
-        logger.info(
-            f"Found {len(completed_batches)} completed batches for document {document_id}, "
-            f"will resume from batch {len(completed_batches)}"
-        )
+        if completed_batches:
+            logger.info(
+                f"Found {len(completed_batches)} completed batches for document {document_id}: "
+                f"{sorted(completed_batches)}. Will resume from batch {max(completed_batches) + 1}"
+            )
+        else:
+            logger.info(
+                f"No completed batches found for document {document_id}. "
+                f"Will process all batches from the beginning."
+            )
         
         # Generate batch ranges (1-indexed for Azure)
         batch_ranges = generate_page_batches(num_pages, batch_size)

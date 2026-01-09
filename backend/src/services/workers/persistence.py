@@ -556,7 +556,7 @@ def get_completed_batches(document_id: str, config) -> set[int]:
         Set of completed batch indices (0-based)
         
     Raises:
-        DatabaseError: If query fails
+        DatabaseError: If query fails (unless it's a known psycopg2 issue, then returns empty set)
         ValueError: If document_id is empty
     """
     if not document_id:
@@ -580,7 +580,10 @@ def get_completed_batches(document_id: str, config) -> set[int]:
             # Extract batch_index from "batch_XXX" format
             if chunk_id.startswith("batch_"):
                 try:
-                    batch_index = int(chunk_id[6:])  # Skip "batch_" prefix
+                    # Handle both "batch_0" and "batch_000" formats
+                    batch_str = chunk_id[6:]  # Skip "batch_" prefix
+                    # Remove leading zeros for comparison
+                    batch_index = int(batch_str)
                     completed_batches.add(batch_index)
                 except ValueError:
                     logger.warning(f"Invalid batch chunk_id format: {chunk_id}")
@@ -589,6 +592,58 @@ def get_completed_batches(document_id: str, config) -> set[int]:
             f"Found {len(completed_batches)} completed batches for document {document_id}"
         )
         return completed_batches
+    except DatabaseError as e:
+        # Workaround for FM-001: psycopg2 "tuple index out of range" error
+        # This appears to be a psycopg2 internal issue when querying in certain connection states.
+        error_msg = str(e).lower()
+        if "tuple index out of range" in error_msg or "indexerror" in error_msg:
+            logger.warning(
+                f"FM-001: Encountered psycopg2 'tuple index out of range' error when querying batches "
+                f"for document {document_id}. Attempting fallback to metadata-based lookup."
+            )
+            
+            # Fallback: Check metadata instead of querying chunks table directly
+            try:
+                metadata = get_ingestion_metadata(document_id, config)
+                batches_completed = metadata.get('batches_completed', {})
+                
+                # Extract batch indices from metadata
+                completed_indices = set()
+                for batch_id, is_completed in batches_completed.items():
+                    if is_completed and batch_id.startswith('batch_'):
+                        try:
+                            batch_str = batch_id[6:]  # Skip "batch_" prefix
+                            batch_index = int(batch_str)
+                            completed_indices.add(batch_index)
+                        except ValueError:
+                            logger.debug(f"FM-001: Skipping invalid batch_id format in metadata: {batch_id}")
+                
+                if completed_indices:
+                    logger.info(
+                        f"FM-001: Successfully used metadata fallback for document {document_id}, "
+                        f"found {len(completed_indices)} completed batches: {sorted(completed_indices)}"
+                    )
+                else:
+                    logger.warning(
+                        f"FM-001: Metadata fallback returned empty set for document {document_id}. "
+                        f"This may indicate no batches exist, or metadata is not yet populated. "
+                        f"Worker will proceed with processing all batches."
+                    )
+                
+                return completed_indices
+                
+            except Exception as fallback_error:
+                logger.error(
+                    f"FM-001: Both query and metadata fallback failed for document {document_id}. "
+                    f"Query error: {e}, Fallback error: {fallback_error}. "
+                    f"Returning empty set - worker will reprocess all batches."
+                )
+                # Last resort: return empty set but log as error for monitoring
+                return set()
+        
+        # Re-raise other database errors (not FM-001)
+        logger.error(f"Failed to get completed batches for document {document_id}: {e}")
+        raise
     except Exception as e:
         logger.error(f"Failed to get completed batches for document {document_id}: {e}")
         raise DatabaseError(f"Failed to get completed batches: {e}") from e

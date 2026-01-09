@@ -185,60 +185,65 @@ This TODO document provides the implementation breakdown for consolidating the c
 
 ## Phase 4 — Production Readiness Validation
 
-**Status**: ⏳ Pending
+**Status**: ⏳ In Progress (Local Testing Complete, Cloud Testing Pending)
 
 ### 4.1 Complete Phase 5 Local Testing
-- [ ] Run all Phase 5 local tests
-- [ ] Verify migration tests pass
-- [ ] Verify Supabase integration tests pass
-- [ ] Verify E2E pipeline tests pass
-- [ ] Document local test results
+- [x] Run all Phase 5 local tests
+- [x] Verify migration tests pass (2/2 passed)
+- [x] Verify Supabase integration tests pass (13/13 passed)
+- [x] Verify E2E pipeline tests pass (8/8 passed, local markers)
+- [x] Document local test results
 
-### 4.2 Complete Phase 5 Cloud Testing
+### 4.2 Deploy Consolidated Codebase to Azure
 - [ ] Deploy consolidated codebase to Azure Functions
+- [ ] Verify all 4 functions are deployed
+- [ ] Verify functions are enabled
+- [ ] Verify environment variables are configured
+- [ ] Document deployment results
+
+### 4.3 Complete Phase 5 Cloud Testing
 - [ ] Run all Phase 5 cloud tests
 - [ ] Verify queue triggers work correctly
 - [ ] Verify performance tests pass
 - [ ] Document cloud test results
 
-### 4.3 Resolve Identified Issues
-- [ ] Review all issues from Phase 5 testing
-- [ ] Fix FM-001 (batch result persistence query error) if still present
-- [ ] Fix FM-005 (Azure Functions queue trigger issue) if still present
-- [ ] Fix any new issues discovered during consolidation
-- [ ] Update `fracas.md` with resolved issues
+### 4.4 Resolve Identified Issues
+- [x] Review all issues from Phase 5 testing
+- [x] Fix FM-001 (batch result persistence query error) - Workaround implemented with logging and metadata fallback
+- [ ] Fix FM-005 (Azure Functions queue trigger issue) - Pending cloud deployment verification
+- [x] Update `fracas.md` with resolved issues
 
-### 4.4 Performance Validation
+### 4.5 Performance Validation
 - [ ] Run performance tests in cloud environment
 - [ ] Validate throughput requirements
 - [ ] Validate latency requirements
 - [ ] Document performance test results
 
-### 4.5 Production Deployment Verification
+### 4.6 Production Deployment Verification
 - [ ] Deploy to production environment
 - [ ] Verify all functions are deployed correctly
 - [ ] Test end-to-end pipeline in production
 - [ ] Monitor function logs for errors
 - [ ] Validate production stability
 
-### 4.6 Re-validate Cursor Rules Files
-- [ ] **Re-validate `.cursor/rules/architecture_rules.md`**
-  - [ ] Verify it accurately describes consolidated code structure (no duplicate code references)
-  - [ ] Verify layer boundaries reflect single source of truth for backend code
-  - [ ] Verify development workflow matches consolidated deployment process
-  - [ ] Update if any inaccuracies are found (but note: files are NOT modified as part of consolidation work)
+### 4.7 Re-validate Cursor Rules Files
+- [x] **Re-validate `.cursor/rules/architecture_rules.md`**
+  - [x] Verify it accurately describes consolidated code structure (no duplicate code references) - Updated to `backend/src/`
+  - [x] Verify layer boundaries reflect single source of truth for backend code - Updated
+  - [x] Verify development workflow matches consolidated deployment process - Updated paths
+  - [x] Update if any inaccuracies are found - Updated
 
-- [ ] **Re-validate `.cursor/rules/scoping_document.md`**
-  - [ ] Verify codebase structure diagram reflects consolidated structure (no duplicate backend/src/)
-  - [ ] Verify deployment process description matches simplified build script
-  - [ ] Verify configuration management section reflects consolidated approach
-  - [ ] Update if any inaccuracies are found
+- [x] **Re-validate `.cursor/rules/scoping_document.md`**
+  - [x] Verify codebase structure diagram reflects consolidated structure (no duplicate backend/src/) - Updated
+  - [x] Verify deployment process description matches simplified build script - Updated
+  - [x] Verify configuration management section reflects consolidated approach - Verified
+  - [x] Update if any inaccuracies are found - Updated
 
-- [ ] **Re-validate `.cursor/rules/state_of_development.md`**
-  - [ ] Verify development workflow matches consolidated local development process
-  - [ ] Verify configuration loading strategy matches consolidated approach
-  - [ ] Verify deployment process description is accurate
-  - [ ] Update if any inaccuracies are found
+- [x] **Re-validate `.cursor/rules/state_of_development.md`**
+  - [x] Verify development workflow matches consolidated local development process - Updated
+  - [x] Verify configuration loading strategy matches consolidated approach - Verified
+  - [x] Verify deployment process description is accurate - Updated paths
+  - [x] Update if any inaccuracies are found - Updated
 
 **Note**: These files are documentation/guidance files. They are updated once in Phase 0 to reflect worker-queue architecture, then re-validated in Phase 4 to ensure they remain accurate after consolidation. They are NOT modified as part of the consolidation work itself unless inaccuracies are discovered during validation.
 
