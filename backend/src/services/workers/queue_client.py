@@ -222,8 +222,14 @@ def _get_queue_client(queue_name: str, config) -> QueueClient:
     if env_connection_string == "UseDevelopmentStorage=true":
         connection_string = env_connection_string
     else:
-        # Use config value, fallback to environment variable
-        connection_string = config.azure_blob_connection_string
+        # Use config value, but check if it's a placeholder or invalid
+        # If config value looks like a placeholder (contains "your_") or is too short, use env var
+        config_conn_str = config.azure_blob_connection_string or ""
+        if config_conn_str and len(config_conn_str) > 200 and "your_" not in config_conn_str.lower():
+            connection_string = config_conn_str
+        else:
+            # Config value is placeholder or missing, use environment variable
+            connection_string = env_connection_string
     if not connection_string:
             connection_string = env_connection_string
     

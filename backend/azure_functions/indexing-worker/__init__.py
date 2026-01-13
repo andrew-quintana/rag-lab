@@ -4,6 +4,15 @@ This function is triggered by messages in the ingestion-indexing queue.
 It processes documents through the indexing stage (Azure AI Search).
 """
 import json
+import sys
+from pathlib import Path
+
+# Add backend directory to Python path for imports
+# With Git deployment, functions are in backend/azure_functions/ and src is in backend/src/
+backend_dir = Path(__file__).parent.parent
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
+
 from src.services.workers.indexing_worker import indexing_worker
 from src.core.logging import get_logger
 

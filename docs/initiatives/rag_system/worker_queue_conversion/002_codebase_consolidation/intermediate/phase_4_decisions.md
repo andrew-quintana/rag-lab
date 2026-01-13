@@ -1,4 +1,4 @@
-# Phase 4 Decisions - Production Readiness Validation
+ a# Phase 4 Decisions - Production Readiness Validation
 
 **Date**: 2025-12-09  
 **Phase**: 4 - Production Readiness Validation  
@@ -145,17 +145,71 @@ Phase 4 focuses on production readiness validation through comprehensive testing
 
 ---
 
+## Decision 4.6: Cloud Deployment via Git Push
+
+**Date**: 2025-12-09  
+**Decision**: Use Git-based deployment (automatic on push to main)
+
+**Context**:
+- Consolidated codebase is ready for deployment
+- Git-based deployment is already configured
+- Build script (`backend/azure_functions/build.sh`) is ready
+
+**Decision**: Deploy via `git push origin main`
+
+**Rationale**:
+- Simplest deployment method
+- Automatic build script execution
+- No manual deployment steps required
+- Consistent with existing infrastructure
+
+**Results**:
+- ✅ All 4 functions deployed successfully
+- ✅ Functions are enabled and accessible
+- ⚠️ DATABASE_URL in Function App points to localhost (needs cloud Supabase URL for production)
+
+**Status**: ✅ Deployment complete
+
+---
+
+## Decision 4.7: Cloud Testing with Partial Results
+
+**Date**: 2025-12-09  
+**Decision**: Execute cloud tests with current configuration, document partial results
+
+**Context**:
+- Cloud tests require cloud Supabase DATABASE_URL
+- Azure Function App has DATABASE_URL set to localhost (127.0.0.1:54322)
+- Some tests don't require database connection
+
+**Decision**: Run cloud tests, document results, note DATABASE_URL configuration issue
+
+**Results**:
+- ✅ 2/3 cloud tests passed (67%)
+  - ✅ `test_concurrent_document_processing`: PASSED
+  - ✅ `test_dead_letter_handling`: PASSED
+  - ❌ `test_azure_functions_queue_trigger_behavior`: ERROR (DATABASE_URL issue)
+
+**Next Steps**:
+- Update DATABASE_URL in Azure Function App to cloud Supabase
+- Re-run failed test after DATABASE_URL update
+- Run performance tests after DATABASE_URL fix
+
+**Status**: ✅ Partial results documented
+
+---
+
 ## Pending Decisions
 
-### Decision 4.6: Cloud Deployment Strategy
+### Decision 4.8: DATABASE_URL Configuration Update
 **Status**: ⏳ Pending  
-**Context**: Need to determine deployment approach and verify consolidated codebase is ready
+**Context**: Need to update DATABASE_URL in Azure Function App to point to cloud Supabase instead of localhost
 
-### Decision 4.7: Performance Test Execution Strategy
-**Status**: ⏳ Pending  
-**Context**: Need to determine how to execute performance tests in cloud environment
+### Decision 4.9: Performance Test Execution Strategy
+**Status**: ⏳ Pending (blocked by DATABASE_URL)  
+**Context**: Performance tests require cloud database connection
 
-### Decision 4.8: Production Deployment Verification Approach
+### Decision 4.10: Production Deployment Verification Approach
 **Status**: ⏳ Pending  
 **Context**: Need to determine production verification steps and acceptance criteria
 
@@ -164,8 +218,10 @@ Phase 4 focuses on production readiness validation through comprehensive testing
 ## Key Metrics
 
 - **Local Tests Passing**: 23/23 (100%)
+- **Cloud Tests Passing**: 2/3 (67%) - 1 blocked by DATABASE_URL configuration
 - **Issues Resolved**: 1 (FM-001 workaround)
 - **Issues Pending**: 1 (FM-005 verification pending cloud deployment)
+- **Deployment Status**: ✅ Complete (all 4 functions deployed)
 - **Code Changes**: 3 files modified
 - **Test Changes**: 1 file updated
 
