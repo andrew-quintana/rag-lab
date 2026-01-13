@@ -8,8 +8,10 @@ import sys
 from pathlib import Path
 
 # Add backend directory to Python path for imports
-# With Git deployment, functions are in backend/azure_functions/ and src is in backend/src/
-backend_dir = Path(__file__).parent.parent
+# Deployment structure: /home/site/wwwroot/<function-name>/__init__.py
+# Backend code is in: /home/site/wwwroot/backend/src/
+# So we need to add /home/site/wwwroot/backend to sys.path
+backend_dir = Path(__file__).parent.parent / "backend"
 if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
 
