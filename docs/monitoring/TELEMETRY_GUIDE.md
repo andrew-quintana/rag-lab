@@ -3,7 +3,7 @@
 **Complete guide to querying and analyzing Application Insights telemetry for Azure Functions**
 
 **Last Updated**: 2026-01-15  
-**Application Insights**: `ai-rag-evaluator` (App ID: `d4a1df24-34cf-4863-9689-81b0747a204d`)
+**Application Insights**: `ai-rag-evaluator` (App ID: `***` - redacted)
 
 ---
 
@@ -469,7 +469,7 @@ az monitor app-insights query \
 
 2. Set APP_INSIGHTS_ID environment variable:
    ```bash
-   export APP_INSIGHTS_ID=d4a1df24-34cf-4863-9689-81b0747a204d
+   export APP_INSIGHTS_ID=***  # Replace with your App Insights ID
    ```
 
 3. Or update script to use resource name instead of App ID

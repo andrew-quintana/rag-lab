@@ -52,14 +52,14 @@ make logs-ingestion   # View ingestion worker logs
 
 - **Resource Name**: `ai-rag-evaluator`
 - **Resource Group**: `rag-lab`
-- **App ID**: `d4a1df24-34cf-4863-9689-81b0747a204d`
-- **Instrumentation Key**: `cc95bdda-0791-4753-ad30-31d818dcd86c`
+- **App ID**: `***` (redacted)
+- **Instrumentation Key**: `***` (redacted)
 
 ### Connection String
 
 Configured in Azure Functions:
 ```
-APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=cc95bdda-0791-4753-ad30-31d818dcd86c;IngestionEndpoint=https://westus2-2.in.applicationinsights.azure.com/;LiveEndpoint=https://westus2.livediagnostics.monitor.azure.com/;ApplicationId=d4a1df24-34cf-4863-9689-81b0747a204d
+APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=***;IngestionEndpoint=https://westus2-2.in.applicationinsights.azure.com/;LiveEndpoint=https://westus2.livediagnostics.monitor.azure.com/;ApplicationId=***
 ```
 
 ### Authentication

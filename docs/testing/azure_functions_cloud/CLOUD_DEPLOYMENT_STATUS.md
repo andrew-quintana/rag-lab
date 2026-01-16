@@ -192,7 +192,7 @@ All required environment variables are set in Azure Functions:
 | `AZURE_BLOB_CONTAINER_NAME` | ✅ | `documents` |
 | `AZURE_STORAGE_QUEUES_CONNECTION_STRING` | ✅ | `DefaultEndpointsProtocol=https...` |
 | `AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT` | ✅ | `https://rag-lab-doc-intel.cognitiveservices.azure...` |
-| `AZURE_DOCUMENT_INTELLIGENCE_API_KEY` | ✅ | `5GznP7X...` |
+| `AZURE_DOCUMENT_INTELLIGENCE_API_KEY` | ✅ | `***` (redacted) |
 | `APPLICATIONINSIGHTS_CONNECTION_STRING` | ✅ | `InstrumentationKey=cc95bdda...` |
 
 ---
