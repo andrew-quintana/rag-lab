@@ -369,7 +369,7 @@ class TestConnectionTests:
             
             if not config.database_url:
                 pytest.skip(
-                    "Skipping connection test. Set DATABASE_URL environment variable to run this test."
+                    "Skipping connection test. Set SUPABASE_DB_URL (or DATABASE_URL) environment variable to run this test."
                 )
             
             # Create database connection

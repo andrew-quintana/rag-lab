@@ -1,189 +1,251 @@
-# Environment Variables Reference
+# Environment Variables Documentation
 
-This document lists all environment variables needed for the RAG Evaluator platform, including Azure Functions and Application Insights configuration.
+**Last Updated**: 2026-01-14  
+**Purpose**: Document environment variable structure for local development and cloud deployment
 
-## Quick Start
+---
 
-Create a `.env.local` file in the project root with your actual values. Copy the template below and fill in your credentials.
+## 📋 Environment Files Structure
 
-## Environment Variables Template
-
-```bash
-# =============================================================================
-# Database (Supabase Postgres)
-# =============================================================================
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your-supabase-anon-key
-DATABASE_URL=postgresql://postgres:password@db.your-project.supabase.co:5432/postgres
-
-# =============================================================================
-# Azure AI Foundry
-# =============================================================================
-AZURE_AI_FOUNDRY_ENDPOINT=https://your-endpoint.openai.azure.com/
-AZURE_AI_FOUNDRY_API_KEY=your-ai-foundry-api-key
-AZURE_AI_FOUNDRY_EMBEDDING_MODEL=text-embedding-ada-002
-AZURE_AI_FOUNDRY_GENERATION_MODEL=gpt-4o
-AZURE_AI_FOUNDRY_REASONING_MODEL=gpt-4o
-
-# =============================================================================
-# Azure AI Search
-# =============================================================================
-AZURE_SEARCH_ENDPOINT=https://your-search-service.search.windows.net
-AZURE_SEARCH_API_KEY=your-search-api-key
-AZURE_SEARCH_INDEX_NAME=your-index-name
-
-# =============================================================================
-# Azure Document Intelligence
-# =============================================================================
-AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT=https://your-endpoint.cognitiveservices.azure.com/
-AZURE_DOCUMENT_INTELLIGENCE_API_KEY=your-document-intelligence-api-key
-
-# =============================================================================
-# Azure Blob Storage
-# =============================================================================
-AZURE_BLOB_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net
-AZURE_BLOB_CONTAINER_NAME=your-container-name
-
-# =============================================================================
-# Azure Storage Queues (for Worker-Queue Architecture)
-# =============================================================================
-# Connection string for Azure Storage Account with Queue Storage enabled
-# Used by workers for queue operations (enqueue, dequeue, etc.)
-# Can use the same connection string as AZURE_BLOB_CONNECTION_STRING if using same storage account
-# Note: In .env.local, use AZURE_STORAGE_CONNECTION_STRING
-#       This maps to AZURE_STORAGE_QUEUES_CONNECTION_STRING in Azure Functions
-AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net
-
-# =============================================================================
-# Azure Functions (for deployed workers)
-# =============================================================================
-# AzureWebJobsStorage is automatically set by Azure Functions when deployed
-# It uses the storage account connection string for the Function App
-# For local development/testing, you can set it manually:
-# AZUREWEBJOBSSTORAGE=DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net
-
-# =============================================================================
-# Azure Application Insights
-# =============================================================================
-# AZURE_APPINSIGHTS_INSTRUMENTATION_KEY is for local development/testing
-# AZURE_APPLICATIONINSIGHTS_CONNECTION_STRING is the connection string (preferred)
-# Note: In Azure Functions, this maps to APPLICATIONINSIGHTS_CONNECTION_STRING
-AZURE_APPINSIGHTS_INSTRUMENTATION_KEY=your-instrumentation-key
-AZURE_APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=...;IngestionEndpoint=...
-
-# =============================================================================
-# API Configuration (with defaults)
-# =============================================================================
-API_HOST=0.0.0.0
-API_PORT=8000
-API_RELOAD=true
+```
+/Users/aq_home/1Projects/rag_evaluator/
+├── .env.local          # Local development (local Supabase)
+├── .env.prod           # Production/Cloud (cloud Supabase)
+└── .env.example        # Template (no secrets)
 ```
 
-## Variable Descriptions
+---
 
-### Database (Supabase)
+## 🔑 Supabase Keys Documentation
 
-- **SUPABASE_URL**: Your Supabase project URL (e.g., `https://xxxxx.supabase.co`)
-- **SUPABASE_KEY**: Your Supabase anon/public key
-- **DATABASE_URL**: PostgreSQL connection string for direct database access
+### Local Development (.env.local)
 
-### Azure AI Foundry
+```bash
+# Local Supabase Instance (via supabase start)
+SUPABASE_URL=http://127.0.0.1:54321
+SUPABASE_ANON_KEY=<local-anon-key>              # For client-side operations (respects RLS)
+SUPABASE_SERVICE_ROLE_KEY=<local-service-role-key>  # For server-side operations (bypasses RLS)
+DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres
+```
 
-- **AZURE_AI_FOUNDRY_ENDPOINT**: Your Azure AI Foundry endpoint URL
-- **AZURE_AI_FOUNDRY_API_KEY**: API key for Azure AI Foundry
-- **AZURE_AI_FOUNDRY_EMBEDDING_MODEL**: Embedding model name (default: `text-embedding-ada-002`)
-- **AZURE_AI_FOUNDRY_GENERATION_MODEL**: Generation model name (default: `gpt-4o`)
-- **AZURE_AI_FOUNDRY_REASONING_MODEL**: Reasoning model name (default: `gpt-4o`)
+**Local Keys** (from `supabase start` output):
+- **ANON_KEY** (anon): For client-side operations, respects Row Level Security policies
+- **SERVICE_ROLE_KEY**: For server-side operations, bypasses RLS - use in backend/Azure Functions
 
-### Azure AI Search
+### Cloud/Production (.env.prod)
 
-- **AZURE_SEARCH_ENDPOINT**: Your Azure AI Search service endpoint
-- **AZURE_SEARCH_API_KEY**: Admin API key for Azure AI Search
-- **AZURE_SEARCH_INDEX_NAME**: Name of your search index
+```bash
+# Cloud Supabase Instance (oeyivkusvlgyuorcjime.supabase.co)
+SUPABASE_URL=https://oeyivkusvlgyuorcjime.supabase.co
+SUPABASE_ANON_KEY=<cloud-anon-key>              # For client-side operations (respects RLS)
+SUPABASE_SERVICE_ROLE_KEY=<cloud-service-role-key>  # For server-side operations (bypasses RLS)
+DATABASE_URL=postgresql://postgres.[ref]:[password]@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+```
 
-### Azure Document Intelligence
+**Cloud Keys** (from Supabase Dashboard → Settings → API):
+- **Project URL**: `https://oeyivkusvlgyuorcjime.supabase.co`
+- **anon public key** (`SUPABASE_ANON_KEY`): For client-side operations - respects RLS policies
+- **service_role key** (`SUPABASE_SERVICE_ROLE_KEY`): For backend/Azure Functions - bypasses RLS, has full admin access
 
-- **AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT**: Your Document Intelligence endpoint URL
-- **AZURE_DOCUMENT_INTELLIGENCE_API_KEY**: API key for Document Intelligence
+---
 
-### Azure Blob Storage
+## 🏗️ Key Naming Convention
 
-- **AZURE_BLOB_CONNECTION_STRING**: Connection string for Azure Blob Storage account
-- **AZURE_BLOB_CONTAINER_NAME**: Name of the blob container for document storage
+| Variable Name | Purpose | RLS Behavior | Usage |
+|---------------|---------|--------------|-------|
+| `SUPABASE_URL` | Base URL for Supabase project | N/A | Both |
+| `SUPABASE_ANON_KEY` | Anonymous/public key | Respects RLS | Client-side only |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (admin) | Bypasses RLS | Backend/Azure Functions |
+| `DATABASE_URL` | Direct PostgreSQL connection string | N/A | Both |
 
-### Azure Storage Queues (Worker-Queue Architecture)
+**Important**: 
+- **Backend/Azure Functions**: Always use `SUPABASE_SERVICE_ROLE_KEY` - it bypasses Row Level Security and has full database access
+- **Client-side**: Use `SUPABASE_ANON_KEY` - it respects RLS policies for security
+- **Never use anon key in backend** - it will fail for operations that require admin access
 
-- **AZURE_STORAGE_CONNECTION_STRING**: Connection string for Azure Storage Account with Queue Storage enabled
-  - Used by workers for queue operations (enqueue, dequeue, etc.)
-  - In `.env.local`, use `AZURE_STORAGE_CONNECTION_STRING`
-  - In Azure Functions, this maps to `AZURE_STORAGE_QUEUES_CONNECTION_STRING`
-  - Can use the same connection string as `AZURE_BLOB_CONNECTION_STRING` if using the same storage account
-  - The queue client also checks `AZURE_BLOB_CONNECTION_STRING` as a fallback
+---
 
-### Azure Functions (Deployed Workers)
+## 🔐 Security Best Practices
 
-- **AZUREWEBJOBSSTORAGE**: Storage account connection string for Azure Functions
-  - **Automatically set** by Azure Functions when deployed
-  - Used by Azure Functions runtime for queue triggers and internal operations
-  - Only needed for local development/testing of Azure Functions
+### ✅ DO:
+- Use `SUPABASE_SERVICE_ROLE_KEY` in backend/Azure Functions (bypasses RLS)
+- Use `SUPABASE_ANON_KEY` in client-side code (respects RLS)
+- Store keys in `.env.local` and `.env.prod` (gitignored)
+- Use Azure Key Vault or App Settings for cloud secrets
+- Rotate keys periodically
 
-### Azure Application Insights
+### ❌ DON'T:
+- Commit keys to git
+- Use `SUPABASE_ANON_KEY` in backend (limited permissions, respects RLS)
+- Share `SUPABASE_SERVICE_ROLE_KEY` publicly (full admin access)
+- Hardcode keys in source code
 
-- **AZURE_APPINSIGHTS_INSTRUMENTATION_KEY**: Application Insights instrumentation key (for local development)
-- **AZURE_APPLICATIONINSIGHTS_CONNECTION_STRING**: Application Insights connection string (preferred)
-  - In `.env.local`, use `AZURE_APPLICATIONINSIGHTS_CONNECTION_STRING`
-  - In Azure Functions, this maps to `APPLICATIONINSIGHTS_CONNECTION_STRING`
-  - **Automatically set** by Azure Functions when Application Insights is configured
-  - Used for logging, metrics, and telemetry
+---
 
-### API Configuration
+## 🚀 Azure Functions Configuration
 
-- **API_HOST**: Host address for the API server (default: `0.0.0.0`)
-- **API_PORT**: Port number for the API server (default: `8000`)
-- **API_RELOAD**: Enable auto-reload for development (default: `true`)
+### Required Environment Variables for Azure Functions
 
-## Azure Functions Deployment
+```bash
+# Supabase
+SUPABASE_URL=https://oeyivkusvlgyuorcjime.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<cloud-service-role-key>  # Required for backend operations
+DATABASE_URL=postgresql://postgres.[ref]:[password]@aws-0-us-east-1.pooler.supabase.com:6543/postgres
 
-When deploying workers as Azure Functions, these environment variables are set via Azure Function App configuration:
+# Azure Storage
+AZURE_STORAGE_ENDPOINT=https://raglabqueues.queue.core.windows.net/
+AZURE_STORAGE_API_KEY=<storage-key>
+AZURE_STORAGE_CONNECTION_STRING=<full-connection-string>
+AZURE_STORAGE_QUEUES_CONNECTION_STRING=<queue-connection-string>
+AZURE_BLOB_CONNECTION_STRING=<blob-connection-string>
+AZURE_BLOB_CONTAINER_NAME=documents
+AZURE_QUEUE_STORAGE_NAME=ingestion-uploads
+AZURE_DOCUMENT_STORAGE_NAME=documents
 
-1. **Via Azure CLI** (see `phase_5_azure_functions_deployment.md`):
-   ```bash
-   az functionapp config appsettings set \
-     --name func-rag-workers \
-     --resource-group rag-lab \
-     --settings \
-       DATABASE_URL="..." \
-       SUPABASE_URL="..." \
-       # ... (all other variables)
-   ```
+# Azure AI Services
+AZURE_AI_FOUNDRY_ENDPOINT=<endpoint>
+AZURE_AI_FOUNDRY_API_KEY=<key>
+AZURE_AI_FOUNDRY_EMBEDDING_MODEL=text-embedding-3-small
+AZURE_AI_FOUNDRY_GENERATION_MODEL=gpt-4o-mini
+AZURE_SEARCH_ENDPOINT=<endpoint>
+AZURE_SEARCH_API_KEY=<key>
+AZURE_SEARCH_INDEX_NAME=rag-lab-search
+AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT=<endpoint>
+AZURE_DOCUMENT_INTELLIGENCE_API_KEY=<key>
 
-2. **Via Azure Portal**:
-   - Navigate to Function App → Configuration → Application settings
-   - Add each variable as a new application setting
+# Functions Runtime
+AzureWebJobsStorage=<storage-connection-string>
+APPLICATIONINSIGHTS_CONNECTION_STRING=<app-insights-connection>
+FUNCTIONS_WORKER_RUNTIME=python
+FUNCTIONS_EXTENSION_VERSION=~4
+```
 
-3. **Via Azure Key Vault** (recommended for production):
-   - Store secrets in Key Vault
-   - Reference them in Function App settings using `@Microsoft.KeyVault(SecretUri=...)`
+---
 
-## Local Development
+## 📝 Setting Up Cloud Supabase
 
-For local development:
+### 1. Create Supabase Cloud Project
+- Go to https://supabase.com/dashboard
+- Create new project: `rag-evaluator-prod`
+- Project ref: `oeyivkusvlgyuorcjime`
+- Region: US East (closest to Azure East US)
 
-1. Create `.env.local` in the project root
-2. Copy the template above
-3. Fill in your actual values
-4. The application will automatically load from `.env.local`
+### 2. Get Connection Details
+**From Dashboard → Settings → API**:
+- Project URL: `https://oeyivkusvlgyuorcjime.supabase.co`
+- anon public key (`SUPABASE_ANON_KEY`): For client-side operations (respects RLS)
+- service_role key (`SUPABASE_SERVICE_ROLE_KEY`): For backend/Azure Functions (bypasses RLS, full admin access)
 
-## Notes
+**From Dashboard → Settings → Database**:
+- Connection string (URI): `postgresql://postgres.[ref]:[password]@aws-0-us-east-1.pooler.supabase.com:6543/postgres`
 
-- **No quotes needed**: Connection strings should not be wrapped in quotes
-- **Same storage account**: You can use the same connection string for both Blob Storage and Queue Storage if they're in the same storage account
-- **Auto-set variables**: `AZUREWEBJOBSSTORAGE` and `APPINSIGHTS_INSTRUMENTATIONKEY` are automatically configured by Azure Functions - you only need to set them manually for local testing
-- **Priority**: The queue client checks `AZURE_BLOB_CONNECTION_STRING` first, then falls back to `AZURE_STORAGE_QUEUES_CONNECTION_STRING` (or `AZURE_STORAGE_CONNECTION_STRING` in `.env.local`)
+### 3. Run Migrations
+```bash
+cd /Users/aq_home/1Projects/rag_evaluator
 
-## Related Documentation
+# Run migrations to cloud instance
+supabase db push --db-url "postgresql://postgres.[ref]:[password]@aws-0-us-east-1.pooler.supabase.com:6543/postgres"
 
-- **Azure Queue Setup**: `docs/setup/azure_queues.md`
-- **Azure Functions Deployment**: `docs/initiatives/rag_system/worker_queue_conversion/phase_5_azure_functions_deployment.md`
-- **Configuration Loading**: `backend/rag_eval/core/config.py`
+# Or apply migrations from infra/supabase/migrations/ manually
+```
 
+### 4. Update Azure Functions
+```bash
+# Set cloud Supabase credentials
+az functionapp config appsettings set \
+  --name func-raglab-uploadworkers \
+  --resource-group rag-lab \
+  --settings \
+    SUPABASE_URL="https://oeyivkusvlgyuorcjime.supabase.co" \
+    SUPABASE_SERVICE_ROLE_KEY="<service-role-key>" \
+    DATABASE_URL="postgresql://postgres.[ref]:[password]@aws-0-us-east-1.pooler.supabase.com:6543/postgres"
+```
+
+---
+
+## 🧪 Testing Configuration
+
+### Local Testing
+```bash
+# Use .env.local
+export $(cat .env.local | xargs)
+python -m pytest
+```
+
+### Cloud Testing
+```bash
+# Use .env.prod
+export $(cat .env.prod | xargs)
+# Test Azure Functions deployment
+```
+
+---
+
+## 🔄 Migration Between Environments
+
+### Local → Cloud
+```bash
+# Export local database
+pg_dump postgresql://postgres:postgres@127.0.0.1:54322/postgres > local_backup.sql
+
+# Import to cloud
+psql "postgresql://postgres.[ref]:[password]@aws-0-us-east-1.pooler.supabase.com:6543/postgres" < local_backup.sql
+```
+
+### Cloud → Local
+```bash
+# Pull from cloud
+supabase db pull --db-url "postgresql://postgres.[ref]:[password]@aws-0-us-east-1.pooler.supabase.com:6543/postgres"
+```
+
+---
+
+## 📊 Environment Variable Checklist
+
+### For Local Development
+- [ ] .env.local exists with local Supabase keys
+- [ ] Local Supabase running (`supabase start`)
+- [ ] DATABASE_URL points to localhost:54322
+- [ ] Migrations applied to local DB
+
+### For Cloud Deployment
+- [ ] .env.prod exists with cloud Supabase keys
+- [ ] Cloud Supabase project created
+- [ ] DATABASE_URL points to cloud instance
+- [ ] Migrations applied to cloud DB
+- [ ] Azure Functions configured with cloud keys
+
+### For Both
+- [ ] .env files in .gitignore
+- [ ] Azure Storage keys configured
+- [ ] Azure AI service keys configured
+- [ ] Backend uses `SUPABASE_SERVICE_ROLE_KEY` (not anon key)
+- [ ] Client-side uses `SUPABASE_ANON_KEY` (respects RLS)
+
+---
+
+## 🆘 Troubleshooting
+
+### "No module named 'src'" Error
+- **Problem**: Azure Functions deployment missing backend code
+- **Solution**: See `E2E_TESTING_GAPS_CHECKLIST.md` GAP-001
+
+### Database Connection Refused
+- **Problem**: Wrong DATABASE_URL or firewall blocking
+- **Solution**: Check Supabase Dashboard → Database → Connection pooler enabled
+
+### "Invalid JWT" or "Invalid API Key"
+- **Problem**: Using wrong key type or expired key
+- **Solution**: Use service_role key, regenerate if needed
+
+### Keys Not Loading
+- **Problem**: Environment variables not set in Azure Functions
+- **Solution**: Run `az functionapp config appsettings list` to verify
+
+---
+
+**Last Updated**: 2026-01-14  
+**Maintained By**: Engineering Team  
+**Related Docs**: 
+- `E2E_TESTING_GAPS_CHECKLIST.md`
+- `docs/setup/environment_variables.md`

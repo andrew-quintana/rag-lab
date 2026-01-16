@@ -1,6 +1,6 @@
 # Makefile for development automation
 
-.PHONY: help dev start stop restart logs supabase-start supabase-stop supabase-status reset-db backend frontend
+.PHONY: help dev start stop restart logs supabase-start supabase-stop supabase-status reset-db backend backend-cloud frontend logs-requests logs-errors logs-functions logs-queue logs-ingestion
 
 help:
 	@echo "Available commands:"
@@ -13,8 +13,16 @@ help:
 	@echo "  make supabase-stop  - Stop Supabase only"
 	@echo "  make supabase-status - Check Supabase status"
 	@echo "  make reset-db     - Reset database and run migrations"
-	@echo "  make backend      - Start backend only"
+	@echo "  make backend      - Start backend only (local config)"
+	@echo "  make backend-cloud - Start backend with cloud config (.env.prod)"
 	@echo "  make frontend     - Start frontend only"
+	@echo ""
+	@echo "Observability (Application Insights):"
+	@echo "  make logs-requests  - View recent HTTP requests (default: 1h)"
+	@echo "  make logs-errors    - View recent errors/exceptions (default: 1h)"
+	@echo "  make logs-functions - View function execution logs (default: 1h)"
+	@echo "  make logs-queue     - View queue-related logs (default: 1h)"
+	@echo "  make logs-ingestion - View ingestion worker logs (default: 1h)"
 
 dev:
 	@echo "Starting all services with Overmind..."
@@ -80,10 +88,37 @@ reset-db:
 	cd infra/supabase && supabase db reset
 
 backend:
-	@echo "Starting backend..."
+	@echo "Starting backend (local configuration)..."
 	cd backend && source venv/bin/activate && PYTHONPATH=backend uvicorn rag_eval.api.main:app --reload --port 8000
+
+backend-cloud:
+	@echo "Starting backend with cloud configuration (.env.prod)..."
+	@if [ ! -f .env.prod ]; then \
+		echo "❌ Error: .env.prod not found"; \
+		exit 1; \
+	fi
+	@export ENV_FILE=$$(pwd)/.env.prod && \
+	export $$(grep -v '^#' .env.prod | grep -v '^$$' | xargs) && \
+	cd backend && \
+	source venv/bin/activate && \
+	uvicorn src.api.main:app --reload --port 8000
 
 frontend:
 	@echo "Starting frontend..."
 	cd frontend && npm run dev
 
+# Observability commands (Application Insights KQL queries)
+logs-requests:
+	@./scripts/logs_requests.sh $(TIME_WINDOW)
+
+logs-errors:
+	@./scripts/logs_errors.sh $(TIME_WINDOW)
+
+logs-functions:
+	@./scripts/logs_functions.sh $(TIME_WINDOW)
+
+logs-queue:
+	@./scripts/logs_queue.sh $(TIME_WINDOW)
+
+logs-ingestion:
+	@./scripts/query_app_insights.sh ingestion $(TIME_WINDOW)

@@ -477,7 +477,7 @@ class TestConnectionTest:
         if not config.database_url:
             warnings.warn(
                 "Supabase database credentials not configured. "
-                "Skipping connection test. Set DATABASE_URL environment variable to run this test."
+                "Skipping connection test. Set SUPABASE_DB_URL (or DATABASE_URL) environment variable to run this test."
             )
             pytest.skip("Supabase database credentials not configured")
         

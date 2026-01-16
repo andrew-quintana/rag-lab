@@ -40,7 +40,7 @@ az functionapp config appsettings set \
   --name $FUNCTION_APP_NAME \
   --resource-group $RESOURCE_GROUP \
   --settings \
-    DATABASE_URL="${DATABASE_URL}" \
+    SUPABASE_DB_URL="${SUPABASE_DB_URL:-${DATABASE_URL}}" \
     SUPABASE_URL="${SUPABASE_URL}" \
     SUPABASE_KEY="${SUPABASE_KEY}" \
     AZURE_AI_FOUNDRY_ENDPOINT="${AZURE_AI_FOUNDRY_ENDPOINT}" \

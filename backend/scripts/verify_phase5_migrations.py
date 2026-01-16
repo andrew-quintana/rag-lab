@@ -191,8 +191,8 @@ def main():
         config = Config.from_env()
         
         if not config.database_url:
-            print("\n❌ ERROR: DATABASE_URL not set in environment")
-            print("   Please set DATABASE_URL in .env.local or environment variables")
+            print("\n❌ ERROR: SUPABASE_DB_URL (or DATABASE_URL) not set in environment")
+            print("   Please set SUPABASE_DB_URL in .env.local or environment variables")
             sys.exit(1)
         
         # Connect to database

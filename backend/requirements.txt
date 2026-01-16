@@ -12,7 +12,7 @@ azure-ai-inference==1.0.0b1
 azure-ai-documentintelligence==1.0.0
 azure-search-documents==11.4.0
 azure-storage-blob==12.19.0
-azure-storage-queue>=12.19.0
+azure-storage-queue>=12.14.1
 
 # Azure Functions
 azure-functions>=1.24.0

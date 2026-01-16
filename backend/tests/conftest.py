@@ -35,12 +35,12 @@ def db_conn(config):
     """Create database connection for integration tests
     
     This fixture creates a DatabaseConnection using the config fixture.
-    It skips tests if DATABASE_URL is not set.
+    It skips tests if SUPABASE_DB_URL (or DATABASE_URL) is not set.
     
     Used by: Integration tests that need real database connections
     """
     if not config.database_url:
-        pytest.skip("DATABASE_URL not set - skipping integration tests")
+        pytest.skip("SUPABASE_DB_URL (or DATABASE_URL) not set - skipping integration tests")
     # Import here to avoid import errors when psycopg2 is not available
     from src.db.connection import DatabaseConnection
     return DatabaseConnection(config)

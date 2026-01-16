@@ -1,0 +1,263 @@
+# Cursor Rules for Azure Functions Monitoring and Development
+
+## Environment Setup
+
+Before working with Azure Functions, ensure:
+- [ ] `.env.local` exists with correct DATABASE_URL (ngrok or cloud)
+- [ ] Azure CLI is logged in: `az login`
+- [ ] Python venv is activated: `source backend/venv/bin/activate`
+- [ ] Azure Storage connection string is available (check `.env.local` or Azure Portal)
+
+## Quick Commands
+
+### Monitoring & Diagnostics
+```bash
+# Quick health check
+python scripts/monitor_queue_health.py
+
+# Watch mode (live updates)
+python scripts/monitor_queue_health.py --watch
+
+# Full diagnostic (sends test message)
+python scripts/diagnose_functions.py
+
+# Peek at poison queue
+python scripts/monitor_queue_health.py --peek ingestion-uploads-poison
+
+# Clear poison queues
+python scripts/monitor_queue_health.py --clear-poison
+```
+
+### Observability (Application Insights KQL)
+```bash
+# View recent requests (default: 1h, override with TIME_WINDOW=30m)
+make logs-requests
+
+# View recent errors/exceptions
+make logs-errors
+
+# View function execution logs
+make logs-functions
+
+# View queue-related logs
+make logs-queue
+
+# View ingestion worker logs
+make logs-ingestion
+
+# Custom time window (e.g., last 30 minutes)
+TIME_WINDOW=30m make logs-functions
+
+# Direct script usage
+./scripts/query_app_insights.sh functions 1h
+./scripts/query_app_insights.sh queue 30m
+```
+
+### Azure Function Logs
+```bash
+# Stream live logs
+az functionapp log tail --name func-raglab-uploadworkers --resource-group rag-lab
+
+# Alternative: Download logs
+az functionapp log download --name func-raglab-uploadworkers --resource-group rag-lab
+
+# Check function status
+az functionapp function list --name func-raglab-uploadworkers --resource-group rag-lab --query "[].{Name:name, Status:config.disabled}" -o table
+```
+
+### Deployment
+```bash
+# Deploy via Git (automatic)
+git push azure main
+
+# Manual deployment (ensures all files are synced)
+cd backend/azure_functions
+func azure functionapp publish func-raglab-uploadworkers --python
+
+# Restart function app
+az functionapp restart --name func-raglab-uploadworkers --resource-group rag-lab
+```
+
+### Testing
+```bash
+# Run monitoring tests
+cd backend
+pytest tests/monitoring/test_function_monitoring.py -v -s
+
+# Run cloud integration tests
+pytest tests/integration/test_phase5_e2e_pipeline.py -v -m cloud
+
+# Run local tests
+./scripts/test_functions_local.sh
+```
+
+## Deployment Checklist
+
+When deploying Azure Functions:
+1. [ ] Update `host.json` if needed (queue config, timeouts, etc.)
+2. [ ] Verify `function.json` has `"dataType": "string"` for queue triggers
+3. [ ] Check `__init__.py` has correct `sys.path` manipulation
+4. [ ] Test locally first: `cd backend/azure_functions && func start`
+5. [ ] Commit changes: `git add . && git commit -m "Update functions"`
+6. [ ] Deploy: `git push azure main` or manual deploy
+7. [ ] Verify deployment: `python scripts/diagnose_functions.py`
+8. [ ] Check logs for errors: `az functionapp log tail ...`
+
+## Common Issues & Quick Fixes
+
+### Issue: Messages going to poison queue
+**Diagnosis:**
+```bash
+# Check logs for errors
+az functionapp log tail --name func-raglab-uploadworkers --resource-group rag-lab
+
+# Peek at poison queue
+python scripts/monitor_queue_health.py --peek ingestion-uploads-poison
+```
+
+**Common causes:**
+1. **Import errors** - Check `sys.path` manipulation in `__init__.py`
+2. **Database connection** - Verify `DATABASE_URL` in Function App settings
+3. **Message encoding** - Ensure `host.json` has `"messageEncoding": "base64"`
+4. **Missing env vars** - Check Configuration in Azure Portal
+
+### Issue: Functions not processing messages
+**Diagnosis:**
+```bash
+# Check if functions are disabled
+az functionapp function list --name func-raglab-uploadworkers --resource-group rag-lab
+
+# Check logs for polling activity
+az functionapp log tail --name func-raglab-uploadworkers --resource-group rag-lab | grep -i "poll"
+```
+
+**Common causes:**
+1. **Functions disabled** - Enable in Azure Portal (Functions → <function-name> → Enable)
+2. **Cold start** - Wait 2-3 minutes after deployment
+3. **Wrong connection string** - Verify `AzureWebJobsStorage` in Configuration
+
+### Issue: "ModuleNotFoundError: No module named 'src'"
+**Fix:**
+Ensure each function's `__init__.py` has:
+```python
+import sys
+from pathlib import Path
+
+# Add backend directory to Python path
+backend_dir = Path(__file__).parent.parent
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
+```
+
+### Issue: "Message decoding has failed"
+**Fix:**
+Update `backend/azure_functions/host.json`:
+```json
+{
+  "extensions": {
+    "queues": {
+      "messageEncoding": "base64"
+    }
+  }
+}
+```
+
+Then redeploy.
+
+## Configuration Management
+
+### Function App Settings (Azure Portal)
+Key settings to verify:
+- `AzureWebJobsStorage` - Connection string for queues/blobs
+- `AZURE_STORAGE_QUEUES_CONNECTION_STRING` - Same as above (fallback)
+- `DATABASE_URL` - PostgreSQL connection (ngrok or cloud)
+- `SUPABASE_URL` - Supabase project URL
+- `SUPABASE_SERVICE_ROLE_KEY` - Service role key for storage
+- `OPENAI_API_KEY` - For embedding generation
+
+### Updating Settings
+```bash
+# Single setting
+az functionapp config appsettings set \
+  --name func-raglab-uploadworkers \
+  --resource-group rag-lab \
+  --settings "DATABASE_URL=<value>"
+
+# Sync from .env.local
+./scripts/configure_function_app_env.sh
+```
+
+## Observability Rules
+
+**Rule: Runtime behavior must be observable.**
+
+1. **Telemetry is required** - All meaningful workflows must emit telemetry compatible with Azure Application Insights
+2. **KQL is the validation layer** - Use KQL queries to inspect requests, dependencies, traces, and exceptions
+3. **Query before debugging** - Before reasoning about runtime behavior, run relevant log queries:
+   - `make logs-functions` - Check function execution
+   - `make logs-errors` - Check for exceptions
+   - `make logs-queue` - Check queue operations
+4. **Use bounded time windows** - Always query with `ago(...)` time windows (e.g., `1h`, `30m`)
+5. **Missing telemetry is a signal** - Treat missing or empty telemetry as a signal and note it explicitly
+6. **No claims without evidence** - Reasoning without telemetry is only allowed if telemetry is explicitly missing and recorded as follow-up work
+
+**Before making changes or debugging:**
+1. Run `make logs-functions` to see current state
+2. Run `make logs-errors` to check for failures
+3. Use telemetry to validate behavior, not assumptions
+
+## Best Practices
+
+1. **Always test locally first** - Use `func start` in `backend/azure_functions/`
+2. **Check queue health regularly** - Use monitoring scripts
+3. **Monitor poison queues** - Clear only after investigating root cause
+4. **Use manual deployment for critical changes** - Git deployment can miss file changes
+5. **Query logs before debugging** - Use `make logs-*` commands to understand runtime behavior
+6. **Validate with telemetry** - Use Application Insights KQL queries to confirm success/failure
+7. **Document environment changes** - Update this file and docs
+
+## Useful Resources
+
+- **Azure Portal**: https://portal.azure.com → func-raglab-uploadworkers
+- **Monitoring Guide**: `docs/monitoring/QUICKSTART.md`
+- **Troubleshooting**: `docs/monitoring/TROUBLESHOOTING.md`
+- **Configuration Guide**: `docs/initiatives/rag_system/worker_queue_conversion/002_codebase_consolidation/notes/deployment/configuration_guide.md`
+
+## Emergency Procedures
+
+### Functions completely broken?
+1. Check logs immediately: `az functionapp log tail ...`
+2. Roll back: `git revert HEAD && git push azure main`
+3. Or restore last working commit: `git push azure <commit-hash>:main --force`
+
+### Poison queue filling up?
+1. Investigate root cause first (don't just clear)
+2. Check logs for exception patterns
+3. Fix the issue
+4. Clear poison queue: `python scripts/monitor_queue_health.py --clear-poison --yes`
+
+### Database connection issues?
+1. **Verify REST API configuration** (not direct PostgreSQL):
+   - Check `SUPABASE_URL` in Function App settings
+   - Check `SUPABASE_SERVICE_ROLE_KEY` in Function App settings
+   - Verify service role key is valid and has proper permissions
+2. **Test REST API directly**:
+   ```bash
+   curl -X GET \
+     "https://<project>.supabase.co/rest/v1/documents?select=*&limit=1" \
+     -H "apikey: <service-role-key>" \
+     -H "Authorization: Bearer <service-role-key>"
+   ```
+3. **Check logs for REST API errors**:
+   ```bash
+   make logs-ingestion TIME_WINDOW=5m | grep -E "(REST API|Supabase|HTTP Request)"
+   ```
+4. **Do NOT use** `DATABASE_URL` or direct PostgreSQL connections - all operations use REST API
+
+## Notes
+
+- Azure CLI sometimes shows functions as "Disabled" on Linux when they're actually running (known bug)
+- Verify with logs: `az functionapp log tail ...` - should see polling activity
+- Cold starts can take 2-3 minutes after deployment
+- Message encoding must be "base64" for proper queue trigger operation
+

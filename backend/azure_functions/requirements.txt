@@ -1,41 +1,34 @@
-# Azure Functions requirements
+
 # All dependencies needed by the workers
-
-# FastAPI and server (for API models)
-fastapi==0.104.1
-pydantic>=2.11.7,<3.0.0
-
-# Database
-psycopg2-binary>=2.9.9
-
+# Azure Functions
+# Azure Functions requirements
 # Azure SDKs
-azure-ai-inference==1.0.0b1
+# Database
+# FastAPI and server
+# FastAPI and server (for API models)
+# Image processing
+# LangGraph for orchestration
+# PDF processing
+# Scientific computing (for bias correction confidence intervals)
+# Supabase
+# Utilities
 azure-ai-documentintelligence==1.0.0
+azure-ai-inference==1.0.0b1
+azure-functions>=1.24.0
 azure-search-documents==11.4.0
 azure-storage-blob==12.19.0
 azure-storage-queue>=12.14.1
-
-# Azure Functions
-azure-functions>=1.24.0
-
-# Utilities
-python-dotenv==1.0.0
-requests>=2.31.0
-
-# Supabase
-supabase>=2.0.0
-pdf2image>=1.16.0
-
-# PDF processing
-PyPDF2>=3.0.0
-
-# Image processing
-Pillow>=10.0.0
-
-# LangGraph for orchestration
-langgraph>=0.2.0
+fastapi==0.104.1
 langchain-core>=0.3.0
-
-# Scientific computing (for bias correction confidence intervals)
+langgraph>=0.2.0
+pdf2image>=1.16.0
+Pillow>=10.0.0
+psycopg2-binary>=2.9.9
+pydantic>=2.11.7,<3.0.0
+PyPDF2>=3.0.0
+python-dotenv==1.0.0
+python-multipart>=0.0.20
+requests>=2.31.0
 scipy>=1.11.0
-
+supabase>=2.0.0
+uvicorn[standard]==0.24.0
