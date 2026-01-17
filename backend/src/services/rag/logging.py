@@ -1,6 +1,7 @@
 """Supabase logging for RAG pipeline operations"""
 
 import json
+import re
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
 from src.core.interfaces import Query, ModelAnswer, RetrievalResult
@@ -10,6 +11,30 @@ from src.core.exceptions import DatabaseError
 from src.utils.ids import generate_id
 
 logger = get_logger("services.rag.logging")
+
+
+def _extract_uuid(id_str: str) -> str:
+    """
+    Extract UUID from prefixed ID string (e.g., 'query_<uuid>' -> '<uuid>').
+    If the ID is already a pure UUID, return it as-is.
+    
+    Args:
+        id_str: ID string that may have a prefix
+        
+    Returns:
+        Pure UUID string
+    """
+    if not id_str:
+        return id_str
+    
+    # UUID pattern: 8-4-4-4-12 hex digits
+    uuid_pattern = r'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})'
+    match = re.search(uuid_pattern, id_str, re.IGNORECASE)
+    if match:
+        return match.group(1)
+    
+    # If no UUID pattern found, return as-is (might already be a UUID)
+    return id_str
 
 
 def log_query(query: Query, query_executor: QueryExecutor) -> str:
@@ -22,7 +47,7 @@ def log_query(query: Query, query_executor: QueryExecutor) -> str:
     if logging fails.
     
     **Database Schema:**
-    - `queries` table: query_id (PK), query_text, timestamp, metadata (JSONB)
+    - `queries` table: id (PK UUID), query_text, timestamp, metadata (JSONB)
     
     **Error Handling:**
     - Logging failures are caught and logged as warnings
@@ -65,13 +90,16 @@ def log_query(query: Query, query_executor: QueryExecutor) -> str:
         # Convert metadata dict to JSON string for JSONB column
         metadata_json = json.dumps(metadata) if metadata else '{}'
         
-        # Insert query into database
+        # Extract UUID from prefixed ID (database expects pure UUID)
+        query_uuid = _extract_uuid(query_id)
+        
+        # Insert query into database (using 'id' column, not 'query_id')
         insert_query = """
-            INSERT INTO queries (query_id, query_text, timestamp, metadata)
-            VALUES (%s, %s, %s, %s::jsonb)
-            ON CONFLICT (query_id) DO NOTHING
+            INSERT INTO queries (id, query_text, timestamp, metadata)
+            VALUES (%s::uuid, %s, %s, %s::jsonb)
+            ON CONFLICT (id) DO NOTHING
         """
-        params = (query_id, query.text, query_timestamp, metadata_json)
+        params = (query_uuid, query.text, query_timestamp, metadata_json)
         
         query_executor.execute_insert(insert_query, params)
         logger.info(f"Successfully logged query '{query_id}' to database")
@@ -107,7 +135,7 @@ def log_retrieval(
     and do not raise exceptions.
     
     **Database Schema:**
-    - `retrieval_logs` table: log_id (PK), query_id (FK), chunk_id, similarity_score, timestamp
+    - `retrieval_logs` table: id (PK UUID), query_id (FK UUID), chunk_id, similarity_score, timestamp
     
     **Batch Insertion Strategy:**
     - Uses a single SQL INSERT statement with multiple VALUES clauses
@@ -139,6 +167,9 @@ def log_retrieval(
         return
     
     try:
+        # Extract UUID from prefixed query_id
+        query_uuid = _extract_uuid(query_id)
+        
         # Prepare batch insert data
         timestamp = datetime.now(timezone.utc)
         values_placeholders = []
@@ -146,12 +177,14 @@ def log_retrieval(
         
         for result in retrieval_results:
             log_id = generate_id("log")
-            values_placeholders.append("(%s, %s, %s, %s, %s)")
-            params.extend([log_id, query_id, result.chunk_id, result.similarity_score, timestamp])
+            log_uuid = _extract_uuid(log_id)
+            values_placeholders.append("(%s::uuid, %s::uuid, %s, %s, %s)")
+            params.extend([log_uuid, query_uuid, result.chunk_id, result.similarity_score, timestamp])
         
         # Construct batch insert query using psycopg2 parameter syntax
+        # Using 'id' column instead of 'log_id'
         insert_query = f"""
-            INSERT INTO retrieval_logs (log_id, query_id, chunk_id, similarity_score, timestamp)
+            INSERT INTO retrieval_logs (id, query_id, chunk_id, similarity_score, timestamp)
             VALUES {', '.join(values_placeholders)}
         """
         
@@ -185,8 +218,8 @@ def log_model_answer(answer: ModelAnswer, query_executor: QueryExecutor) -> str:
     raise exceptions.
     
     **Database Schema:**
-    - `model_answers` table: answer_id (PK), query_id (FK), answer_text, 
-      prompt_version (FK), retrieved_chunk_ids (TEXT[]), timestamp
+    - `model_answers` table: id (PK UUID), query_id (FK UUID), answer_text, 
+      prompt_version, retrieved_chunk_ids (TEXT[]), timestamp
     
     **Error Handling:**
     - Logging failures are caught and logged as warnings
@@ -228,19 +261,24 @@ def log_model_answer(answer: ModelAnswer, query_executor: QueryExecutor) -> str:
         # Ensure retrieved_chunk_ids is a list (handle None case)
         retrieved_chunk_ids = answer.retrieved_chunk_ids or []
         
+        # Extract UUIDs from prefixed IDs
+        answer_uuid = _extract_uuid(answer_id)
+        query_uuid = _extract_uuid(answer.query_id)
+        
         # Insert model answer into database
         # PostgreSQL array syntax: ARRAY['value1', 'value2']
+        # Using 'id' column instead of 'answer_id'
         insert_query = """
             INSERT INTO model_answers (
-                answer_id, query_id, answer_text, prompt_version, 
+                id, query_id, answer_text, prompt_version, 
                 retrieved_chunk_ids, timestamp
             )
-            VALUES (%s, %s, %s, %s, %s::text[], %s)
-            ON CONFLICT (answer_id) DO NOTHING
+            VALUES (%s::uuid, %s::uuid, %s, %s, %s::text[], %s)
+            ON CONFLICT (id) DO NOTHING
         """
         params = (
-            answer_id,
-            answer.query_id,
+            answer_uuid,
+            query_uuid,
             answer.text,
             answer.prompt_version,
             retrieved_chunk_ids,  # PostgreSQL will convert list to array

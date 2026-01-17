@@ -416,6 +416,42 @@ curl -X POST http://localhost:8000/api/query \
 
 ---
 
+### Step 5: Full Document Batch Processing Test (2026-01-16)
+
+**5.1 Large Document Upload** ⚠️ **STUCK**
+
+Attempted to test full batch processing with a 232-page document:
+- **Document**: `scan_classic_hmo.pdf`
+- **Total Pages**: 232
+- **Expected Batches**: 116 (2 pages per batch)
+- **Document ID**: `2fe231cd-40fa-47b1-8d00-59c88e3c9621`
+
+**Results**:
+- ✅ Document uploaded successfully
+- ✅ Batch processing started (116 batches detected)
+- ⚠️ **Processing stuck** - Only 7 batches completed (non-sequential: 1, 5, 8, 11, 15, 19, 20)
+- ❌ **6 messages in poison queue** - Multiple processing failures
+- ❌ **All main queues empty** - Worker stopped processing
+- ⚠️ **Progress regressed** - Was at page 38, now at page 24
+
+**Issues Identified**:
+1. **Batch Processing Failures**: Some batches are failing (non-sequential completion)
+2. **Poison Queue**: Messages going to dead-letter queue after max retries
+3. **Worker Stopped**: All main queues empty, worker not processing
+4. **Large Document**: 232 pages may be too large for reliable testing
+
+**Recommendations**:
+1. **Use Smaller Test Document**: Test with 4-10 page document first to verify batch processing works
+2. **Check Azure Functions Logs**: Review Application Insights for specific error messages
+3. **Investigate Batch Failures**: Determine why some batches are failing (Azure Document Intelligence limits, timeouts, etc.)
+4. **Consider Batch Size**: May need to adjust batch processing strategy for very large documents
+
+**Step 5 Summary**: ⚠️ **STUCK** - Large document processing encountered failures
+- **Batch Processing**: Started but encountered errors
+- **Recommendation**: Test with smaller multi-page document (4-10 pages) first
+
+---
+
 ### Step 4: Error Handling Tests (10 minutes)
 
 **4.1 Test Invalid Document**
