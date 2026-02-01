@@ -1,0 +1,50 @@
+# Bytecode / caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env
+
+# Secrets and local config
+.env
+.env.local
+*.pem
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project-specific: generated artifacts (keep .gitkeep)
+artifacts/*
+!artifacts/.gitkeep
+
+# Project-specific: run outputs (keep .gitkeep)
+runs/*
+!runs/.gitkeep
+
+# Optional: ignore large/generated data (keep .gitkeep)
+data/*
+!data/.gitkeep

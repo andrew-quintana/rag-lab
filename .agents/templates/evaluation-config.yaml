@@ -1,0 +1,199 @@
+# RAGLab Evaluation Configuration Template
+
+# Basic evaluation settings
+evaluation:
+  name: "template_evaluation"
+  description: "Template configuration for RAGLab evaluation"
+  retrieval_k: 5
+  run_name: "template_run"
+  prompts_dir: "prompts/evaluation"
+
+# Component selection and configuration
+components:
+  # Judge configuration
+  judge:
+    name: "llm_judge"  # Component name from registry
+    config:
+      temperature: 0.1
+      max_tokens: 500
+      custom_param: "value"
+
+  # Chunker configuration  
+  chunker:
+    name: "simple_chunker"  # Component name from registry
+    config:
+      max_chunk_size: 500
+      overlap_size: 50
+
+  # Embedder configuration
+  embedder:
+    name: "openai_embedder"  # Component name from registry
+    config:
+      model_name: "text-embedding-ada-002"
+      embedding_dimension: 1536
+      batch_size: 100
+
+  # Retriever configuration
+  retriever:
+    name: "faiss_retriever"  # Component name from registry
+    config:
+      index_path: "artifacts/faiss.index"
+      docstore_path: "artifacts/docstore.parquet"
+      similarity_threshold: 0.0
+
+  # Generator configuration
+  generator:
+    name: "openai_generator"  # Component name from registry  
+    config:
+      model_name: "gpt-4"
+      temperature: 0.7
+      max_tokens: 150
+
+# Dataset configuration
+data:
+  corpus_path: "data/corpus.parquet"
+  tasks_path: "data/tasks.jsonl"
+  agent_tasks_path: "data/agent_tasks.jsonl"
+  
+  # Data filtering and sampling
+  filters:
+    max_examples: null  # null for all examples
+    min_chunk_count: 1
+    example_ids: null  # List of specific example IDs to evaluate
+  
+  # Data preprocessing
+  preprocessing:
+    normalize_text: true
+    remove_duplicates: false
+    validate_ground_truth: true
+
+# Evaluation metrics configuration
+metrics:
+  # BEIR metrics settings
+  beir:
+    k_values: [1, 3, 5, 10]
+    compute_all: true
+    
+  # Judge evaluation settings  
+  judge:
+    enable_correctness: true
+    enable_hallucination: true
+    enable_risk_assessment: true
+    require_reasoning: true
+    
+  # Meta-evaluation settings
+  meta_eval:
+    enable_validation: true
+    bias_detection: true
+    ground_truth_comparison: true
+
+# Performance and resource settings
+performance:
+  batch_size: 10
+  max_concurrent: 4
+  timeout_seconds: 300
+  save_intermediate: true
+  checkpoint_interval: 100
+
+# Output configuration
+output:
+  save_config: true
+  save_outputs: true
+  save_metrics: true
+  save_traces: true
+  save_artifacts: true
+  
+  # Output formats
+  formats:
+    detailed_jsonl: true
+    summary_json: true
+    csv_export: false
+    visualization_data: true
+
+# Logging and debugging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  console_output: true
+  file_output: true
+  component_timing: true
+  memory_tracking: false
+
+# Experimental features
+experimental:
+  enable_caching: false
+  parallel_evaluation: false
+  streaming_results: false
+  distributed_processing: false
+
+# Security and privacy
+security:
+  sanitize_inputs: true
+  redact_sensitive_data: true
+  secure_api_calls: true
+  audit_trail: true
+
+# Environment-specific overrides
+environments:
+  development:
+    performance:
+      batch_size: 5
+      save_intermediate: true
+    logging:
+      level: "DEBUG"
+      
+  production:
+    performance:
+      batch_size: 50
+      max_concurrent: 8
+    logging:
+      level: "WARNING"
+      file_output: true
+
+# Custom configuration sections
+custom:
+  # Add project-specific configuration here
+  domain_settings:
+    insurance_focus: true
+    risk_categories: ["care_avoidance", "unexpected_cost"]
+  
+  # Integration settings
+  integrations:
+    external_apis: []
+    database_connections: []
+    monitoring_tools: []
+
+# Configuration validation
+validation:
+  strict_mode: false  # Fail on unknown configuration keys
+  required_components: ["judge", "retriever", "generator"]
+  component_compatibility_check: true
+  
+# Template usage instructions:
+# 1. Copy this file to your desired configuration name (e.g., my_evaluation.yaml)
+# 2. Update component names to match your registered components
+# 3. Adjust configuration parameters for each component
+# 4. Modify dataset paths to point to your data files
+# 5. Customize evaluation metrics and performance settings
+# 6. Set appropriate logging level and output formats
+# 7. Add any custom configuration sections as needed
+# 8. Validate configuration before running evaluation
+
+# Loading this configuration:
+# ```python
+# import yaml
+# with open('evaluation-config.yaml', 'r') as f:
+#     config = yaml.safe_load(f)
+# 
+# # Extract component configurations
+# component_configs = {k: v['config'] for k, v in config['components'].items()}
+# component_names = {f"{k}_name": v['name'] for k, v in config['components'].items()}
+# 
+# # Run evaluation
+# results, run_dir = run_evaluation(
+#     examples=examples,
+#     **component_names,
+#     component_configs=component_configs,
+#     retrieval_k=config['evaluation']['retrieval_k'],
+#     run_name=config['evaluation']['run_name']
+# )
+# ```
